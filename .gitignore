@@ -1,5 +1,9 @@
 # Prerequisites
 *.d
+*.user
+*.DS_Store
+*.swp
+dependencies/
 
 # Object files
 *.o

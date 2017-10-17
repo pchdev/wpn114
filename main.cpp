@@ -1,10 +1,14 @@
 #include <iostream>
-#include <portaudio.h>
-#include <sndfile.h>
+#include "src/audio/backend/backend.h"
+#include "src/audio/vst/vst.h"
+#include <QCoreApplication>
 
 using namespace std;
 
 // a vst host for kaivo
+// vst host for absynth
+// vst host for altiverb
+
 // custom granular / multifunction sampler
 // libossia for communication
 // ableton push support?
@@ -18,74 +22,20 @@ using namespace std;
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 256
 
-typedef short*  sndbuf_16;
-typedef int*    sndbuf_32;
-
-template<typename T> T load_soundfile()
-{
-    SNDFILE* infile;
-    SF_INFO sfinfo;
-    int readcount;
-    const char* infilename = "input.wav";
-
-    memset(&sfinfo, 0, sizeof(sfinfo));
-
-    if(!(infile = sf_open (infilename, SFM_READ, &sfinfo)))
-    {
-        // throw error
-    }
-
-    // load file contents into buffer
-    T buffer = nullptr;
-    buffer = (T*) malloc(sfinfo.frames * sfinfo.channels * sizeof(T));
-
-    // puts contents into buffer
-    sf_count_t frames_read = sf_read_short(infile, buffer, sfinfo.frames);
-
-    return buffer;
-}
-
-void load_vst()
-{
-
-}
-
-void write_main_stream(sndbuf_16 buffer)
-{
-
-}
-
-// units will then write on a main portaudio stream with blocking API
 int main()
 {
+    std::string name("Kaivo");
+    wpn114::audio::vst::load_vst(name);
+    //wpn114::audio::vst::load_vst("/Library/Audio/Plug-Ins/VST/Absynth.vst");
+    //wpn114::audio::vst::load_vst("/Library/Audio/Plug-Ins/VST/Altiverb.vst");
+    //wpn114::audio::units::fields("/path/to/soundfile.wav");
 
-    PaStreamParameters output_parameters;
-    PaStream* stream;
-    PaError err;
+    //auto& stream = wpn114::audio::backend::initialize_audio(SAMPLE_RATE, FRAMES_PER_BUFFER);
+    // init controller
+    // init view (qml)
 
-    // dont't forget error management
-    err = Pa_Initialize();
 
-    output_parameters.device = Pa_GetDefaultOutputDevice();
-    output_parameters.channelCount = 2;
-    output_parameters.sampleFormat = paFloat32;
-    output_parameters.suggestedLatency = Pa_GetDeviceInfo(output_parameters.device)->defaultLowOutputLatency;
-    output_parameters.hostApiSpecificStreamInfo = NULL;
-
-    err = Pa_OpenStream(&stream,
-                        NULL,
-                        &output_parameters,
-                        SAMPLE_RATE,
-                        FRAMES_PER_BUFFER,
-                        paClipOff,
-                        NULL,
-                        NULL );
-
-    err = Pa_WriteStream(stream, buffer, FRAMES_PER_BUFFER);
-    err = Pa_StopStream(stream);
-
-    err = Pa_CloseStream(stream);
-    Pa_Terminate();
+    // loop
 
     return 0;
 }
