@@ -1,7 +1,8 @@
 #include <iostream>
-#include "src/audio/backend/backend.h"
-#include "src/audio/vst/vst.h"
-#include <QCoreApplication>
+#include "src/audio/backend/audio_backend.hpp"
+#include "src/audio/units/vst/vst.hpp"
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
 using namespace std;
 
@@ -24,6 +25,12 @@ using namespace std;
 
 int main()
 {
+    QGuiApplication app(argc, argv);
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+
+    if(engine.rootObjects().isEmpty()) return -1;
+
     wpn114::audio::vst::plugin_handler kaivo_1("Kaivo");
     //wpn114::audio::vst::plugin_handler absynth_1("Absynth");
     //wpn114::audio::vst::plugin_handler altiverb("Altiverb");
@@ -35,7 +42,5 @@ int main()
     // init controller
     // init view (qml or command line)
 
-    // loop
-
-    return 0;
+    return app.exec();
 }

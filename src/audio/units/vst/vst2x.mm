@@ -1,6 +1,6 @@
 extern "C" {
 
-#include "vst.h"
+#include "vst.hpp"
 #include <AppKit/AppKit.h>
 #include <Cocoa/Cocoa.h>
 #include <Foundation/Foundation.h>

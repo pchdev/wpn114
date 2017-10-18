@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "vst.h"
+#include "vst.hpp"
 
 wpn114::audio::vst::plugin_handler::plugin_handler(const char *name)
 {
@@ -41,7 +41,7 @@ wpn114::audio::vst::plugin_handler::~plugin_handler()
 
 }
 
-void wpn114::audio::vst::plugin_handler::start_plugin(float sample_rate, int blocksize)
+void wpn114::audio::vst::plugin_handler::start(float sample_rate, int blocksize)
 {
     m_dispatcher(m_plugin, effOpen, 0, 0, NULL, 0.0f);
     m_dispatcher(m_plugin, effSetSampleRate, 0, 0, NULL, sample_rate);
@@ -50,12 +50,12 @@ void wpn114::audio::vst::plugin_handler::start_plugin(float sample_rate, int blo
     this->resume_plugin();
 }
 
-void wpn114::audio::vst::plugin_handler::suspend_plugin()
+void wpn114::audio::vst::plugin_handler::suspend()
 {
     m_dispatcher(m_plugin, effMainsChanged, 0, 0, NULL, 0.f);
 }
 
-void wpn114::audio::vst::plugin_handler::resume_plugin()
+void wpn114::audio::vst::plugin_handler::resume()
 {
     m_dispatcher(m_plugin, effMainsChanged, 0, 1, NULL, 0.f);
 }
