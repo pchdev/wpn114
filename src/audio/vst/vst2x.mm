@@ -1,16 +1,13 @@
 extern "C" {
 
 #include "vst.h"
-#include "aeffectx.h"
 #include <AppKit/AppKit.h>
 #include <Cocoa/Cocoa.h>
 #include <Foundation/Foundation.h>
 #include <CoreFoundation/CFBundle.h>
 
-    // Courtesy of Teragon audio, code from MrsWatson
-
-    aeffect* load_vst_2x_plugin(const char* path);
-    aeffect* load_vst_2x_plugin(const char* path)
+    // code from Teragon::MrsWatson
+    aeffect* wpn114::audio::vst::plugin_handler::load_vst_2x_plugin(const char* path)
     {
         CFStringRef plugin_path_string_ref = CFStringCreateWithCString(NULL, path, kCFStringEncodingASCII);
         CFURLRef bundle_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, plugin_path_string_ref, kCFURLPOSIXPathStyle, true);
@@ -59,8 +56,7 @@ extern "C" {
         return plugin;
     }
 
-    void show_vst_2x_editor(aeffect* effect);
-    void show_vst_2x_editor(aeffect* effect)
+    void wpn114::audio::vst::plugin_handler::show_vst_2x_editor(aeffect* effect)
     {
         NSRect frame;
         NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -98,8 +94,4 @@ extern "C" {
         [pool release];
 
     }
-
-
-
-
 }

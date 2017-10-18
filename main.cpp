@@ -24,16 +24,16 @@ using namespace std;
 
 int main()
 {
-    std::string name("Kaivo");
-    wpn114::audio::vst::load_vst(name);
-    //wpn114::audio::vst::load_vst("/Library/Audio/Plug-Ins/VST/Absynth.vst");
-    //wpn114::audio::vst::load_vst("/Library/Audio/Plug-Ins/VST/Altiverb.vst");
+    wpn114::audio::vst::plugin_handler kaivo_1("Kaivo");
+    //wpn114::audio::vst::plugin_handler absynth_1("Absynth");
+    //wpn114::audio::vst::plugin_handler altiverb("Altiverb");
+    //wpn114::audio::vst::plugin_handler amplitube("Amplitube");
+
     //wpn114::audio::units::fields("/path/to/soundfile.wav");
 
     //auto& stream = wpn114::audio::backend::initialize_audio(SAMPLE_RATE, FRAMES_PER_BUFFER);
     // init controller
-    // init view (qml)
-
+    // init view (qml or command line)
 
     // loop
 

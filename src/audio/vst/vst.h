@@ -17,6 +17,7 @@
  */
 
 #include <string>
+#include "aeffect.h"
 #include "aeffectx.h"
 
 using aeffect = AEffect;
@@ -48,17 +49,27 @@ namespace wpn114 {
 namespace audio {
 namespace vst {
 
-aeffect* load_plugin();
+class plugin_handler
+{
+public:
+    plugin_handler(const char* name);
+    ~plugin_handler();
+    void start_plugin(float sample_rate, int blocksize);
+    void suspend_plugin();
+    void resume_plugin();
+    void process_audio(float **inputs, float **outputs, long num_frames);
+    void silence_channel(float **channel_data, int num_channels, long num_frames);
+    void process_midi(vstevents *events);
 
-int configure_plugin_callbacks(aeffect* plugin);
-void start_plugin(aeffect* plugin);
-void suspend_plugin(aeffect* plugin);
-void resume_plugin(aeffect* plugin);
-void initialize_io();
-void process_audio(aeffect* plugin, float **inputs, float **outputs, long num_frames);
-void silence_channel(float **channel_data, int num_channels, long num_frames);
-void process_midi(aeffect* plugin, vstevents *events);
+private:
+    void initialize_io();
+    aeffect* load_vst_2x_plugin(const char* path);
+    void show_vst_2x_editor(aeffect* effect);
+    dispatcher_funcptr m_dispatcher;
+    aeffect* m_plugin;
+    int m_num_channels;
 
+};
 }
 }
 }
