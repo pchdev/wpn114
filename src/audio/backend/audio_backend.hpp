@@ -19,6 +19,7 @@
 #pragma once
 #include <portaudio.h>
 #include <vector>
+#include "../units/units_base.hpp"
 
 namespace wpn114
 {
@@ -27,12 +28,10 @@ namespace audio
 namespace backend
 {
 
-typedef float *(*seccallback)(float*input_buffer);
-
 class backend_handler
 {
 public:
-    backend_handler(int num_channels);
+    backend_handler(int num_channels = 2);
     ~backend_handler();
     void start_stream(long sample_rate, int frames_per_buffer);
     void stop_stream();
@@ -48,7 +47,7 @@ private:
                         PaStreamCallbackFlags status_flags,
                         void *user_data);
 
-    std::vector<seccallback> m_registered_stream_callbacks;
+    std::vector<wpn114::audio::units_base*> m_registered_units;
 
 };
 

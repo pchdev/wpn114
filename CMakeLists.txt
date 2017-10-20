@@ -18,6 +18,7 @@ set(WPN114_HDRS
     ${CMAKE_SOURCE_DIR}/src/audio/units/units_base.hpp
     ${CMAKE_SOURCE_DIR}/src/control/controller_base.hpp
     ${CMAKE_SOURCE_DIR}/src/control/midi/backend/midi_backend.hpp
+    ${CMAKE_SOURCE_DIR}/src/audio/context.hpp
     )
 
 set(WPN114_SRCS

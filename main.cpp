@@ -1,6 +1,8 @@
 #include <iostream>
 #include "src/audio/backend/audio_backend.hpp"
 #include "src/audio/units/vst/vst.hpp"
+#include "src/audio/context.hpp"
+
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
@@ -20,10 +22,13 @@ using namespace std;
 // - portaudio
 // - libsndfile
 
+// vst take float** inputs and outputs
+//
+
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 256
 
-int main()
+int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
@@ -31,7 +36,14 @@ int main()
 
     if(engine.rootObjects().isEmpty()) return -1;
 
-    wpn114::audio::vst::plugin_handler kaivo_1("Kaivo");
+    wpn114::audio::context.blocksize = 256;
+    wpn114::audio::context.sample_rate = 44100;
+    wpn114::audio::context.num_inputs = 0;
+    wpn114::audio::context.num_outputs = 2;
+
+    wpn114::audio::backend::backend_handler backend(2);
+
+    wpn114::audio::units::plugin_handler kaivo_1("Kaivo");
     //wpn114::audio::vst::plugin_handler absynth_1("Absynth");
     //wpn114::audio::vst::plugin_handler altiverb("Altiverb");
     //wpn114::audio::vst::plugin_handler amplitube("Amplitube");

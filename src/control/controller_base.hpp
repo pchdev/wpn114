@@ -16,3 +16,15 @@
  * =====================================================================================
  */
 
+namespace wpn114 {
+namespace control {
+
+class controller_base
+{
+public:
+    virtual ~controller_base();
+    virtual void send_back();
+};
+
+}
+}
