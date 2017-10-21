@@ -16,7 +16,8 @@ class unit_base
 {
 
 public:
-    virtual ~unit_base();
+
+    virtual ~unit_base() {}
     virtual void start()            = 0;
     virtual void suspend()          = 0;
     virtual void resume()           = 0;

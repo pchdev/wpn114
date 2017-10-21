@@ -17,9 +17,66 @@
  */
 #include <stdlib.h>
 #include <iostream>
-#include "../../context.hpp"
 
+#include <wpn114/audio/context.hpp>
 #include <wpn114/audio/units/plugins/vst.hpp>
+
+extern "C" {
+
+vstintptr_t VSTCALLBACK
+host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index,
+              vstintptr_t value, void *ptr, float opt)
+{
+    vstintptr_t result = 0;
+
+    switch(opcode)
+    {
+    case audioMasterAutomate: break;
+    case audioMasterVersion:
+        result = 2400;
+        break;
+    case audioMasterCurrentId:
+        break;
+    case audioMasterIdle:
+        result = 1;
+        break;
+    case audioMasterGetTime:
+        break;
+    case audioMasterProcessEvents:
+        break;
+    case audioMasterIOChanged:
+        break;
+    case audioMasterGetSampleRate:
+        break;
+    case audioMasterGetBlockSize:
+        break;
+    case audioMasterGetInputLatency:
+        break;
+    case audioMasterGetOutputLatency:
+        break;
+    case audioMasterGetCurrentProcessLevel:
+        break;
+    case audioMasterGetAutomationState:
+        break;
+    case audioMasterGetVendorString:
+        break;
+    case audioMasterGetProductString:
+        break;
+    case audioMasterGetVendorVersion:
+        break;
+    case audioMasterCanDo:
+        break;
+    case audioMasterGetLanguage:
+        break;
+    case audioMasterUpdateDisplay:
+        break;
+    default:
+        break;
+    }
+
+    return result;
+}
+}
 
 wpn114::audio::units::plugin_handler::plugin_handler(std::string name) :
     m_plugin_name(name)

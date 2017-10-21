@@ -40,11 +40,11 @@ public:
     std::vector<wpn114::audio::unit_base*> get_registered_units() const;
 
 private:
-    uint16_t m_num_channels;
-    PaStream* m_main_stream;
-    PaStreamParameters m_output_parameters;
-    std::vector<wpn114::audio::unit_base*> m_registered_units;
-    PaStreamCallback* m_main_stream_cb_funcptr;
+    uint16_t            m_num_channels;
+    PaStream*           m_main_stream;
+    PaStreamParameters  m_output_parameters;
+    PaStreamCallback*   m_main_stream_cb_funcptr;
+    std::vector<wpn114::audio::unit_base*> m_registered_units;    
 };
 
 }
