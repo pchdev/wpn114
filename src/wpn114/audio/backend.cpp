@@ -8,13 +8,14 @@ int main_stream_callback
 (const void *input_buffer, void *output_buffer, unsigned long frames_per_buffer,
  const PaStreamCallbackTimeInfo *time_info, PaStreamCallbackFlags status_flags, void *user_data)
 {
+    float*                  out     = (float*) output_buffer;
     wpn114::audio::backend* backend = (wpn114::audio::backend*) user_data;
-    float* out = (float*) output_buffer;
-    unsigned long i;
 
-    (void) time_info;
-    (void) status_flags;
-    (void) input_buffer;
+    (void)                  time_info;
+    (void)                  status_flags;
+    (void)                  input_buffer;
+
+    unsigned long           i;
 
     for(auto& unit : backend->get_registered_units())
     {
@@ -40,30 +41,20 @@ int main_stream_callback
     return paContinue;
 }
 
-wpn114::audio::backend::backend(int num_channels) :
-    m_main_stream(nullptr)
-{
-     PaError err;
-
-     // dont't forget error management
-     err = Pa_Initialize();
-
-     m_output_parameters.device = Pa_GetDefaultOutputDevice();
-     m_output_parameters.channelCount = num_channels;
-     m_output_parameters.sampleFormat = paFloat32;
-     m_output_parameters.suggestedLatency = Pa_GetDeviceInfo(m_output_parameters.device)->defaultLowOutputLatency;
-     m_output_parameters.hostApiSpecificStreamInfo = NULL;
-     m_main_stream_cb_funcptr = &main_stream_callback;
-}
+wpn114::audio::backend::backend(uint16_t num_channels) :
+    m_main_stream(nullptr),
+    m_num_channels(num_channels) {}
 
 wpn114::audio::backend::~backend()
 {
     PaError err = Pa_StopStream(m_main_stream);
-    err = Pa_CloseStream(m_main_stream);
+            err = Pa_CloseStream(m_main_stream);
+
     Pa_Terminate();
 }
 
-std::vector<wpn114::audio::unit_base*> wpn114::audio::backend::get_registered_units() const
+std::vector<wpn114::audio::unit_base*>
+wpn114::audio::backend::get_registered_units() const
 {
     return m_registered_units;
 }
@@ -85,16 +76,36 @@ void wpn114::audio::backend::unregister_unit(wpn114::audio::unit_base* unit)
             */
 }
 
-void wpn114::audio::backend::start_stream(long sample_rate, int frames_per_buffer)
+void wpn114::audio::backend::initialize_io()
 {
-    PaError err = Pa_OpenStream(&m_main_stream,
+    PaError err;
+
+    // dont't forget error management
+    err = Pa_Initialize();
+
+    m_output_parameters.device                      = Pa_GetDefaultOutputDevice();
+    m_output_parameters.channelCount                = m_num_channels;
+    m_output_parameters.sampleFormat                = paFloat32;
+    m_output_parameters.hostApiSpecificStreamInfo   = NULL;
+    m_main_stream_cb_funcptr                        = &main_stream_callback;
+    m_output_parameters.suggestedLatency            = Pa_GetDeviceInfo
+                                                      (m_output_parameters.device)->defaultLowOutputLatency;
+
+    for(auto& unit : m_registered_units)
+        unit->initialize_io();
+}
+
+void wpn114::audio::backend::start_stream()
+{
+    PaError err = Pa_OpenStream(
+                        &m_main_stream,
                         NULL,
                         &m_output_parameters,
-                        sample_rate,
-                        frames_per_buffer,
+                        wpn114::audio::context.sample_rate,
+                        wpn114::audio::context.blocksize,
                         paClipOff,
                         m_main_stream_cb_funcptr,
-                        NULL );
+                        this );
 }
 
 void wpn114::audio::backend::stop_stream()

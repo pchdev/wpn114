@@ -19,11 +19,13 @@
 #include <iostream>
 #include "../../context.hpp"
 
-#include <wpn114/audio/units/vst.hpp>
+#include <wpn114/audio/units/plugins/vst.hpp>
 
-wpn114::audio::units::plugin_handler::plugin_handler(const char *name)
+wpn114::audio::units::plugin_handler::plugin_handler(std::string name) :
+    m_plugin_name(name)
 {
-    m_plugin = this->_load_vst_2x_plugin(name);
+    m_plugin = this->_load_vst_2x_plugin(m_plugin_name.c_str());
+
     if(m_plugin->magic != kEffectMagic)
     {
         std::cerr << "Plugin's magic number is incorrrect\n";
@@ -48,7 +50,23 @@ void wpn114::audio::units::plugin_handler::net_expose()
 
 void wpn114::audio::units::plugin_handler::show()
 {
-    this->_show_vst_2x_editor(this->m_plugin);
+    ERect   *editor_rect    = 0;
+    uint16_t width          = 0;
+    uint16_t height         = 0;
+
+    m_dispatcher(m_plugin, effEditGetRect, 0, 0, &editor_rect, 0);
+
+    if(editor_rect)
+    {
+        width = editor_rect->right - editor_rect->left;
+        height = editor_rect->bottom - editor_rect->top;
+    }
+    else
+    {
+        std::cerr << "error, could not get plugin editor's window" << std::endl;
+    }
+
+    this->_show_vst_2x_editor(this->m_plugin, m_plugin_name.c_str(), width, height);
 }
 
 void wpn114::audio::units::plugin_handler::start()

@@ -19,7 +19,7 @@
 #include <string>
 #include "aeffect.h"
 #include "aeffectx.h"
-#include <wpn114/audio/unit_base.hpp>
+#include <wpn114/audio/units/unit_base.hpp>
 
 using aeffect = AEffect;
 using vstint32_t = VstInt32;
@@ -31,7 +31,7 @@ extern "C" {
 
 vstintptr_t VSTCALLBACK
 host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index,
-              vstint32_t value, void *ptr, float opt);
+              vstintptr_t value, void *ptr, float opt);
 
 }
 
@@ -54,7 +54,7 @@ namespace units {
 class plugin_handler final : public wpn114::audio::unit_base
 {
 public:
-    plugin_handler(const char* name);
+    plugin_handler(std::string name);
     plugin_handler(const plugin_handler&) = delete;
     plugin_handler(const plugin_handler&&) = delete;
 
@@ -76,9 +76,11 @@ public:
 
 private:
     aeffect*            _load_vst_2x_plugin(const char* path);
-    void                _show_vst_2x_editor(aeffect* effect);
+    void                _show_vst_2x_editor(aeffect* effect, const char *plugin_name,
+                                            uint16_t width, uint16_t height);
     dispatcher_funcptr  m_dispatcher;
     aeffect*            m_plugin;
+    std::string         m_plugin_name;
 };
 }
 }

@@ -3,6 +3,7 @@
 #include <Foundation/Foundation.h>
 #include <CoreFoundation/CFBundle.h>
 #include <wpn114/audio/units/plugins/vst.hpp>
+#include <wpn114/audio/units/plugins/vstwindow.h>
 #include <iostream>
 
     // code from Teragon::MrsWatson
@@ -55,7 +56,8 @@
     extern "C"
     {
 
-    void wpn114::audio::units::plugin_handler::_show_vst_2x_editor(aeffect* effect)
+    void wpn114::audio::units::plugin_handler::_show_vst_2x_editor
+    (aeffect* effect, const char* plugin_name, uint16_t width, uint16_t height)
     {
         NSRect frame;
         NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -65,31 +67,37 @@
         NSApplicationLoad();
 
         NSRect mainScreenRect = [[NSScreen mainScreen] frame];
-        frame.origin.x = (mainScreenRect.size.width - rect->width) / 2;
-        frame.origin.y = (mainScreenRect.size.height - rect->height) / 2;
-        frame.size.width = rect->width;
-        frame.size.height = rect->height;
+        frame.origin.x = (mainScreenRect.size.width - width) / 2;
+        frame.origin.y = (mainScreenRect.size.height - height) / 2;
+        frame.size.width = width;
+        frame.size.height = height;
 
         NSWindow *window  = [[[NSWindow alloc] initWithContentRect:frame
                                                          styleMask:NSBackingStoreBuffered
                                                            backing:NSBackingStoreBuffered
                                                              defer:NO]
                              autorelease];
-        NSRect innerFrame = NSMakeRect(0, 0, rect->width, rect->height);
+        NSRect innerFrame = NSMakeRect(0, 0, width, height);
         NSView *view = [[[NSView alloc] initWithFrame:innerFrame] autorelease];
         [window setContentView:view];
-        NSString *windowTitle = [[[NSString alloc] initWithBytes:pluginName->data
-                                                          length:strlen(pluginName->data)
+        NSString *windowTitle = [[[NSString alloc] initWithBytes:plugin_name
+                                                          length:strlen(plugin_name)
                                                         encoding:NSASCIIStringEncoding]
                                 autorelease];
         [window setTitle:windowTitle];
         [window makeKeyAndOrderFront:NSApp];
-        logDebug("Opening plugin editor window");
+
+        std::cerr << "Opening plugin editor window" << std::endl;
+
         effect->dispatcher(effect, effEditOpen, 0, 0, (void*)view, 0);
         [window orderFrontRegardless];
-        logDebug("Starting app runloop");
+
+        std::cerr << "Starting app runloop" << std::endl;
+
         [NSApp run];
-        logDebug("App runloop stopped");
+
+        std::cerr << "App runloop stopped" << std::endl;
+
         [pool release];
     }
 

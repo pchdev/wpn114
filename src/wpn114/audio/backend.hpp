@@ -21,6 +21,7 @@
 #include <vector>
 #include <portaudio.h>
 #include <wpn114/audio/units/unit_base.hpp>
+#include <wpn114/audio/context.hpp>
 
 namespace wpn114
 {
@@ -29,15 +30,17 @@ namespace audio
 class backend
 {
 public:
-    backend(int num_channels = 2);
+    backend(uint16_t num_channels = 2);
     ~backend();
-    void start_stream(long sample_rate, int frames_per_buffer);
+    void initialize_io();
+    void start_stream();
     void stop_stream();
     void register_unit(wpn114::audio::unit_base* unit);
     void unregister_unit(wpn114::audio::unit_base* unit);
     std::vector<wpn114::audio::unit_base*> get_registered_units() const;
 
 private:
+    uint16_t m_num_channels;
     PaStream* m_main_stream;
     PaStreamParameters m_output_parameters;
     std::vector<wpn114::audio::unit_base*> m_registered_units;
