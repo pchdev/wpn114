@@ -1,37 +1,9 @@
-#include "../sunits_base.hpp"
-#include "../../sndfile/sndf.h"
+#include <wpn114/audio/units/fields/fields.hpp>
 
 #include <math.h>
 
-#define ENVSIZE 16384
-
-class fields final : public wpn114::audio::units::units_base
-{
-public:
-    fields(uint32_t xfade_length);
-    ~fields();
-
-    void start();
-    void suspend();
-    void resume();
-    void expose();
-    void show();
-    void process_midi();
-    void process_audio();
-
-private:
-    float* m_buf;
-    uint32_t m_samplepos;
-    float m_env_samplepos;
-    uin32_t m_xfade_length;
-    uint32_t m_xfade_point;
-    double m_env_incr;
-    float m_env[ENVSIZE];
-
-};
-
-fields::fields(uint32_t xfade_length) :
-    m_buf(0),
+wpn114::audio::units::fields::fields(std::string soundfile_path, uint32_t xfade_length) :
+    m_sf_buffer(0),
     m_samplepos(0),
     m_env_samplepos(0.f),
     m_xfade_length(xfade_length),

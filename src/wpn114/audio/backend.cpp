@@ -31,7 +31,7 @@ int main_stream_callback
         for(auto& unit : backend->get_registered_units())
         {
             frame_data_l += unit->get_framedata(0, i);
-            frame_data_r += unit->get_framedata(0, i);
+            frame_data_r += unit->get_framedata(1, i);
         }
 
         *out++ = frame_data_l;

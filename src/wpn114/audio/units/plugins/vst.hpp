@@ -55,6 +55,7 @@ class plugin_handler final : public wpn114::audio::unit_base
 {
 public:
     plugin_handler(std::string name);
+    plugin_handler() = delete;
     plugin_handler(const plugin_handler&) = delete;
     plugin_handler(const plugin_handler&&) = delete;
 
