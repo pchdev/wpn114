@@ -1,7 +1,8 @@
 #include <iostream>
-#include "src/audio/backend/audio_backend.hpp"
-#include "src/audio/units/vst/vst.hpp"
-#include "src/audio/context.hpp"
+
+#include <wpn114/audio/backend.hpp>
+#include <wpn114/audio/units/plugins/vst.hpp>
+#include <wpn114/audio/context.hpp>
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -41,7 +42,7 @@ int main(int argc, char* argv[])
     wpn114::audio::context.num_inputs = 0;
     wpn114::audio::context.num_outputs = 2;
 
-    wpn114::audio::backend::backend_handler backend(2);
+    wpn114::audio::backend::backend backend(2);
 
     wpn114::audio::units::plugin_handler kaivo_1("Kaivo");
     //wpn114::audio::vst::plugin_handler absynth_1("Absynth");

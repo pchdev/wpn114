@@ -1,13 +1,12 @@
-extern "C" {
-
-#include "vst.hpp"
 #include <AppKit/AppKit.h>
 #include <Cocoa/Cocoa.h>
 #include <Foundation/Foundation.h>
 #include <CoreFoundation/CFBundle.h>
+#include <wpn114/audio/units/plugins/vst.hpp>
+#include <iostream>
 
     // code from Teragon::MrsWatson
-    aeffect* wpn114::audio::vst::plugin_handler::load_vst_2x_plugin(const char* path)
+    aeffect* wpn114::audio::units::plugin_handler::_load_vst_2x_plugin(const char* path)
     {
         CFStringRef plugin_path_string_ref = CFStringCreateWithCString(NULL, path, kCFStringEncodingASCII);
         CFURLRef bundle_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, plugin_path_string_ref, kCFURLPOSIXPathStyle, true);
@@ -18,18 +17,15 @@ extern "C" {
             return NULL;
         }
 
-        CFBundleRef bundle_ref = CFBundleCreate(kCFAllocatorDefault, bundle_url);
+        CFBundleRef bundle = CFBundleCreate(kCFAllocatorDefault, bundle_url);
 
-        if (bundle_ref == NULL)
+        if (bundle == NULL)
         {
             std::cerr << "Couldn't create bundle reference" << std::endl;
             CFRelease(plugin_path_string_ref);
             CFRelease(bundle_url);
             return NULL;
         }
-
-        CFRelease(plugin_path_string_ref);
-        CFRelease(bundle_url);
 
         vst_plugin_funcptr main_entry_point = NULL;
         main_entry_point = (vst_plugin_funcptr) CFBundleGetFunctionPointerForName(bundle, CFSTR("VSTPluginMain"));
@@ -56,7 +52,10 @@ extern "C" {
         return plugin;
     }
 
-    void wpn114::audio::vst::plugin_handler::show_vst_2x_editor(aeffect* effect)
+    extern "C"
+    {
+
+    void wpn114::audio::units::plugin_handler::_show_vst_2x_editor(aeffect* effect)
     {
         NSRect frame;
         NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -92,6 +91,6 @@ extern "C" {
         [NSApp run];
         logDebug("App runloop stopped");
         [pool release];
+    }
 
     }
-}

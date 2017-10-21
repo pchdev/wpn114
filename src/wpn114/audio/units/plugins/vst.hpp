@@ -19,7 +19,7 @@
 #include <string>
 #include "aeffect.h"
 #include "aeffectx.h"
-#include "../units_base.hpp"
+#include <wpn114/audio/unit_base.hpp>
 
 using aeffect = AEffect;
 using vstint32_t = VstInt32;
@@ -35,7 +35,7 @@ host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index,
 
 }
 
-typedef aeffect *(*vst_plugin_funcptr)(audioMasterCallback host);
+typedef aeffect* (*vst_plugin_funcptr)(audioMasterCallback host);
 
 typedef vstintptr_t
 (*dispatcher_funcptr)(aeffect* effect, vstint32_t opcode, vstint32_t index,
@@ -51,7 +51,7 @@ namespace wpn114 {
 namespace audio {
 namespace units {
 
-class plugin_handler final : public wpn114::audio::units_base
+class plugin_handler final : public wpn114::audio::unit_base
 {
 public:
     plugin_handler(const char* name);
@@ -66,7 +66,9 @@ public:
     void net_expose()   override;
     void show()         override;
 
+    void    initialize_io()          override;
     void    process_audio()          override;
+
     float   get_framedata(uint16_t channel, uint32_t frame)    override;
 
     void silence_channel(float **channel_data, int num_channels, long num_frames);

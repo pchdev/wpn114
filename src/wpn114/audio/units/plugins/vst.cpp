@@ -19,7 +19,7 @@
 #include <iostream>
 #include "../../context.hpp"
 
-#include "vst.hpp"
+#include <wpn114/audio/units/vst.hpp>
 
 wpn114::audio::units::plugin_handler::plugin_handler(const char *name)
 {
@@ -27,7 +27,6 @@ wpn114::audio::units::plugin_handler::plugin_handler(const char *name)
     if(m_plugin->magic != kEffectMagic)
     {
         std::cerr << "Plugin's magic number is incorrrect\n";
-        return -1;
     }
 
     m_dispatcher = (dispatcher_funcptr)(m_plugin->dispatcher);
@@ -35,29 +34,6 @@ wpn114::audio::units::plugin_handler::plugin_handler(const char *name)
     m_plugin->getParameter = (get_parameter_funcptr) m_plugin->getParameter;
     m_plugin->processReplacing = (process_funcptr) m_plugin->processReplacing;
     m_plugin->setParameter = (set_parameter_funcptr) m_plugin->setParameter;
-
-    uint32_t blocksize = wpn114::audio::context.blocksize;
-
-    // initialize IO buffers
-    if(m_input_buffer)
-    {
-        m_input_buffer = new float*[m_num_inputs];
-        for(int i = 0; i < m_num_inputs; ++i)
-        {
-            m_input_buffer[i] = new float[blocksize];
-            m_input_buffer[i] = 0.f;
-        }
-    }
-
-    if(m_output_buffer)
-    {
-        m_output_buffer = new float*[m_num_outputs];
-        for(int i = 0; i < m_num_outputs; ++i)
-        {
-            m_output_buffer[i] = new float[blocksize];
-            m_output_buffer[i] = 0.f;
-        }
-    }
 }
 
 wpn114::audio::units::plugin_handler::~plugin_handler()
@@ -94,7 +70,31 @@ void wpn114::audio::units::plugin_handler::resume()
     m_dispatcher(m_plugin, effMainsChanged, 0, 1, NULL, 0.f);
 }
 
-void wpn114::audio::units::plugin_handler::process_audio()
+void wpn114::audio::units::plugin_handler::initialize_io()
+{
+    uint32_t blocksize = wpn114::audio::context.blocksize;
+
+    // initialize IO buffers
+    if(m_input_buffer)
+    {
+        m_input_buffer = new float*[m_num_inputs];
+        for(int i = 0; i < m_num_inputs; ++i)
+        {
+            m_input_buffer[i] = new float[blocksize];
+        }
+    }
+
+    if(m_output_buffer)
+    {
+        m_output_buffer = new float*[m_num_outputs];
+        for(int i = 0; i < m_num_outputs; ++i)
+        {
+            m_output_buffer[i] = new float[blocksize];
+        }
+    }
+}
+
+inline void wpn114::audio::units::plugin_handler::process_audio()
 {
     this->silence_channel(m_output_buffer, m_num_outputs, wpn114::audio::context.blocksize);
     this->silence_channel(m_input_buffer, m_num_inputs, wpn114::audio::context.blocksize);
@@ -102,19 +102,19 @@ void wpn114::audio::units::plugin_handler::process_audio()
     m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, wpn114::audio::context.blocksize);
 }
 
-float wpn114::audio::units::plugin_handler::get_framedata(uint16_t channel, uint32_t frame)
+inline float wpn114::audio::units::plugin_handler::get_framedata(uint16_t channel, uint32_t frame)
 {
-
+    return m_output_buffer[channel][frame];
 }
 
-void wpn114::audio::units::plugin_handler::silence_channel(float **channel_data, int num_channels, long num_frames)
+inline void wpn114::audio::units::plugin_handler::silence_channel(float **channel_data, int num_channels, long num_frames)
 {
     for(int channel =0; channel < num_channels; ++channel)
         for(long frame = 0; frame < num_frames; ++frame)
             channel_data[channel][frame] = 0.f;
 }
 
-void wpn114::audio::units::plugin_handler::process_midi(vstevents *events)
+inline void wpn114::audio::units::plugin_handler::process_midi(vstevents *events)
 {
     m_dispatcher(m_plugin, effProcessEvents, 0, 0, events, 0.f);
 }
