@@ -24,9 +24,9 @@ typedef int*    sndbuf_32;
 
 template<typename T> T load_soundfile()
 {
-    SNDFILE* infile;
-    SF_INFO sfinfo;
-    int readcount;
+    SNDFILE*    infile;
+    SF_INFO     sfinfo;
+    int         readcount;
     const char* infilename = "input.wav";
 
     std::memset(&sfinfo, 0, sizeof(sfinfo));
@@ -37,8 +37,8 @@ template<typename T> T load_soundfile()
     }
 
     // load file contents into buffer
-    T buffer = nullptr;
-    buffer = (T*) malloc(sfinfo.frames * sfinfo.channels * sizeof(T));
+    T buffer    = nullptr;
+    buffer      = (T*) malloc(sfinfo.frames * sfinfo.channels * sizeof(T));
 
     // puts contents into buffer
     sf_count_t frames_read = sf_read_short(infile, buffer, sfinfo.frames);

@@ -16,14 +16,32 @@
  * =====================================================================================
  */
 
+#include <wpn114/control/midi/backend.hpp>
+
 namespace wpn114 {
 namespace control {
 
-class controller_base
+enum controller_protocol
+{
+    MIDI    = 0,
+    OSC     = 1
+};
+
+enum device_io_type
+{
+    INPUT   = 0,
+    OUTPUT  = 1,
+    IN_OUT  = 2
+};
+
+class controller_base        
 {
 public:
     virtual ~controller_base();
-    virtual void send_back();
+    virtual std::string get_controller_id() const = 0;
+
+protected:
+    std::string m_controller_id;
 };
 
 }

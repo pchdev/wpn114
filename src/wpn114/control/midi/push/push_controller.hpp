@@ -18,14 +18,20 @@
 
 
 #include <wpn114/control/controller_base.hpp>
+
 #include <cstdint>
 #include <string>
 
 namespace wpn114 {
 namespace control {
+namespace midi {
+
+//! TODO: to have different setups/maps for the controller
+//! maybe a JSON or TOML mapping file?
 
 class push_controller final : public controller_base
 {
+public:
     enum command_buttons
     {
         PLAY                    = 85,
@@ -195,15 +201,33 @@ class push_controller final : public controller_base
         DARK_GREEN              = 64
     };
 
-    push_controller();
+    enum lcd_alignment
+    {
+        LEFT        = 0,
+        CENTER      = 1,
+        RIGHT       = 2
+    }
+
+#define LCD_LINE_SIZE 68
+
+    push_controller(unique_device_hdl hdl);
     ~push_controller();
 
+    std::string get_controller_id() const override;
+
+    //   output (-> physical device) methods
     void light_pad(uint8_t target, pad_colors color, pad_lighting_mode mode);
     void light_cc_commmand_button(command_buttons target, toggle_lighting_mode mode);
-    void light_cc_toggle(uint8_t target, toggle_lighting_mode mode);
-    void lcd_display(std::string text_to_display);
+    void light_cc_toggle(uint8_t row, uint8_t target, toggle_lighting_mode mode);
+
+    void lcd_display(std::string text_to_display, uint8_t line,
+                     uint8_t divide, uint8_t slot, lcd_alignment align);
+
+private:
+    unique_device_hdl m_device_hdl;
 
 };
 
+}
 }
 }

@@ -16,11 +16,21 @@
  * =====================================================================================
  */
 
-#include <portmidi.h>
+#include <RtMidi.h>
+#include <wpn114/control/controller_base.hpp>
 #include <string>
 
 namespace wpn114 {
+namespace control {
 namespace midi {
+
+typedef std::unique_ptr<wpn114::control::midi::device_hdl> unique_device_hdl;
+
+using rtmidiin  = RtMidiIn;
+using rtmidiout = RtMidiOut;
+
+template<typename T> void   print_all_midi_ports();
+template<typename T> int    get_index_for_port(std::string& port_reference_target);
 
 enum commands
 {
@@ -35,18 +45,48 @@ enum commands
     PITCH_BEND              = 0xe0
 };
 
-class backend
+class device_hdl
 {
-    backend(std::string device);
-    ~backend();
+public:
+    device_hdl(rtmidiin* input);
+    device_hdl(rtmidiout* output);
+    device_hdl(rtmidiin* input, rtmidiout* output);
+
+    device_hdl(const device_hdl&)   = delete;
+    device_hdl(device_hdl&&)        = delete;
+    ~device_hdl();
+
     void enable_reception();
     void disable_reception();
-    void send_note_on(uint8_t channel, uint8_t index, uint8_t value);
-    void send_note_off(uint8_t channel, uint8_t index, uint8_t value);
-    void send_control_change(uint8_t channel, uint8_t index, uint8_t value);
-    void send_program_change(uint8_t channel, uint8_t index, uint8_t value);
-    void send_sysex(std::vector<uint8_t> byte_array);
+    bool is_enabled() const;
 
+    void send_note_on(uint8_t channel, uint8_t index, uint8_t value) const;
+    void send_note_off(uint8_t channel, uint8_t index, uint8_t value) const;
+    void send_control_change(uint8_t channel, uint8_t index, uint8_t value) const;
+    void send_program_change(uint8_t channel, uint8_t index, uint8_t value) const;
+    void send_sysex(std::vector<uint8_t> byte_array) const;
+
+    device_io_type get_io_type() const;
+
+private:
+    bool            m_is_enabled;
+    rtmidiin*       m_midi_input;
+    rtmidiout*      m_midi_output;
+    device_io_type  m_io_type;
 };
+
+class device_factory
+{
+public:
+    device_factory  ();
+    ~device_factory ();
+
+    unique_device_hdl make_device_hdl(std::string& controller_port_reference, device_io_type io_type);
+    void make_device_hdl(control::controller_base& target_controller, device_io_type io_type);
+
+private:
+    template<typename T> T* open_port(std::string& controller_port_reference);
+};
+}
 }
 }

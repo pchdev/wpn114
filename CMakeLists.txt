@@ -23,7 +23,7 @@ set(WPN114_HDRS
     ${CMAKE_SOURCE_DIR}/src/wpn114/audio/units/unit_base.hpp
     ${CMAKE_SOURCE_DIR}/src/wpn114/control/controller_base.hpp
     ${CMAKE_SOURCE_DIR}/src/wpn114/control/midi/backend.hpp
-    ${CMAKE_SOURCE_DIR}/src/wpn114/control/push/push_controller.hpp
+    ${CMAKE_SOURCE_DIR}/src/wpn114/control/midi/push/push_controller.hpp
 
     )
 
@@ -35,7 +35,7 @@ set(WPN114_SRCS
     ${CMAKE_SOURCE_DIR}/src/wpn114/audio/units/plugins/vstwindow.m
     ${CMAKE_SOURCE_DIR}/src/wpn114/audio/units/fields/fields.cpp
     ${CMAKE_SOURCE_DIR}/src/wpn114/control/midi/backend.cpp
-    ${CMAKE_SOURCE_DIR}/src/wpn114/control/push/push_controller.cpp
+    ${CMAKE_SOURCE_DIR}/src/wpn114/control/midi/push/push_controller.cpp
     )
 
 set(WPN114_QML_SRCS
