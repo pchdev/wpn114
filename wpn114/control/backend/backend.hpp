@@ -24,6 +24,10 @@
 
 namespace wpn114 {
 namespace control {
+
+enum class device_io_type;
+class controller_base;
+
 namespace midi {
 
 using rtmidiin  = RtMidiIn;

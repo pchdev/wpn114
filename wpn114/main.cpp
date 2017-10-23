@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 
     wpn114::audio::backend audio_backend(2);
 
-    wpn114::audio::units::plugin_handler kaivo_1("Kaivo.vst");
+    //wpn114::audio::units::plugin_handler kaivo_1("Kaivo.vst");
     //wpn114::audio::units::plugin_handler absynth_1("Absynth.vst");
     //wpn114::audio::units::plugin_handler altiverb("Altiverb.vst");
     //wpn114::audio::units::plugin_handler amplitube("Amplitube.vst");
@@ -55,5 +55,5 @@ int main(int argc, char* argv[])
 
     // init view (qml or command line)
 
-    return app.exec();
+    return 0;
 }

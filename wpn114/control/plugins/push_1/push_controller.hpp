@@ -30,7 +30,7 @@ namespace midi {
 class push_controller final : public controller_base
 {
 public:
-    enum command_buttons
+    enum class command_buttons
     {
         PLAY                    = 85,
         RECORD                  = 86,
@@ -82,7 +82,7 @@ public:
         STOP                    = 29
     };
 
-    enum toggle_lighting_mode
+    enum class toggle_lighting_mode
     {
         OFF                     = 0,
         RED_DIM                 = 1,
@@ -111,14 +111,14 @@ public:
         GREEN_FULL_FAST         = 24
     };
 
-    enum pad_lighting_mode
+    enum class pad_lighting_mode
     {
         OFF                     = 0,
         NORMAL                  = 1,
         FADE_IN_FAST            = 2,
         FADE_IN_MED             = 3,
         FADE_IN_SLOW            = 4,
-        FLASH_TRIPLET_BEATS     = 7,
+        PULSE_TRIPLET_BEATS     = 7,
         CYCLE_COLORS_FAST       = 8,
         PULSE_QUARTER_BEATS     = 9,
         PULSE_WHOLE_BEATS       = 10,
@@ -130,7 +130,7 @@ public:
         FLASH_TWO_BEATS         = 16
     };
 
-    enum pad_colors
+    enum class pad_colors
     {
         BLACK                   = 0,
         LIGHTEST_WHITE          = 1,
@@ -199,12 +199,12 @@ public:
         DARK_GREEN              = 64
     };
 
-    enum lcd_alignment
+    enum class lcd_alignment
     {
         LEFT        = 0,
         CENTER      = 1,
         RIGHT       = 2
-    }
+    };
 
 #define LCD_LINE_SIZE 68
 

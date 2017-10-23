@@ -7,7 +7,7 @@
 #include <iostream>
 
     // code from Teragon::MrsWatson
-    aeffect* wpn114::audio::units::plugin_handler::_load_vst_2x_plugin(const char* path)
+    aeffect* wpn114::audio::plugins::vst_hdl::_load_vst_2x_plugin(const char* path)
     {
         CFStringRef plugin_path_string_ref = CFStringCreateWithCString(NULL, path, kCFStringEncodingASCII);
         CFURLRef bundle_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, plugin_path_string_ref, kCFURLPOSIXPathStyle, true);
@@ -56,7 +56,7 @@
     extern "C"
     {
 
-    void wpn114::audio::units::plugin_handler::_show_vst_2x_editor
+    void wpn114::audio::plugins::vst_hdl::_show_vst_2x_editor
     (aeffect* effect, const char* plugin_name, uint16_t width, uint16_t height)
     {
         NSRect frame;

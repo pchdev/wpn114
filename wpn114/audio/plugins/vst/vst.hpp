@@ -73,7 +73,7 @@ public:
     void resume();
 
 private:
-    void                _silence_channel(float **channel_data, int num_channels, long num_frames);
+    void                _silence_channel(float **channel_data, int num_channels, long num_frames) {}
     aeffect*            _load_vst_2x_plugin(const char* path);
     void                _show_vst_2x_editor(aeffect* effect, const char *plugin_name,
                                             uint16_t width, uint16_t height);

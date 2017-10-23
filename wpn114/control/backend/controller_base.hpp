@@ -23,13 +23,13 @@
 namespace wpn114 {
 namespace control {
 
-enum controller_protocol
+enum class controller_protocol
 {
     MIDI    = 0,
     OSC     = 1
 };
 
-enum device_io_type
+enum class device_io_type
 {
     INPUT   = 0,
     OUTPUT  = 1,

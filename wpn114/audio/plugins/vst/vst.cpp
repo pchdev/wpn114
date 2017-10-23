@@ -95,7 +95,7 @@ wpn114::audio::plugins::vst_hdl::vst_hdl(std::string name_with_extension) :
     m_plugin->setParameter = (set_parameter_funcptr) m_plugin->setParameter;
 }
 
-wpn114::audio::plugins::vst_hdl::~plugin_handler() {}
+wpn114::audio::plugins::vst_hdl::~vst_hdl() {}
 
 #ifdef WPN_OSSIA
 void wpn114::audio::plugins::vst_hdl::net_expose(std::shared_ptr<ossia::net::node_base> application_node)
@@ -142,10 +142,10 @@ void wpn114::audio::plugins::vst_hdl::resume()
     m_dispatcher(m_plugin, effMainsChanged, 0, 1, NULL, 0.f);
 }
 
-void wpn114::audio::plugins::vst_hdl::process_audio()
+void wpn114::audio::plugins::vst_hdl::process_audio(uint32_t num_frames)
 {
-    silence_channel(m_output_buffer, m_num_outputs, wpn114::audio::context.blocksize);
-    silence_channel(m_input_buffer, m_num_inputs, wpn114::audio::context.blocksize);
+    _silence_channel(m_output_buffer, m_num_outputs, wpn114::audio::context.blocksize);
+    _silence_channel(m_input_buffer, m_num_inputs, wpn114::audio::context.blocksize);
 
     m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, wpn114::audio::context.blocksize);
 }

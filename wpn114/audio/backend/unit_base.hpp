@@ -28,10 +28,10 @@ public:
 #define SETN_INPUTS(n)      m_num_inputs = n;
 #define SETN_OUTPUTS(n)     m_num_outputs = n;
 
-    ~unit_base();
+    ~unit_base() {}
 
 #ifdef WPN_OSSIA
-    virtual void net_expose(std::shared_ptr<ossia::net::node_base> application_node);
+    virtual void net_expose(std::shared_ptr<ossia::net::node_base> application_node) {}
     // gets called whenever we want to expose the parameters' unit to the network
 #endif
 

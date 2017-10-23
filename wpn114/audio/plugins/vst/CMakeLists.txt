@@ -15,6 +15,8 @@ add_definitions(-DDEVELOPMENT)
 
 if(WPN_OSSIA)
     add_definitions(-DWPN_OSSIA)
+    target_include_directories(wpn114audio PUBLIC ${CMAKE_SOURCE_DIR}/dependencies/libossia/OSSIA)
+    target_link_libraries(wpn114vst ossia)
 endif()
 
 set(VST2X_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/dependencies/vst3sdk/pluginterfaces/vst2.x)
@@ -27,3 +29,4 @@ if(APPLE)
     target_link_libraries(wpn114vst "-framework Foundation")
     target_link_libraries(wpn114vst "-framework CoreFoundation")
 endif(APPLE)
+
