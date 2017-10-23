@@ -3,3 +3,7 @@ set(WPN114_FIELDS_IMPLEMENTATIONS
 
 add_library(fields SHARED ${WPN114_FIELDS_IMPLEMENTATIONS})
 target_include_directories(fields PUBLIC ${CMAKE_SOURCE_DIR})
+
+if(WPN_OSSIA)
+    add_definitions(-DWPN_OSSIA)
+endif()

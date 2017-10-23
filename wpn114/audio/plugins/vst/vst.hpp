@@ -17,9 +17,9 @@
  */
 
 #include <string>
-#include "aeffect.h"
-#include "aeffectx.h"
-#include <wpn114/audio/units/unit_base.hpp>
+#include <aeffect.h>
+#include <aeffectx.h>
+#include <wpn114/audio/backend/unit_base.hpp>
 
 using aeffect = AEffect;
 using vstint32_t = VstInt32;
@@ -49,33 +49,31 @@ typedef void (*process_funcptr) (aeffect* effect, float **inputs, float **output
 
 namespace wpn114 {
 namespace audio {
-namespace units {
+namespace plugins {
 
-class plugin_handler final : public wpn114::audio::unit_base
+class vst_hdl final : public wpn114::audio::unit_base
 {
 public:
-    plugin_handler(std::string name);
-    plugin_handler() = delete;
-    plugin_handler(const plugin_handler&) = delete;
-    plugin_handler(const plugin_handler&&) = delete;
+    vst_hdl(std::string name_with_extension);
+    vst_hdl() = delete;
+    vst_hdl(const vst_hdl&) = delete;
+    vst_hdl(vst_hdl&&) = delete;
 
-    ~plugin_handler();
+    ~vst_hdl();
 
-    void start()        override;
-    void suspend()      override;
-    void resume()       override;
-    void net_expose()   override;
-    void show()         override;
+#ifdef WPN_OSSIA
+    void net_expose(std::shared_ptr<ossia::net::node_base> application_node)   override;
+#endif
 
-    void    initialize_io()          override;
-    void    process_audio()          override;
-
-    float   get_framedata(uint16_t channel, uint32_t frame)    const override;
-
-    void silence_channel(float **channel_data, int num_channels, long num_frames);
+    void show_editor();
+    void process_audio(uint32_t num_frames)     override;
     void process_midi(vstevents *events);
+    void start();
+    void suspend();
+    void resume();
 
 private:
+    void                _silence_channel(float **channel_data, int num_channels, long num_frames);
     aeffect*            _load_vst_2x_plugin(const char* path);
     void                _show_vst_2x_editor(aeffect* effect, const char *plugin_name,
                                             uint16_t width, uint16_t height);

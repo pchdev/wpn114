@@ -19,3 +19,9 @@ target_include_directories(wpn114audio PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(wpn114audio ${PORTAUDIO_LIBRARIES})
 target_link_libraries(wpn114audio ${SNDFILE_LIBRARIES})
 
+if(WPN_OSSIA)
+    add_definitions(-DWPN_OSSIA)
+    target_include_directories(wpn114audio PUBLIC ${OSSIA_INCLUDE_DIR})
+    target_link_libraries(wpn114audio ossia)
+endif()
+

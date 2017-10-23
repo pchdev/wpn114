@@ -18,6 +18,7 @@
 
 #pragma once
 #include <wpn114/control/backend/backend.hpp>
+#include <string>
 
 namespace wpn114 {
 namespace control {

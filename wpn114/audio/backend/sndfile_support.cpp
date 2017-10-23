@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <sndfile.h>
 #include <cstring>
-#include <wpn114/audio/soundfiles/sndfile_support.hpp>
+#include <wpn114/audio/backend/sndfile_support.hpp>
 
 template<typename T> T load_soundfile()
 {

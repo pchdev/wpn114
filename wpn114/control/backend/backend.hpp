@@ -29,9 +29,6 @@ namespace midi {
 using rtmidiin  = RtMidiIn;
 using rtmidiout = RtMidiOut;
 
-template<typename T> void   print_all_midi_ports();
-template<typename T> int    get_index_for_port(std::string& port_reference_target);
-
 enum commands
 {
     SYSEX                   = 0xf0,
@@ -69,6 +66,9 @@ public:
     void send_sysex(std::vector<uint8_t> byte_array) const;
 
     device_io_type get_io_type() const;
+
+    template<typename T>  static void   print_all_midi_ports();
+    template<typename T>  static int    get_index_for_port(std::string& port_reference_target);
 
 private:
     bool            m_is_enabled;

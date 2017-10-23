@@ -18,7 +18,7 @@ int main_stream_callback
 
     for(auto& unit : backend->get_registered_units())
     {
-        unit->process_audio();
+        unit->process_audio(frames_per_buffer);
     }
 
     //! TODO: for each audio channel, important when we'll have ambisonics and vbap..

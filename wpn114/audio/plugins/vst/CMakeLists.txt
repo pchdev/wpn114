@@ -11,6 +11,15 @@ add_library(wpn114vst SHARED
     ${WPN114_VST_HEADERS}
     ${WPN114_VST_IMPLEMENTATIONS})
 
+add_definitions(-DDEVELOPMENT)
+
+if(WPN_OSSIA)
+    add_definitions(-DWPN_OSSIA)
+endif()
+
+set(VST2X_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/dependencies/vst3sdk/pluginterfaces/vst2.x)
+target_include_directories(wpn114vst PUBLIC ${VST2X_INCLUDE_DIR})
+target_include_directories(wpn114vst PUBLIC ${CMAKE_SOURCE_DIR})
 
 if(APPLE)
     target_link_libraries(wpn114vst "-framework AppKit")
@@ -18,7 +27,3 @@ if(APPLE)
     target_link_libraries(wpn114vst "-framework Foundation")
     target_link_libraries(wpn114vst "-framework CoreFoundation")
 endif(APPLE)
-
-add_definitions(-DDEVELOPMENT)
-target_include_directories(wpn114vst PUBLIC ${CMAKE_SOURCE_DIR}/dependencies/vst3sdk/pluginterfaces/vst2.x)
-target_include_directories(wpn114vst PUBLIC ${CMAKE_SOURCE_DIR})

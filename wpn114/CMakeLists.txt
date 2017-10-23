@@ -24,3 +24,7 @@ if(WPN_COMMAND_LINE)
 else()
     message("WPN114: Building wpn114 without command-line features")
 endif()
+
+if(WPN_OSSIA)
+    add_definitions(-DWPN_OSSIA)
+endif()
