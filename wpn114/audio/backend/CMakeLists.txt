@@ -21,7 +21,7 @@ target_link_libraries(wpn114audio ${SNDFILE_LIBRARIES})
 
 if(WPN_OSSIA)
     add_definitions(-DWPN_OSSIA)
-    target_include_directories(wpn114audio PUBLIC ${CMAKE_SOURCE_DIR}/dependencies/libossia/OSSIA)
-    target_link_libraries(wpn114audio ossia)
+    #target_include_directories(wpn114audio PUBLIC /usr/local/include)
+    #target_link_libraries(wpn114audio /usr/local/lib/libossia.dylib)
 endif()
 
