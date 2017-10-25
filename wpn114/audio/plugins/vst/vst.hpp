@@ -17,8 +17,8 @@
  */
 
 #include <string>
-#include <aeffect.h>
-#include <aeffectx.h>
+#include "aeffect.h"
+#include "aeffectx.h"
 #include <wpn114/audio/backend/unit_base.hpp>
 
 using aeffect = AEffect;

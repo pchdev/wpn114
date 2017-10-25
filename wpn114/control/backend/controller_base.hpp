@@ -39,7 +39,7 @@ enum class device_io_type
 class controller_base        
 {
 public:
-    virtual ~controller_base();
+    virtual ~controller_base() {}
     virtual std::string get_controller_id() const = 0;
 
 protected:

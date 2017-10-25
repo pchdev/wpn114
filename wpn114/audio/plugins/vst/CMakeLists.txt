@@ -1,4 +1,7 @@
 set(WPN114_VST_HEADERS
+   ${CMAKE_CURRENT_SOURCE_DIR}/aeffect.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/aeffectx.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/vstfxstore.h
    ${CMAKE_CURRENT_SOURCE_DIR}/vst.hpp
    ${CMAKE_CURRENT_SOURCE_DIR}/vstwindow.h)
 

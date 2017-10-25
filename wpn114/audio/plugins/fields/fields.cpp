@@ -18,6 +18,12 @@ public:
         SET_UTYPE       (wpn114::audio::GENERATOR_UNIT);
     }
 
+    void fields::initialize() override
+    {
+        // initialize envelope
+
+    }
+
     void fields::process_audio(uint32_t num_frames) override
     {
         // audio processing goes here;

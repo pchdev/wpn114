@@ -10,7 +10,7 @@
 namespace wpn114 {
 namespace audio {
 
-enum unit_type
+enum class unit_type
 {
     ANALYSIS_UNIT   = 0,
     GENERATOR_UNIT  = 1,
@@ -21,13 +21,6 @@ enum unit_type
 class unit_base
 {
 public:
-
-#define IN(c,f)             m_input_buffer[c][f]
-#define OUT(c,f,v)          m_output_buffer[c][f] = v;
-#define SET_UTYPE(u)        m_unit_type = u;
-#define SETN_INPUTS(n)      m_num_inputs = n;
-#define SETN_OUTPUTS(n)     m_num_outputs = n;
-
     ~unit_base() {}
 
 #ifdef WPN_OSSIA
@@ -37,13 +30,22 @@ public:
 
     virtual void process_audio(uint32_t num_frames) = 0;
     // the unit's audio callback
+    virtual void initialize() = 0;
+    // preparing the units user-defined audio processing
 
-    unit_type   get_unit_type() {}
-    float       get_framedata(uint16_t channel, uint32_t frame) const {}
     void        initialize_io() {}
-    //          allocates input/output buffers, and set them to zero
+                // filling the out buffers
+    unit_type   get_unit_type() { return m_unit_type; }
+    float       get_framedata(uint16_t channel, uint32_t frame) const {}
+
 
 protected:
+#define IN(c,f)             m_input_buffer[c][f]
+#define OUT(c,f,v)          m_output_buffer[c][f] = v;
+#define SET_UTYPE(u)        m_unit_type = u;
+#define SETN_INPUTS(n)      m_num_inputs = n;
+#define SETN_OUTPUTS(n)     m_num_outputs = n;
+
     int         m_num_inputs;
     int         m_num_outputs;
     float**     m_input_buffer;
@@ -55,6 +57,5 @@ protected:
 #endif
 
 };
-
 }
 }

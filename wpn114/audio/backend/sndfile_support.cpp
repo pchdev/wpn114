@@ -17,19 +17,17 @@
  */
 #include <stdlib.h>
 #include <sndfile.h>
-#include <cstring>
 #include <wpn114/audio/backend/sndfile_support.hpp>
 
-template<typename T> T load_soundfile()
+template<typename T> T load_soundfile(std::string &path_to_soundfile)
 {
     SNDFILE*    infile;
     SF_INFO     sfinfo;
     int         readcount;
-    const char* infilename = "input.wav";
 
     std::memset(&sfinfo, 0, sizeof(sfinfo));
 
-    if(!(infile = sf_open (infilename, SFM_READ, &sfinfo)))
+    if(!(infile = sf_open (path_to_soundfile.c_str(), SFM_READ, &sfinfo)))
     {
         // throw error
     }
@@ -37,6 +35,7 @@ template<typename T> T load_soundfile()
     // load file contents into buffer
     T buffer    = nullptr;
     buffer      = (T*) malloc(sfinfo.frames * sfinfo.channels * sizeof(T));
+    // remember that sndbuffers_t are interleaved
 
     // puts contents into buffer
     sf_count_t frames_read = sf_read_short(infile, buffer, sfinfo.frames);

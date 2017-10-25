@@ -26,7 +26,6 @@ namespace midi {
 
 //! TODO: to have different setups/maps for the controller
 //! maybe a JSON or TOML mapping file?
-
 class push_controller final : public controller_base
 {
 public:

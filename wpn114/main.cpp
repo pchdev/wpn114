@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     wpn114::audio::context.num_outputs = 2;
     wpn114::audio::context.master_tempo = 120.f;
 
-    wpn114::audio::backend audio_backend(2);
+    //wpn114::audio::backend audio_backend(2);
 
     //wpn114::audio::units::plugin_handler kaivo_1("Kaivo.vst");
     //wpn114::audio::units::plugin_handler absynth_1("Absynth.vst");
@@ -43,12 +43,13 @@ int main(int argc, char* argv[])
 
     //wpn114::audio::units::fields("/path/to/soundfile.wav");
 
-    audio_backend.initialize_io();
+    //audio_backend.initialize_io();
 
     // init controller
     wpn114::control::midi::device_factory push_device_factory;
+    std::string push_port_name = "Ableton Push User Port";
 
-    auto push_hdl = push_device_factory.make_device_hdl((std::string) "Ableton Push User Port",
+    auto push_hdl = push_device_factory.make_device_hdl(push_port_name,
                                  wpn114::control::device_io_type::IN_OUT);
 
     wpn114::control::midi::push_controller push(std::move(push_hdl));

@@ -27,7 +27,7 @@ wpn114::control::midi::push_controller::push_controller(unique_device_hdl hdl) :
 
 wpn114::control::midi::push_controller::~push_controller()
 {
-    m_device_hdl->stop();
+    //m_device_hdl->stop();
     m_device_hdl.reset();
 }
 
@@ -39,13 +39,13 @@ std::string wpn114::control::midi::push_controller::get_controller_id() const
 void wpn114::control::midi::push_controller::light_pad
 (uint8_t target, pad_colors color, pad_lighting_mode mode)
 {
-    m_device_hdl->send_note_on(mode, target, color);
+    m_device_hdl->send_note_on(static_cast<uint8_t>(mode), target, static_cast<uint8_t>(color));
 }
 
 void wpn114::control::midi::push_controller::light_cc_commmand_button
 (command_buttons target, toggle_lighting_mode mode)
 {
-    m_device_hdl->send_control_change(0, target, mode);
+    m_device_hdl->send_control_change(0, static_cast<uint8_t>(target), static_cast<uint8_t>(mode));
 }
 
 void wpn114::control::midi::push_controller::light_cc_toggle(uint8_t row, uint8_t target, toggle_lighting_mode mode)
@@ -54,7 +54,7 @@ void wpn114::control::midi::push_controller::light_cc_toggle(uint8_t row, uint8_
     if (row == 1) offset = 19;
     else offset = 101;
 
-    m_device_hdl->send_control_change(1, target+offset, mode);
+    m_device_hdl->send_control_change(1, target+offset, static_cast<uint8_t>(mode));
 }
 
 void wpn114::control::midi::push_controller::lcd_display
