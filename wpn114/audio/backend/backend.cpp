@@ -8,7 +8,7 @@ int main_stream_callback
  const PaStreamCallbackTimeInfo *time_info, PaStreamCallbackFlags status_flags, void *user_data)
 {
     float*                  out     = (float*) output_buffer;
-    wpn114::audio::backend* backend = (wpn114::audio::backend*) user_data;
+    backend_hdl*            backend = (backend_hdl*) user_data;
 
     (void)                  time_info;
     (void)                  status_flags;
@@ -40,11 +40,11 @@ int main_stream_callback
     return paContinue;
 }
 
-wpn114::audio::backend::backend(uint16_t num_channels) :
+wpn114::audio::backend_hdl::backend_hdl(uint16_t num_channels) :
     m_main_stream(nullptr),
     m_num_channels(num_channels) {}
 
-wpn114::audio::backend::~backend()
+wpn114::audio::backend_hdl::~backend_hdl()
 {
     PaError err = Pa_StopStream(m_main_stream);
             err = Pa_CloseStream(m_main_stream);
@@ -53,17 +53,17 @@ wpn114::audio::backend::~backend()
 }
 
 std::vector<wpn114::audio::unit_base*>
-wpn114::audio::backend::get_registered_units() const
+wpn114::audio::backend_hdl::get_registered_units() const
 {
     return m_registered_units;
 }
 
-void wpn114::audio::backend::register_unit(wpn114::audio::unit_base* unit)
+void wpn114::audio::backend_hdl::register_unit(wpn114::audio::unit_base* unit)
 {
     m_registered_units.push_back(unit);
 }
 
-void wpn114::audio::backend::unregister_unit(wpn114::audio::unit_base* unit)
+void wpn114::audio::backend_hdl::unregister_unit(wpn114::audio::unit_base* unit)
 {
     m_registered_units.erase(
                 std::remove(
@@ -75,7 +75,7 @@ void wpn114::audio::backend::unregister_unit(wpn114::audio::unit_base* unit)
             */
 }
 
-void wpn114::audio::backend::initialize_io()
+void wpn114::audio::backend_hdl::initialize()
 {
     PaError err;
 
@@ -91,10 +91,14 @@ void wpn114::audio::backend::initialize_io()
                                                       (m_output_parameters.device)->defaultLowOutputLatency;
 
     for(auto& unit : m_registered_units)
+    {
+        // initialize registered units
         unit->initialize_io();
+        unit->initialize();
+    }
 }
 
-void wpn114::audio::backend::start_stream()
+void wpn114::audio::backend_hdl::start_stream()
 {
     PaError err = Pa_OpenStream(
                         &m_main_stream,
@@ -107,7 +111,7 @@ void wpn114::audio::backend::start_stream()
                         this );
 }
 
-void wpn114::audio::backend::stop_stream()
+void wpn114::audio::backend_hdl::stop_stream()
 {
     PaError err = Pa_StopStream(m_main_stream);
 }

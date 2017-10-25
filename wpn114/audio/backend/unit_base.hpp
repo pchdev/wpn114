@@ -40,6 +40,7 @@ public:
 
 
 protected:
+
 #define IN(c,f)             m_input_buffer[c][f]
 #define OUT(c,f,v)          m_output_buffer[c][f] = v;
 #define SET_UTYPE(u)        m_unit_type = u;

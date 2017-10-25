@@ -15,7 +15,6 @@ static struct context
     float       master_tempo;
 
 } context;
-
 }
 }
 

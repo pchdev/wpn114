@@ -27,12 +27,12 @@ namespace wpn114
 {
 namespace audio
 {
-class backend
+class backend_hdl
 {
 public:
-    backend(uint16_t num_channels = 2);
-    ~backend();
-    void initialize_io();
+    backend_hdl(uint16_t num_channels = 2);
+    ~backend_hdl();
+    void initialize();
     void start_stream();
     void stop_stream();
     void register_unit(wpn114::audio::unit_base* unit);
@@ -46,6 +46,5 @@ private:
     PaStreamCallback*   m_main_stream_cb_funcptr;
     std::vector<wpn114::audio::unit_base*> m_registered_units;    
 };
-
 }
 }
