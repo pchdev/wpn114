@@ -2,9 +2,12 @@ add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/main.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 
 if(WPN_AUDIO)
+
     message("WPN114: Building ${PROJECT_NAME} with audio features")
     add_subdirectory(audio)
+
     target_link_libraries(${PROJECT_NAME} wpn114audio)
+
     if(WPN_PLUGINS_AMBISONICS)
         target_link_libraries(${PROJECT_NAME} ambisonics)
     endif()
@@ -20,36 +23,49 @@ if(WPN_AUDIO)
     if(WPN_PLUGINS_GRANARY)
         target_link_libraries(${PROJECT_NAME} granary)
     endif()
+    if(WPN_PLUGINS_ONESHOTS)
+        target_link_libraries(oneshots wpn114audio)
+        target_link_libraries(${PROJECT_NAME} oneshots)
+    endif()
     if(WPN_PLUGINS_VBAP)
         target_link_libraries(${PROJECT_NAME} vbap)
     endif()
     if(WPN_PLUGINS_VST)
         target_link_libraries(${PROJECT_NAME} wpn114vst)
     endif()
+
 else()
     message("WPN114: Building ${PROJECT_NAME} without audio features")
 endif()
 
 if(WPN_CONTROL)
+
     message("WPN114: Building ${PROJECT_NAME} with control features")
     add_subdirectory(control)
     target_link_libraries(${PROJECT_NAME} wpn114control)
+
     if(WPN_CONTROL_PUSH)
         target_link_libraries(${PROJECT_NAME} wpn114push)
     endif()
+
 else()
     message("WPN114: Building ${PROJECT_NAME} without control features")
 endif()
 
 if(WPN_COMMAND_LINE)
+
     message("WPN114: Building ${PROJECT_NAME} with command-line features")
     add_subdirectory(command)
     #target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}command)
 else()
+
     message("WPN114: Building ${PROJECT_NAME} without command-line features")
 endif()
 
 if(WPN_OSSIA)
+    add_definitions(-DWPN_OSSIA)
+    add_subdirectory(network)
     target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/include)
     target_link_libraries(${PROJECT_NAME} /usr/local/lib/libossia.dylib)
+    target_link_libraries(${PROJECT_NAME} wpn114net)
 endif()

@@ -52,7 +52,7 @@ wpn114::audio::backend_hdl::~backend_hdl()
     Pa_Terminate();
 }
 
-std::vector<wpn114::audio::unit_base*>
+inline std::vector<wpn114::audio::unit_base*>
 wpn114::audio::backend_hdl::get_registered_units() const
 {
     return m_registered_units;

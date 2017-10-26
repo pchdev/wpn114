@@ -2,8 +2,9 @@
 #include <wpn114/audio/backend/context.hpp>
 #include <wpn114/audio/plugins/vst/vst.hpp>
 #include <wpn114/audio/plugins/fields/fields.cpp>
-
+#include <wpn114/audio/plugins/oneshots/oneshots.cpp>
 #include <wpn114/control/plugins/push_1/push_controller.hpp>
+#include <wpn114/network/net_hdl.hpp>
 #include <iostream>
 
 using namespace wpn114;
@@ -25,8 +26,16 @@ int main(int argc, char* argv[])
 
     //wpn114::audio::plugins::fields sf_1("/path/to/soundfile.wav");
 
-    wpn114::audio::backend_hdl audio_hdl(2);
-    //audio_hdl.register_unit(&sf_1);
+    net::net_hdl net_hdl("quarre-audio");
+    net_hdl.expose_oscquery_server(1234, 5678);
+
+    audio::backend_hdl audio_hdl(2);
+
+    audio::plugins::oneshots testwav("/testwav.wav");
+    testwav.net_expose(net_hdl.get_application_node());
+
+    audio_hdl.register_unit(&testwav);
+
     audio_hdl.initialize();
     audio_hdl.start_stream();
 

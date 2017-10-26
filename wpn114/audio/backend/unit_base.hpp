@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <wpn114/audio/backend/sndfile_support.hpp>
 
 #ifdef WPN_OSSIA
     #include <ossia/ossia.hpp>
@@ -24,7 +25,7 @@ public:
     ~unit_base() {}
 
 #ifdef WPN_OSSIA
-    virtual void net_expose(std::shared_ptr<ossia::net::node_base> application_node) {}
+    virtual void net_expose(ossia::net::node_base& application_node) {}
     // gets called whenever we want to expose the parameters' unit to the network
 #endif
 
@@ -41,11 +42,13 @@ public:
 
 protected:
 
-#define IN(c,f)             m_input_buffer[c][f]
-#define OUT(c,f,v)          m_output_buffer[c][f] = v;
-#define SET_UTYPE(u)        m_unit_type = u;
-#define SETN_INPUTS(n)      m_num_inputs = n;
-#define SETN_OUTPUTS(n)     m_num_outputs = n;
+#define IN                  m_input_buffer
+#define OUT                 m_output_buffer
+#define SET_UTYPE(u)        m_unit_type = u
+#define SETN_INPUTS(n)      m_num_inputs = n
+#define SETN_OUTPUTS(n)     m_num_outputs = n
+#define N_OUTPUTS           m_num_outputs
+#define N_INPUTS            m_num_inputs
 
     int         m_num_inputs;
     int         m_num_outputs;
