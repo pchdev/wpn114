@@ -29,18 +29,25 @@ namespace audio
 {
 class backend_hdl
 {
+
 public:
-    backend_hdl(uint16_t num_channels = 2);
+
+    backend_hdl(uint8_t num_channels = 2);
     ~backend_hdl();
+
     void initialize();
     void start_stream();
     void stop_stream();
+
     void register_unit(wpn114::audio::unit_base* unit);
     void unregister_unit(wpn114::audio::unit_base* unit);
+
+    uint8_t get_num_channels() const;
     std::vector<wpn114::audio::unit_base*> get_registered_units() const;
 
 private:
-    uint16_t            m_num_channels;
+
+    uint8_t             m_num_channels;
     PaStream*           m_main_stream;
     PaStreamParameters  m_output_parameters;
     PaStreamCallback*   m_main_stream_cb_funcptr;

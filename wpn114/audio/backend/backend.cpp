@@ -7,40 +7,44 @@ int main_stream_callback
 (const void *input_buffer, void *output_buffer, unsigned long frames_per_buffer,
  const PaStreamCallbackTimeInfo *time_info, PaStreamCallbackFlags status_flags, void *user_data)
 {
-    float*                  out     = (float*) output_buffer;
-    backend_hdl*            backend = (backend_hdl*) user_data;
+    float*          out     = (float*) output_buffer;
+    backend_hdl*    backend = (backend_hdl*) user_data;
 
-    (void)                  time_info;
-    (void)                  status_flags;
-    (void)                  input_buffer;
+    (void) time_info;
+    (void) status_flags;
+    (void) input_buffer;
 
-    unsigned long           i;
+    // copy unit's configuration
+    std::vector<unit_base*> units = backend->get_registered_units();
+    uint8_t nchannels = backend->get_num_channels();
+    float frame_data[frames_per_buffer];
 
-    for(auto& unit : backend->get_registered_units())
+    // call audio processing on each of the registered units
+    for(auto& unit : units)
     {
         unit->process_audio(frames_per_buffer);
     }
 
-    //! TODO: for each audio channel, important when we'll have ambisonics and vbap..
-    for(i = 0; i < frames_per_buffer; ++i)
+    for(uint32_t i = 0; i < frames_per_buffer; ++i)
     {
-        float frame_data_l = 0;
-        float frame_data_r = 0;
-
-        for(auto& unit : backend->get_registered_units())
+        for(auto& unit : units)
         {
-            frame_data_l += unit->get_framedata(0, i);
-            frame_data_r += unit->get_framedata(1, i);
+            if(unit->is_active())
+            {
+                for(uint8_t n = 0; n < unit->get_num_channels(); n++)
+                {
+                    frame_data[i] += unit->get_framedata(n, i);
+                }
+            }
         }
 
-        *out++ = frame_data_l;
-        *out++ = frame_data_r;
+        *out++ = frame_data[i];
     }
 
     return paContinue;
 }
 
-wpn114::audio::backend_hdl::backend_hdl(uint16_t num_channels) :
+wpn114::audio::backend_hdl::backend_hdl(uint8_t num_channels) :
     m_main_stream(nullptr),
     m_num_channels(num_channels) {}
 
@@ -56,6 +60,11 @@ inline std::vector<wpn114::audio::unit_base*>
 wpn114::audio::backend_hdl::get_registered_units() const
 {
     return m_registered_units;
+}
+
+inline uint8_t backend_hdl::get_num_channels() const
+{
+    return m_num_channels;
 }
 
 void wpn114::audio::backend_hdl::register_unit(wpn114::audio::unit_base* unit)
@@ -93,8 +102,8 @@ void wpn114::audio::backend_hdl::initialize()
     for(auto& unit : m_registered_units)
     {
         // initialize registered units
-        unit->initialize_io();
-        unit->initialize();
+        unit->initialize_io(context.blocksize);
+        unit->initialize(context.blocksize);
     }
 }
 

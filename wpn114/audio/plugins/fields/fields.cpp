@@ -16,20 +16,23 @@ public:
     {}
 #endif
 
-    fields(const char* sfpath) : m_sf_buffer(0), m_sample_pos(0), m_env_sample_pos(0)
+    fields(const char* sfpath) :
+        m_sf_buffer(0),
+        m_sample_pos(0), m_env_sample_pos(0),
+        m_active(false)
     {
         SETN_INPUTS     (0);
         SETN_OUTPUTS    (2);
         SET_UTYPE       (unit_type::GENERATOR_UNIT);
     }
 
-    void initialize() override
+    void initialize(uint16_t frames_per_buffer) override
     {
         // initialize envelope
 
     }
 
-    void process_audio(uint32_t num_frames) override
+    void process_audio(uint16_t frames_per_buffer) override
     {
         // audio processing goes here;
     }
@@ -39,7 +42,6 @@ private:
     uint32_t m_sample_pos;
     float    m_env_sample_pos;
 };
-
 }
 }
 }

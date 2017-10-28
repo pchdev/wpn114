@@ -31,8 +31,9 @@ int main(int argc, char* argv[])
 
     audio::backend_hdl audio_hdl(2);
 
-    audio::plugins::oneshots testwav("/testwav.wav");
+    audio::plugins::oneshots testwav("test", "test.wav", 0.25);
     testwav.net_expose(net_hdl.get_application_node());
+    testwav.activate();
 
     audio_hdl.register_unit(&testwav);
 
@@ -49,6 +50,9 @@ int main(int argc, char* argv[])
     wpn114::control::midi::push_controller push(std::move(push_hdl));
 
     // init view (qml or command line)*/
+
+    while(true)
+        ;
 
     audio_hdl.stop_stream();
 
