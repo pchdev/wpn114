@@ -62,11 +62,11 @@ public:
     ~vst_hdl();
 
 #ifdef WPN_OSSIA
-    void net_expose(ossia::net::node_base& application_node)   override;
+    void net_expose(ossia::net::device_base* application_node)   override;
 #endif
 
     void show_editor();
-    void process_audio(uint32_t num_frames)     override;
+    void process_audio(uint16_t num_frames)     override;
     void process_midi(vstevents *events);
     void start();
     void suspend();

@@ -34,7 +34,7 @@ struct sndbuf_t
     float*          data;
 };
 
-static int load_soundfile(sndbuf_t& buffer, const std::string& path_to_soundfile);
+int load_soundfile(sndbuf_t& buffer, const std::string& path_to_soundfile);
 
 }
 }

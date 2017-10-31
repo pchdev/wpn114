@@ -48,11 +48,13 @@ protected:
 
 #define IN                  m_input_buffer
 #define OUT                 m_output_buffer
-#define SET_UTYPE(u)        m_unit_type = u
-#define SETN_INPUTS(n)      m_num_inputs = n
-#define SETN_OUTPUTS(n)     m_num_outputs = n
+#define SET_UTYPE(u)        m_unit_type = u;
+#define SETN_INPUTS(n)      m_num_inputs = n;
+#define SETN_OUTPUTS(n)     m_num_outputs = n;
 #define N_OUTPUTS           m_num_outputs
 #define N_INPUTS            m_num_inputs
+#define SET_ACTIVE          m_active = true;
+#define SET_INACTIVE        m_active = false;
 
     bool        m_active;
     uint8_t     m_num_inputs;

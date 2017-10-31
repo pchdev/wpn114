@@ -18,8 +18,7 @@ public:
 
     fields(const char* sfpath) :
         m_sf_buffer(0),
-        m_sample_pos(0), m_env_sample_pos(0),
-        m_active(false)
+        m_sample_pos(0), m_env_sample_pos(0)
     {
         SETN_INPUTS     (0);
         SETN_OUTPUTS    (2);

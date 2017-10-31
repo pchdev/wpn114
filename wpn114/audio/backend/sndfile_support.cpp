@@ -20,7 +20,7 @@
 
 //template<typename T>
 //T wpn114::audio::sndbuf16_t::load_soundfile(const std::string& path_to_soundfile)
-static int wpn114::audio::load_soundfile(sndbuf_t& buffer, const std::string& path_to_soundfile)
+int wpn114::audio::load_soundfile(sndbuf_t& buffer, const std::string& path_to_soundfile)
 {
     SNDFILE*    infile;
     SF_INFO     sfinfo;
@@ -42,7 +42,7 @@ static int wpn114::audio::load_soundfile(sndbuf_t& buffer, const std::string& pa
 
     buffer.num_channels     = sfinfo.channels;
     buffer.num_frames       = sfinfo.frames;
-    buffer.num_samples      = (float) sfinfo.frames / sfinfo.channels;
+    buffer.num_samples      = sfinfo.frames / sfinfo.channels;
     buffer.sample_rate      = sfinfo.samplerate;
 
     return 0;
