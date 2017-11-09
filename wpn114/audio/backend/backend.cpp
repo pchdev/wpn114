@@ -3,7 +3,7 @@
 
 using namespace wpn114::audio;
 
-int main_stream_callback
+static int main_stream_callback
 (const void *input_buffer, void *output_buffer, unsigned long frames_per_buffer,
  const PaStreamCallbackTimeInfo *time_info, PaStreamCallbackFlags status_flags, void *user_data)
 {
@@ -17,28 +17,28 @@ int main_stream_callback
     // copy unit's configuration
     std::vector<unit_base*> units = backend->get_registered_units();
     uint8_t nchannels = backend->get_num_channels();
-    float frame_data[frames_per_buffer];
+    float data[nchannels][frames_per_buffer];
 
     // call audio processing on each of the registered units
-    for(auto& unit : units)
-    {
-        unit->process_audio(frames_per_buffer);
-    }
+    for (auto& unit : units)
+    if  (unit->is_active())
+         unit->process_audio(frames_per_buffer);
 
-    for(uint32_t i = 0; i < frames_per_buffer; ++i)
+    for(uint16_t i = 0; i < frames_per_buffer; ++i)
     {
-        for(auto& unit : units)
+        for (uint8_t n = 0; n < nchannels; ++n)
         {
-            if(unit->is_active())
-            {
-                for(uint8_t n = 0; n < unit->get_num_channels(); n++)
-                {
-                    frame_data[i] += unit->get_framedata(n, i);
-                }
-            }
-        }
+            // initialize sample data for each channel
+            data[n][i] = 0.f;
 
-        *out++ = frame_data[i];
+            //      poll registered units
+            for     (auto& unit : units)
+            if      (unit->is_active() && n <= unit->get_num_channels()-1)
+                    data[n][i] += unit->get_framedata(n,i);
+
+            // output sample data for channel n
+            *out++ = data[n][i];
+        }
     }
 
     return paContinue;
@@ -57,12 +57,12 @@ wpn114::audio::backend_hdl::~backend_hdl()
 }
 
 inline std::vector<wpn114::audio::unit_base*>
-wpn114::audio::backend_hdl::get_registered_units() const
+wpn114::audio::backend_hdl::get_registered_units()  const
 {
     return m_registered_units;
 }
 
-inline uint8_t backend_hdl::get_num_channels() const
+inline uint8_t backend_hdl::get_num_channels()      const
 {
     return m_num_channels;
 }
@@ -78,10 +78,6 @@ void wpn114::audio::backend_hdl::unregister_unit(wpn114::audio::unit_base* unit)
                 std::remove(
                     m_registered_units.begin(), m_registered_units.end(), unit),
                 m_registered_units.end());
-    /*for     (auto it = m_registered_units.begin(); it != m_registered_units.end(); ++it)
-    if      (it == unit)
-            m_registered_units.erase(it);
-            */
 }
 
 void wpn114::audio::backend_hdl::initialize()
@@ -99,11 +95,14 @@ void wpn114::audio::backend_hdl::initialize()
     m_output_parameters.suggestedLatency            = Pa_GetDeviceInfo
                                                       (m_output_parameters.device)->defaultLowOutputLatency;
 
+    auto device_name = Pa_GetDeviceInfo(m_output_parameters.device)->name;
+    std::cout << device_name << std::endl;
+
     for(auto& unit : m_registered_units)
     {
         // initialize registered units
-        unit->initialize_io(context.blocksize);
-        unit->initialize(context.blocksize);
+        unit->initialize_io(512);
+        unit->initialize(512);
     }
 }
 
@@ -113,11 +112,18 @@ void wpn114::audio::backend_hdl::start_stream()
                         &m_main_stream,
                         NULL,
                         &m_output_parameters,
-                        wpn114::audio::context.sample_rate,
-                        wpn114::audio::context.blocksize,
+                        44100,
+                        512,
                         paClipOff,
-                        m_main_stream_cb_funcptr,
+                        main_stream_callback,
                         this );
+
+    if(err != paNoError)
+    {
+        std::cout << "error: " << Pa_GetErrorText(err) << std::endl;
+    }
+
+    err = Pa_StartStream(m_main_stream);
 }
 
 void wpn114::audio::backend_hdl::stop_stream()

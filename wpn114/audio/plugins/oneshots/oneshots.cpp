@@ -17,9 +17,6 @@ public:
         auto play_node  = root->create_child("play");
         auto level_node = root->create_child("level");
 
-        //auto play_node = ossia::net::find_or_create_node(root_node, "/oneshots/play");
-        //auto play_node = ossia::net::find_or_create_node(root_node, "/oneshots/level");
-
         auto play_param     = play_node->create_parameter(ossia::val_type::IMPULSE);
         auto level_param    = level_node->create_parameter(ossia::val_type::FLOAT);
 
@@ -30,22 +27,19 @@ public:
         level_param->add_callback([&](const ossia::value& v) {
             m_level = v.get<float>();
         });
-
-
     }
 #endif
 
     oneshots(const char* name, const char* sfpath, float default_level) :
         m_name(name), m_sf_path(sfpath),
-        m_level(default_level)
+        m_level(default_level), m_phase(0)
     {
+        SET_INACTIVE
         SETN_INPUTS(0)
         SET_UTYPE(unit_type::GENERATOR_UNIT)
 
         load_soundfile(m_sf_buffer, m_sf_path);
         SETN_OUTPUTS(m_sf_buffer.num_channels)
-
-        SET_INACTIVE
     }
 
     void initialize(uint16_t samples_per_buffer)        override {}
@@ -53,33 +47,31 @@ public:
     {
         for(int i = 0; i < samples_per_buffer; ++i)
         {
-            if (i == m_sf_buffer.num_samples)
+            if ( m_phase == m_sf_buffer.num_frames )
             {
                 // reset buffer, deactivate and output zeroes
-                m_sf_buffer.data -= m_sf_buffer.num_frames;
+                std::cout << "inactive" << std::endl;
+                m_sf_buffer.data -= m_phase;
                 SET_INACTIVE
-                for(int j = 0; i < N_OUTPUTS; ++j)
-                {
+
+                for (int j = 0; j < N_OUTPUTS; ++j)
                     OUT[j][i] = 0.f;
-                }
             }
-            else if ( i > m_sf_buffer.num_samples )
+            else if ( m_phase > m_sf_buffer.num_frames )
             {
                 // fill the rest of the buffer with zeroes
-                for(int j = 0; i < N_OUTPUTS; ++j)
-                {
+                for(int j = 0; j < N_OUTPUTS; ++j)
                     OUT[j][i] = 0.f;
-                }
             }
             else
                 // normal behaviour
             {
-                for(int j = 0; i < N_OUTPUTS; ++j)
-                {
+                for(int j = 0; j < N_OUTPUTS; ++j)
                     // note: sfbufs are interleaved
-                    OUT[j][i] = *m_sf_buffer.data++ * m_level;
-                }
+                    OUT[j][i] = *m_sf_buffer.data++;
             }
+
+            m_phase++;
         }
     }
 
@@ -88,8 +80,8 @@ private:
     std::string             m_sf_path;
     sndbuf_t                m_sf_buffer;
     float                   m_level;
+    uint32_t                m_phase;
 };
-
 }
 }
 }

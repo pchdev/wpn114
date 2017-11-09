@@ -22,7 +22,7 @@ using namespace wpn114::audio;
 
 unit_base::~unit_base()
 {
-    for(int i = 0; i < m_num_outputs; ++i)
+    for (int i = 0; i < m_num_outputs; ++i)
         delete m_output_buffer[i];
 
     delete m_output_buffer;
@@ -30,7 +30,7 @@ unit_base::~unit_base()
     if(m_unit_type == unit_type::EFFECT_UNIT ||
             m_unit_type == unit_type::HYBRID_UNIT)
     {
-        for(int i = 0; i < m_num_inputs; ++i)
+        for (int i = 0; i < m_num_inputs; ++i)
             delete m_input_buffer[i];
 
         delete m_input_buffer;
@@ -42,15 +42,15 @@ void unit_base::initialize_io(uint16_t samples_per_buffer)
     // allocate input/output buffers if necessary
     m_output_buffer = new float*[m_num_outputs];
 
-    for(int i = 0; i < m_num_outputs; ++i)
+    for (int i = 0; i < m_num_outputs; ++i)
         m_output_buffer[i] = new float[samples_per_buffer];
 
-    if(m_unit_type == unit_type::EFFECT_UNIT ||
-            m_unit_type == unit_type::HYBRID_UNIT)
+    if  (m_unit_type == unit_type::EFFECT_UNIT ||
+         m_unit_type == unit_type::HYBRID_UNIT)
     {
         m_input_buffer = new float*[m_num_inputs];
 
-        for(int i = 0; i < m_num_inputs; ++i)
+        for (int i = 0; i < m_num_inputs; ++i)
             m_input_buffer[i] = new float[samples_per_buffer];
     }
 }

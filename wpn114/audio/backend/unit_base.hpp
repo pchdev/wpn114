@@ -45,7 +45,6 @@ public:
     bool        is_active();
 
 protected:
-
 #define IN                  m_input_buffer
 #define OUT                 m_output_buffer
 #define SET_UTYPE(u)        m_unit_type = u;

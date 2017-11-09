@@ -6,6 +6,7 @@
 #include <wpn114/control/plugins/push_1/push_controller.hpp>
 #include <wpn114/network/net_hdl.hpp>
 #include <iostream>
+#include <time.h>
 
 using namespace wpn114;
 
@@ -17,13 +18,10 @@ int main(int argc, char* argv[])
     wpn114::audio::context.num_outputs = 2;
     wpn114::audio::context.master_tempo = 120.f;
 
-    //wpn114::audio::backend audio_backend(2);
-
     //wpn114::audio::units::plugin_handler kaivo_1("Kaivo.vst");
     //wpn114::audio::units::plugin_handler absynth_1("Absynth.vst");
     //wpn114::audio::units::plugin_handler altiverb("Altiverb.vst");
     //wpn114::audio::units::plugin_handler amplitube("Amplitube.vst");
-
     //wpn114::audio::plugins::fields sf_1("/path/to/soundfile.wav");
 
     net::net_hdl net_hdl("quarre-audio");
@@ -51,8 +49,10 @@ int main(int argc, char* argv[])
 
     // init view (qml or command line)*/
 
-    while(true)
-        ;
+    //while(true)
+      //  ;
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(20000));
 
     audio_hdl.stop_stream();
 
