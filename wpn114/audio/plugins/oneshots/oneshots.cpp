@@ -49,9 +49,9 @@ public:
         {
             if ( m_phase == m_sf_buffer.num_samples )
             {
-                // reset buffer, deactivate and output zeroes
-                std::cout << "inactive" << std::endl;
-                m_sf_buffer.data -= m_phase;
+                // reset buffer, set unit inactive
+                // and fill the rest of the buffer with zeroes
+                m_sf_buffer.data -= m_sf_buffer.num_frames;
                 SET_INACTIVE
 
                 for (int j = 0; j < N_OUTPUTS; ++j)
