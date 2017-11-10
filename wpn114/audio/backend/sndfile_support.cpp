@@ -38,19 +38,14 @@ int wpn114::audio::load_soundfile(sndbuf_t& buffer, const std::string& path_to_s
     // remember that sndbuffers_t are interleaved
 
     // puts contents into buffer
-    sf_count_t frames_read  = sf_readf_float(infile, buffer.data, sfinfo.frames);
-    if(frames_read != sfinfo.frames)
-    {
-        std::cerr << "error when reading file, aborting.." << std::endl;
-        return -1;
-    }
+    readcount = sf_readf_float(infile, buffer.data, sfinfo.frames);
 
     buffer.num_channels     = sfinfo.channels;
     buffer.num_frames       = sfinfo.frames * sfinfo.channels;
     buffer.num_samples      = sfinfo.frames;
     buffer.sample_rate      = sfinfo.samplerate;
 
-    //std::cout << std::to_string(buffer.num_samples) << std::endl;
+    sf_close(infile);
 
     return 0;
 }

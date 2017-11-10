@@ -11,7 +11,7 @@ class oneshots final : public wpn114::audio::unit_base
 public:
 
 #ifdef WPN_OSSIA
-    void net_expose(ossia::net::device_base* application_node)
+    void net_expose(ossia::net::device_base* application_node) override
     {
         auto root       = application_node->get_root_node().create_child(m_name);
         auto play_node  = root->create_child("play");
@@ -42,12 +42,12 @@ public:
         SETN_OUTPUTS(m_sf_buffer.num_channels)
     }
 
-    void initialize(uint16_t samples_per_buffer)        override {}
-    void process_audio(uint16_t samples_per_buffer)     override
+    void initialize(uint16_t samples_per_buffer) override {}
+    void process_audio(uint16_t samples_per_buffer) override
     {
         for(int i = 0; i < samples_per_buffer; ++i)
         {
-            if ( m_phase == m_sf_buffer.num_frames )
+            if ( m_phase == m_sf_buffer.num_samples )
             {
                 // reset buffer, deactivate and output zeroes
                 std::cout << "inactive" << std::endl;
@@ -57,7 +57,7 @@ public:
                 for (int j = 0; j < N_OUTPUTS; ++j)
                     OUT[j][i] = 0.f;
             }
-            else if ( m_phase > m_sf_buffer.num_frames )
+            else if ( m_phase > m_sf_buffer.num_samples )
             {
                 // fill the rest of the buffer with zeroes
                 for(int j = 0; j < N_OUTPUTS; ++j)
@@ -73,6 +73,11 @@ public:
 
             m_phase++;
         }
+    }
+
+    ~oneshots()
+    {
+        delete m_sf_buffer.data;
     }
 
 private:
