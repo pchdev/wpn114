@@ -97,6 +97,10 @@ wpn114::audio::plugins::vst_hdl::vst_hdl(const char* name_with_extension)
     m_plugin->processReplacing = (process_funcptr) m_plugin->processReplacing;
     m_plugin->setParameter = (set_parameter_funcptr) m_plugin->setParameter;
 
+    SET_UTYPE(wpn114::audio::unit_type::HYBRID_UNIT);
+    SETN_INPUTS(m_plugin->numInputs);
+    SETN_OUTPUTS(m_plugin->numOutputs);
+
     SET_ACTIVE
 }
 
@@ -149,12 +153,19 @@ void wpn114::audio::plugins::vst_hdl::resume()
     m_dispatcher(m_plugin, effMainsChanged, 0, 1, NULL, 0.f);
 }
 
+inline void wpn114::audio::plugins::vst_hdl::_silence_channel(float** channel_data, uint8_t num_channels, uint16_t samples_per_buffer)
+{
+    for(uint8_t ch  = 0; ch < num_channels; ++ch)
+        for(uint16_t fr = 0; fr < samples_per_buffer; ++fr)
+            channel_data[ch][fr] = 0.0f;
+}
+
 void wpn114::audio::plugins::vst_hdl::process_audio(uint16_t samples_per_buffer)
 {
-    //_silence_channel(m_output_buffer, m_num_outputs, wpn114::audio::context.blocksize);
-    //silence_channel(m_input_buffer, m_num_inputs, wpn114::audio::context.blocksize);
+    _silence_channel(m_input_buffer, m_num_inputs, samples_per_buffer);
+    _silence_channel(m_output_buffer, m_num_outputs, samples_per_buffer);
 
-    m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, samples_per_buffer);
+    m_plugin->processReplacing(m_plugin, m_input_buffer, m_output_buffer, samples_per_buffer);
 }
 
 inline void wpn114::audio::plugins::vst_hdl::process_midi(vstevents *events)

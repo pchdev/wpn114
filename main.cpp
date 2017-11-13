@@ -32,14 +32,15 @@ int main(int argc, char* argv[])
     audio::plugins::oneshots testwav("test", "test.wav", 0.25);
     testwav.net_expose(net_hdl.get_application_node());
     testwav.activate();
-
     audio_hdl.register_unit(&testwav);
 
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
-    kaivo_1.show_editor();
+    audio_hdl.register_unit(&kaivo_1);
 
     audio_hdl.initialize();
     audio_hdl.start_stream();
+
+    kaivo_1.show_editor();
 
     // init controller
     /*wpn114::control::midi::device_factory push_device_factory;
