@@ -14,7 +14,7 @@ static struct context
     uint16_t    num_outputs;
     float       master_tempo;
 
-} context;
+} audio_context;
 }
 }
 

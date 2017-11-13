@@ -1,9 +1,9 @@
 #include <wpn114/audio/backend/backend.hpp>
 #include <wpn114/audio/backend/context.hpp>
 #include <wpn114/audio/plugins/vst/vst.hpp>
-#include <wpn114/audio/plugins/fields/fields.cpp>
+//#include <wpn114/audio/plugins/fields/fields.cpp>
 #include <wpn114/audio/plugins/oneshots/oneshots.cpp>
-#include <wpn114/control/plugins/push_1/push_controller.hpp>
+//#include <wpn114/control/plugins/push_1/push_controller.hpp>
 #include <wpn114/network/net_hdl.hpp>
 #include <iostream>
 #include <time.h>
@@ -12,11 +12,11 @@ using namespace wpn114;
 
 int main(int argc, char* argv[])
 {
-    wpn114::audio::context.blocksize = 256;
-    wpn114::audio::context.sample_rate = 44100;
-    wpn114::audio::context.num_inputs = 0;
-    wpn114::audio::context.num_outputs = 2;
-    wpn114::audio::context.master_tempo = 120.f;
+    wpn114::audio::audio_context.blocksize = 512;
+    wpn114::audio::audio_context.sample_rate = 44100;
+    wpn114::audio::audio_context.num_inputs = 0;
+    wpn114::audio::audio_context.num_outputs = 2;
+    wpn114::audio::audio_context.master_tempo = 120.f;
 
     //wpn114::audio::units::plugin_handler kaivo_1("Kaivo.vst");
     //wpn114::audio::units::plugin_handler absynth_1("Absynth.vst");
@@ -34,6 +34,9 @@ int main(int argc, char* argv[])
     testwav.activate();
 
     audio_hdl.register_unit(&testwav);
+
+    audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
+    kaivo_1.show_editor();
 
     audio_hdl.initialize();
     audio_hdl.start_stream();

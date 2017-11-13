@@ -54,7 +54,7 @@ namespace plugins {
 class vst_hdl final : public wpn114::audio::unit_base
 {
 public:
-    vst_hdl(std::string name_with_extension);
+    vst_hdl(const char* name_with_extension);
     vst_hdl() = delete;
     vst_hdl(const vst_hdl&) = delete;
     vst_hdl(vst_hdl&&) = delete;
@@ -66,9 +66,9 @@ public:
 #endif
 
     void show_editor();
-    void process_audio(uint16_t num_frames)     override;
+    void process_audio(uint16_t samples_per_buffer)     override;
+    void initialize(uint16_t samples_per_buffer) override;
     void process_midi(vstevents *events);
-    void start();
     void suspend();
     void resume();
 

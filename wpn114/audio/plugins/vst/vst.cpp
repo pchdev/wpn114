@@ -78,9 +78,12 @@ host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index,
 }
 }
 
-wpn114::audio::plugins::vst_hdl::vst_hdl(std::string name_with_extension) :
-    m_plugin_name(name_with_extension)
+wpn114::audio::plugins::vst_hdl::vst_hdl(const char* name_with_extension)
 {
+    std::string name = "/Library/Audio/Plug-Ins/VST/";
+    name += name_with_extension;
+    m_plugin_name = name;
+
     m_plugin = this->_load_vst_2x_plugin(m_plugin_name.c_str());
 
     if(m_plugin->magic != kEffectMagic)
@@ -93,13 +96,17 @@ wpn114::audio::plugins::vst_hdl::vst_hdl(std::string name_with_extension) :
     m_plugin->getParameter = (get_parameter_funcptr) m_plugin->getParameter;
     m_plugin->processReplacing = (process_funcptr) m_plugin->processReplacing;
     m_plugin->setParameter = (set_parameter_funcptr) m_plugin->setParameter;
+
+    SET_ACTIVE
 }
 
 wpn114::audio::plugins::vst_hdl::~vst_hdl() {}
 
 #ifdef WPN_OSSIA
-void wpn114::audio::plugins::vst_hdl::net_expose(std::shared_ptr<ossia::net::node_base> application_node)
-{}
+void wpn114::audio::plugins::vst_hdl::net_expose(ossia::net::device_base* application_node)
+{
+
+}
 #endif
 
 void wpn114::audio::plugins::vst_hdl::show_editor()
@@ -123,11 +130,11 @@ void wpn114::audio::plugins::vst_hdl::show_editor()
     this->_show_vst_2x_editor(this->m_plugin, m_plugin_name.c_str(), width, height);
 }
 
-void wpn114::audio::plugins::vst_hdl::start()
+void wpn114::audio::plugins::vst_hdl::initialize(uint16_t samples_per_buffer)
 {
     m_dispatcher(m_plugin, effOpen, 0, 0, NULL, 0.0f);
-    m_dispatcher(m_plugin, effSetSampleRate, 0, 0, NULL, wpn114::audio::context.sample_rate);
-    m_dispatcher(m_plugin, effSetBlockSize, 0, wpn114::audio::context.blocksize, NULL, 0.0f);
+    m_dispatcher(m_plugin, effSetSampleRate, 0, 0, NULL, 44100);
+    m_dispatcher(m_plugin, effSetBlockSize, 0, samples_per_buffer, NULL, 0.0f);
 
     this->resume();
 }
@@ -142,12 +149,12 @@ void wpn114::audio::plugins::vst_hdl::resume()
     m_dispatcher(m_plugin, effMainsChanged, 0, 1, NULL, 0.f);
 }
 
-void wpn114::audio::plugins::vst_hdl::process_audio(uint32_t num_frames)
+void wpn114::audio::plugins::vst_hdl::process_audio(uint16_t samples_per_buffer)
 {
-    _silence_channel(m_output_buffer, m_num_outputs, wpn114::audio::context.blocksize);
-    _silence_channel(m_input_buffer, m_num_inputs, wpn114::audio::context.blocksize);
+    //_silence_channel(m_output_buffer, m_num_outputs, wpn114::audio::context.blocksize);
+    //silence_channel(m_input_buffer, m_num_inputs, wpn114::audio::context.blocksize);
 
-    m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, wpn114::audio::context.blocksize);
+    m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, samples_per_buffer);
 }
 
 inline void wpn114::audio::plugins::vst_hdl::process_midi(vstevents *events)

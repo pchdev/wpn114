@@ -22,7 +22,7 @@ namespace wpn114 {
 namespace audio {
 namespace plugins {
 
-class circspatn final : public wpn114::audio::unit_base
+class circles final : public wpn114::audio::unit_base
 {
 
 public:
@@ -48,7 +48,7 @@ public:
     }
 #endif
 
-    circspatn(const char* name, uint8_t n_inputs, uint8_t n_speakers) :
+    circles(const char* name, uint8_t n_inputs, uint8_t n_speakers) :
         m_name(name)
     {
         SET_ACTIVE
@@ -79,16 +79,6 @@ public:
 
 private:
     std::string     m_name;
-    float           m_spread;
-    float           m_spread_base[3];
-    float           m_x;
-    float           m_y;
-    float           m_set_invmtx[MAX_LS_SETS][9];
-    float           m_set_mtx[MAX_LS_SETS][9];
-    float           m_lsset[MAX_LS_SETS][3];
-    uint8_t         m_nlsset;
-    uint8_t         m_nls;
-
 };
 }
 }

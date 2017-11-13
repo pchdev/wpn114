@@ -33,3 +33,5 @@ if(APPLE)
     target_link_libraries(wpn114vst "-framework CoreFoundation")
 endif(APPLE)
 
+target_link_libraries(wpn114vst wpn114audio)
+

@@ -9,6 +9,8 @@
     // code from Teragon::MrsWatson
     aeffect* wpn114::audio::plugins::vst_hdl::_load_vst_2x_plugin(const char* path)
     {
+
+        std::cout << path << std::endl;
         CFStringRef plugin_path_string_ref = CFStringCreateWithCString(NULL, path, kCFStringEncodingASCII);
         CFURLRef bundle_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, plugin_path_string_ref, kCFURLPOSIXPathStyle, true);
 
@@ -61,8 +63,9 @@
     {
         NSRect frame;
         NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-        [NSApplication shared_application];
-        VstWindowAppDelegate *app_delegate = [[[VstWindowAppDelegate alloc] init] autorelease];
+        //[NSApplication shared_application];
+        //VstWindowAppDelegate *app_delegate = [[[VstWindowAppDelegate alloc] init] autorelease];
+        VstWindowAppDelegate *app_delegate = [[NSApplication sharedApplication] delegate];
         [NSApp setDelegate:app_delegate];
         NSApplicationLoad();
 

@@ -18,8 +18,6 @@
 #include <stdlib.h>
 #include <wpn114/audio/backend/sndfile_support.hpp>
 
-//template<typename T>
-//T wpn114::audio::sndbuf16_t::load_soundfile(const std::string& path_to_soundfile)
 int wpn114::audio::load_soundfile(sndbuf_t& buffer, const std::string& path_to_soundfile)
 {
     SNDFILE*    infile;
@@ -35,7 +33,6 @@ int wpn114::audio::load_soundfile(sndbuf_t& buffer, const std::string& path_to_s
     }
 
     buffer.data = (float*) malloc(sfinfo.frames * sfinfo.channels * sizeof(float));
-    // remember that sndbuffers_t are interleaved
 
     // puts contents into buffer
     readcount = sf_readf_float(infile, buffer.data, sfinfo.frames);
