@@ -76,19 +76,20 @@
         frame.size.height = height;
 
         NSWindow *window  = [[[NSWindow alloc] initWithContentRect:frame
-                                                         styleMask:NSBackingStoreBuffered
+                                                         styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
                                                            backing:NSBackingStoreBuffered
                                                              defer:NO]
                              autorelease];
+
         NSRect innerFrame = NSMakeRect(0, 0, width, height);
         NSView *view = [[[NSView alloc] initWithFrame:innerFrame] autorelease];
         [window setContentView:view];
-        NSString *windowTitle = [[[NSString alloc] initWithBytes:plugin_name
-                                                          length:strlen(plugin_name)
-                                                        encoding:NSASCIIStringEncoding]
-                                autorelease];
-        [window setTitle:windowTitle];
-        [window makeKeyAndOrderFront:NSApp];
+    //    NSString *windowTitle = [[[NSString alloc] initWithBytes:plugin_name
+      //                                                    length:strlen(plugin_name)
+        //                                                encoding:NSASCIIStringEncoding]
+          //                      autorelease];
+  //      [window setTitle:windowTitle];
+//        [window makeKeyAndOrderFront:NSApp];
 
         std::cerr << "Opening plugin editor window" << std::endl;
 
