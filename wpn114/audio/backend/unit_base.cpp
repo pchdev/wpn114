@@ -43,7 +43,10 @@ void unit_base::initialize_io(uint16_t samples_per_buffer)
     m_output_buffer = new float*[m_num_outputs];
 
     for (int i = 0; i < m_num_outputs; ++i)
+    {
         m_output_buffer[i] = new float[samples_per_buffer];
+        memset(m_output_buffer[i], 0.f, sizeof(samples_per_buffer));
+    }
 
     if  (m_unit_type == unit_type::EFFECT_UNIT ||
          m_unit_type == unit_type::HYBRID_UNIT)
@@ -51,7 +54,10 @@ void unit_base::initialize_io(uint16_t samples_per_buffer)
         m_input_buffer = new float*[m_num_inputs];
 
         for (int i = 0; i < m_num_inputs; ++i)
+        {
             m_input_buffer[i] = new float[samples_per_buffer];
+            memset(m_output_buffer[i], 0.f, sizeof(samples_per_buffer));
+        }
     }
 }
 

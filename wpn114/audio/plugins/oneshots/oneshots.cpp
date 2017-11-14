@@ -30,10 +30,11 @@ public:
     }
 #endif
 
-    oneshots(const char* name, const char* sfpath, float default_level) :
-        m_name(name), m_sf_path(sfpath),
-        m_level(default_level), m_phase(0)
+    oneshots(const char* name, const char* sfpath, float level) :
+        m_sf_path(sfpath), m_phase(0)
     {
+        SET_NAME
+        SET_LEVEL
         SET_INACTIVE
         SETN_INPUTS(0)
         SET_UTYPE(unit_type::GENERATOR_UNIT)
@@ -44,7 +45,7 @@ public:
 
     void initialize(uint16_t samples_per_buffer) override {}
     void process_audio(uint16_t samples_per_buffer) override
-    {
+    {                
         for(int i = 0; i < samples_per_buffer; ++i)
         {
             if ( m_phase == m_sf_buffer.num_samples )
@@ -81,10 +82,8 @@ public:
     }
 
 private:
-    std::string             m_name;
     std::string             m_sf_path;
     sndbuf_t                m_sf_buffer;
-    float                   m_level;
     uint32_t                m_phase;
 };
 }

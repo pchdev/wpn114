@@ -18,12 +18,6 @@ int main(int argc, char* argv[])
     wpn114::audio::audio_context.num_outputs = 2;
     wpn114::audio::audio_context.master_tempo = 120.f;
 
-    //wpn114::audio::units::plugin_handler kaivo_1("Kaivo.vst");
-    //wpn114::audio::units::plugin_handler absynth_1("Absynth.vst");
-    //wpn114::audio::units::plugin_handler altiverb("Altiverb.vst");
-    //wpn114::audio::units::plugin_handler amplitube("Amplitube.vst");
-    //wpn114::audio::plugins::fields sf_1("/path/to/soundfile.wav");
-
     net::net_hdl net_hdl("quarre-audio");
     net_hdl.expose_oscquery_server(1234, 5678);
 
@@ -36,6 +30,9 @@ int main(int argc, char* argv[])
 
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio_hdl.register_unit(&kaivo_1);
+
+    audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
+    audio::plugins::vst_hdl altiverb("Audio Ease/Altiverb 7.vst");
 
     audio::plugins::fields fields_test("fields", "test.wav", 32768, 0.25);
     audio_hdl.register_unit(&fields_test);

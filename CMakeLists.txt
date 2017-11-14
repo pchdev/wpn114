@@ -20,6 +20,7 @@ option(WPN_AUDIO_PLUGINS_FIELDS "Enables fields unit" ON)
 option(WPN_AUDIO_PLUGINS_GRANARY "Enables granular synthesis support" OFF)
 option(WPN_AUDIO_PLUGINS_ONESHOTS "Enables one-shot soundfile player support" ON)
 option(WPN_AUDIO_PLUGINS_POLY_ONESHOTS "Enables poly one-shots sfplayer support" OFF)
+option(WPN_AUDIO_PLUGINS_ROOMS "Enables rooms spatialization system" ON)
 option(WPN_AUDIO_PLUGINS_VBAP "Enables vbap support" OFF)
 option(WPN_AUDIO_PLUGINS_VST "Enables support for VST plugins" ON)
 
