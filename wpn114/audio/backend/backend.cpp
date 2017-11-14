@@ -118,10 +118,8 @@ void wpn114::audio::backend_hdl::start_stream()
                         main_stream_callback,
                         this );
 
-    if(err != paNoError)
-    {
-        std::cout << "error: " << Pa_GetErrorText(err) << std::endl;
-    }
+    if( err != paNoError )
+        std::cerr << "error: " << Pa_GetErrorText(err) << std::endl;
 
     err = Pa_StartStream(m_main_stream);
 }

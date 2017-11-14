@@ -1,8 +1,6 @@
 #pragma once
-
 #include <cstdint>
 #include <memory>
-#include <wpn114/audio/backend/sndfile_support.hpp>
 
 #ifdef WPN_OSSIA
     #include <ossia/ossia.hpp>
@@ -21,7 +19,17 @@ enum class unit_type
 
 class unit_base
 {
+
 public:
+
+#ifdef WPN_AUDIO_SENDS
+struct aux_send
+{
+    unit_base*  m_target;
+    float       m_level;
+};
+#endif
+
     virtual ~unit_base();
 
 #ifdef WPN_OSSIA
@@ -62,6 +70,10 @@ protected:
     float**     m_output_buffer;
     float**     m_vu;
     unit_type   m_unit_type;
+
+#ifdef WPN_AUDIO_SENDS
+    std::vector<aux_send>   m_aux_sends;
+#endif
 
 #ifdef WPN_OSSIA
     ossia::net::node_base*  m_ossia_rootnode;

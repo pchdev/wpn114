@@ -5,6 +5,10 @@ if(WPN_OSSIA)
     add_definitions(-DWPN_OSSIA)
 endif()
 
+if(WPN_AUDIO_SENDS)
+    add_definitions(-DWPN_AUDIO_SENDS)
+endif()
+
 set(WPN114_AUDIO_BACKEND_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/backend.hpp
    ${CMAKE_CURRENT_SOURCE_DIR}/context.hpp

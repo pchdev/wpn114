@@ -1,7 +1,7 @@
 #include <wpn114/audio/backend/backend.hpp>
 #include <wpn114/audio/backend/context.hpp>
 #include <wpn114/audio/plugins/vst/vst.hpp>
-//#include <wpn114/audio/plugins/fields/fields.cpp>
+#include <wpn114/audio/plugins/fields/fields.cpp>
 #include <wpn114/audio/plugins/oneshots/oneshots.cpp>
 //#include <wpn114/control/plugins/push_1/push_controller.hpp>
 #include <wpn114/network/net_hdl.hpp>
@@ -29,13 +29,18 @@ int main(int argc, char* argv[])
 
     audio::backend_hdl audio_hdl(2);
 
-    audio::plugins::oneshots testwav("test", "test.wav", 0.25);
-    testwav.net_expose(net_hdl.get_application_node());
-    testwav.activate();
-    audio_hdl.register_unit(&testwav);
+    /*audio::plugins::oneshots os_test("os_test", "test.wav", 0.25);
+    os_test.net_expose(net_hdl.get_application_node());
+    os_test.activate();
+    audio_hdl.register_unit(&os_test);*/
 
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio_hdl.register_unit(&kaivo_1);
+
+    audio::plugins::fields fields_test("fields", "test.wav", 32768, 0.25);
+    audio_hdl.register_unit(&fields_test);
+    fields_test.activate();
+    fields_test.net_expose(net_hdl.get_application_node());
 
     audio_hdl.initialize();
     audio_hdl.start_stream();

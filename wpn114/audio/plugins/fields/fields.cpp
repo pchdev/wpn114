@@ -64,9 +64,13 @@ public:
             m_env[i] = sin(i/(float)ENVSIZE*(M_PI_2));
     }
 
+    inline float lininterp(float x, float a, float b)
+    { // to be moved in utilities lib
+        return a + x * (b - a);
+    }
+
     void process_audio(uint16_t frames_per_buffer) override
     {
-        // audio processing goes here;
         for(int i = 0; i < frames_per_buffer; ++i)
         {
             if(m_phase >= m_xfade_point && m_phase < m_sf_buffer.num_samples)

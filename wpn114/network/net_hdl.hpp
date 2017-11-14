@@ -32,7 +32,7 @@ public:
     void expose_osc(const char *remote_addr, uint32_t remote_port, uint32_t local_port);
     void expose_minuit(const char *remote_addr, uint32_t remote_port, uint32_t local_port);
 
-    ossia::net::device_base* get_application_node();
+    ossia::net::device_base* get_application_node() const;
 
 private:
     std::unique_ptr<ossia::net::device_base> m_device;
