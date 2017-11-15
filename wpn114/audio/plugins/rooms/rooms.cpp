@@ -24,7 +24,6 @@ namespace plugins {
 
 class rooms final : public wpn114::audio::unit_base
 {
-
 public:
 
     struct rooms_ls
@@ -72,9 +71,9 @@ public:
     {
         SET_NAME
         SET_ACTIVE
-        SETN_INPUTS(n_inputs)
-        SETN_OUTPUTS(n_speakers)
-        SET_UTYPE(unit_type::EFFECT_UNIT)
+        SETN_INPUTS(    n_inputs)
+        SETN_OUTPUTS(   n_speakers)
+        SET_UTYPE(      unit_type::EFFECT_UNIT)
     }
 
     void initialize(uint16_t samples_per_buffer) override {}
@@ -94,12 +93,6 @@ public:
 
     void process_audio(uint16_t samples_per_buffer) override
     {
-        // compute speaker gains
-        // for each ls
-        // if source is within the ls's radius
-        // calculate gain
-        // else output 0. or do nothing?
-
         for(int i = 0; i < samples_per_buffer; ++i)
         {
             for(const auto& src : m_sources)
@@ -108,6 +101,7 @@ public:
                 {
                     if(within_ls_area(src, ls))
                     {
+                        // if source is within the ls's radius
                         OUT[ls.output_channel][i] =
                                 IN[src.input_channel][i] * compute_speaker_gain(src,ls);
                     }
@@ -116,11 +110,10 @@ public:
             }
         }
     }
-
+using namespace std;
 private:
-    std::string             m_name;
-    std::vector<rooms_ls>   m_loudspeakers;
-    std::vector<rooms_src>  m_sources;
+    vector<rooms_ls>   m_loudspeakers;
+    vector<rooms_src>  m_sources;
 };
 }
 }

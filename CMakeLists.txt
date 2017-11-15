@@ -11,7 +11,9 @@ set(CMAKE_MODULE_PATH
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 option(WPN_AUDIO "Enables audio functionnalities" ON)
-option(WPN_AUDIO_SENDS "Enables audio aux/sends support" ON)
+option(WPN_AUDIO_TRACKS "Enables audio tracks support" ON)
+option(WPN_AUDIO_AUX "Enables audio aux/sends support" ON)
+option(WPN_AUDIO_SNDFILE "Enables soundfile support" ON)
 option(WPN_AUDIO_PLUGINS_AMBISONICS "Enables ambisonics support" OFF)
 option(WPN_AUDIO_PLUGINS_ASH "Enables pink/white noise support" OFF)
 option(WPN_AUDIO_PLUGINS_BURSTS "Enables pink noise audio tests bursts" OFF)
@@ -23,6 +25,13 @@ option(WPN_AUDIO_PLUGINS_POLY_ONESHOTS "Enables poly one-shots sfplayer support"
 option(WPN_AUDIO_PLUGINS_ROOMS "Enables rooms spatialization system" ON)
 option(WPN_AUDIO_PLUGINS_VBAP "Enables vbap support" OFF)
 option(WPN_AUDIO_PLUGINS_VST "Enables support for VST plugins" ON)
+
+if( WPN_AUDIO_PLUGINS_FIELDS OR
+    WPN_AUDIO_PLUGINS_GRANARY OR
+    WPN_AUDIO_PLUGINS_ONESHOTS OR
+    WPN_AUDIO_PLUGINS_POLY_ONESHOTS)
+    set(WPN_AUDIO_SNDFILE ON)
+endif()
 
 option(WPN_CONTROL "Enables controller functionnalities" OFF)
 option(WPN_CONTROL_PUSH "Enables Ableton Push functionnalities" OFF)

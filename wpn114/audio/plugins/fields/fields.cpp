@@ -8,12 +8,12 @@ namespace wpn114 {
 namespace audio {
 namespace plugins {
 
-class fields final : public wpn114::audio::unit_base
+//-------------------------------------------------------------------------------------------------------
+class fields final : public wpn114::audio::buffer_unit
+//-------------------------------------------------------------------------------------------------------
 {
-
 public:
-
-#ifdef WPN_OSSIA
+#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
     void net_expose(ossia::net::device_base* application_node) override
     {
         auto root       = application_node->get_root_node().create_child(m_name);
@@ -39,22 +39,23 @@ public:
             m_level = v.get<float>();
         });
     }
-#endif
+#endif //------------------------------------------------------------------------------------------------
 
-    fields(const char* name, const char* sfpath, uint32_t xfade_length, float default_level) :
-        m_name(name), m_sf_path(sfpath),
-        m_xfade_length(xfade_length), m_level(default_level),
+    fields(const char* name, const char* sfpath, uint32_t xfade_length, float level) :
+        m_xfade_length(xfade_length),
         m_phase(0.f), m_env_phase(0.f)
     {
-        SET_INACTIVE
-        SETN_INPUTS(0)
-        SET_UTYPE(unit_type::GENERATOR_UNIT)
-        load_soundfile(m_sf_buffer, sfpath);
+        SET_NAME;
+        SET_LEVEL;
+        SET_INACTIVE;
+        SETN_INPUTS(0);
+        SET_UTYPE(unit_type::GENERATOR_UNIT);
+        load_soundfile(SFBUF, sfpath);
 
-        SETN_OUTPUTS(m_sf_buffer.num_channels)
+        SETN_OUTPUTS(SFBUF.num_channels);
     }
 
-    void initialize(uint16_t frames_per_buffer) override
+    void preprocessing(uint16_t nsamples) override
     {
         // initialize crossfade envelope
         m_env_incr      = ENVSIZE/m_xfade_length;
@@ -115,13 +116,14 @@ public:
         }
     }
 
+    ~fields()
+    {
+        CLEARBUF
+    }
+
 private:
-    sndbuf_t        m_sf_buffer;
     uint32_t        m_phase;
     float           m_env_phase;
-    float           m_level;
-    std::string     m_name;
-    std::string     m_sf_path;
     uint32_t        m_xfade_length;
     uint32_t        m_xfade_point;
     double          m_env_incr;

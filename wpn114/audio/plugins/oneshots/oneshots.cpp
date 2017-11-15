@@ -5,12 +5,12 @@ namespace wpn114 {
 namespace audio {
 namespace plugins {
 
-class oneshots final : public wpn114::audio::unit_base
+class oneshots final : public wpn114::audio::buffer_unit
 {
 
 public:
 
-#ifdef WPN_OSSIA
+#ifdef WPN_OSSIA //---------------------------------------------------------------------------------------
     void net_expose(ossia::net::device_base* application_node) override
     {
         auto root       = application_node->get_root_node().create_child(m_name);
@@ -28,10 +28,9 @@ public:
             m_level = v.get<float>();
         });
     }
-#endif
+#endif //-------------------------------------------------------------------------------------------------
 
-    oneshots(const char* name, const char* sfpath, float level) :
-        m_sf_path(sfpath), m_phase(0)
+    oneshots(const char* name, const char* sfpath, float level) : m_phase(0)
     {
         SET_NAME
         SET_LEVEL
@@ -39,11 +38,12 @@ public:
         SETN_INPUTS(0)
         SET_UTYPE(unit_type::GENERATOR_UNIT)
 
-        load_soundfile(m_sf_buffer, m_sf_path);
+        load_soundfile(SFBUF, sfpath);
         SETN_OUTPUTS(m_sf_buffer.num_channels)
     }
 
     void initialize(uint16_t samples_per_buffer) override {}
+    void process_audio(float** input, uint16_t samples_per_buffer) override {}
     void process_audio(uint16_t samples_per_buffer) override
     {                
         for(int i = 0; i < samples_per_buffer; ++i)
@@ -78,13 +78,11 @@ public:
 
     ~oneshots()
     {
-        delete m_sf_buffer.data;
+        CLEARBUF
     }
 
 private:
-    std::string             m_sf_path;
-    sndbuf_t                m_sf_buffer;
-    uint32_t                m_phase;
+    uint32_t m_phase;
 };
 }
 }

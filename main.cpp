@@ -10,14 +10,11 @@
 
 using namespace wpn114;
 
+#define BLOCKSIZE 512
+#define SAMPLERATE 44100
+
 int main(int argc, char* argv[])
 {
-    wpn114::audio::audio_context.blocksize = 512;
-    wpn114::audio::audio_context.sample_rate = 44100;
-    wpn114::audio::audio_context.num_inputs = 0;
-    wpn114::audio::audio_context.num_outputs = 2;
-    wpn114::audio::audio_context.master_tempo = 120.f;
-
     net::net_hdl net_hdl("quarre-audio");
     net_hdl.expose_oscquery_server(1234, 5678);
 
@@ -39,8 +36,8 @@ int main(int argc, char* argv[])
     fields_test.activate();
     fields_test.net_expose(net_hdl.get_application_node());
 
-    audio_hdl.initialize();
-    audio_hdl.start_stream();
+    audio_hdl.initialize(BLOCKSIZE);
+    audio_hdl.start_stream(SAMPLERATE, BLOCKSIZE);
 
     kaivo_1.show_editor();
 

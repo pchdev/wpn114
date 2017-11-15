@@ -86,20 +86,18 @@ wpn114::audio::plugins::vst_hdl::vst_hdl(const char* name_with_extension)
 
     m_plugin = this->_load_vst_2x_plugin(m_plugin_name.c_str());
 
-    if(m_plugin->magic != kEffectMagic)
-    {
+    if  (m_plugin->magic != kEffectMagic)
         std::cerr << "Plugin's magic number is incorrrect\n";
-    }
 
     m_dispatcher = (dispatcher_funcptr)(m_plugin->dispatcher);
 
-    m_plugin->getParameter = (get_parameter_funcptr) m_plugin->getParameter;
-    m_plugin->processReplacing = (process_funcptr) m_plugin->processReplacing;
-    m_plugin->setParameter = (set_parameter_funcptr) m_plugin->setParameter;
+    m_plugin->getParameter      = (get_parameter_funcptr) m_plugin->getParameter;
+    m_plugin->processReplacing  = (process_funcptr) m_plugin->processReplacing;
+    m_plugin->setParameter      = (set_parameter_funcptr) m_plugin->setParameter;
 
-    SET_UTYPE(wpn114::audio::unit_type::HYBRID_UNIT);
-    SETN_INPUTS(m_plugin->numInputs);
-    SETN_OUTPUTS(m_plugin->numOutputs);
+    SET_UTYPE(      wpn114::audio::unit_type::HYBRID_UNIT);
+    SETN_INPUTS(    m_plugin->numInputs);
+    SETN_OUTPUTS(   m_plugin->numOutputs);
 
     SET_ACTIVE
 }
@@ -109,7 +107,12 @@ wpn114::audio::plugins::vst_hdl::~vst_hdl() {}
 #ifdef WPN_OSSIA
 void wpn114::audio::plugins::vst_hdl::net_expose(ossia::net::device_base* application_node)
 {
-
+    for(int i = 0; i < m_plugin->numParams; ++i)
+    {
+        char name[256];
+        m_dispatcher(m_plugin, effGetParamName, 0, 0, &name, 0);
+        std::cout << name << std::endl;
+    }
 }
 #endif
 
@@ -123,8 +126,8 @@ void wpn114::audio::plugins::vst_hdl::show_editor()
 
     if(editor_rect)
     {
-        width = editor_rect->right - editor_rect->left;
-        height = editor_rect->bottom - editor_rect->top;
+        width   = editor_rect->right - editor_rect->left;
+        height  = editor_rect->bottom - editor_rect->top;
     }
     else
     {
@@ -160,6 +163,11 @@ inline void wpn114::audio::plugins::vst_hdl::_silence_channel(float** channel_da
             channel_data[ch][fr] = 0.0f;
 }
 
+inline void wpn114::audio::plugins::vst_hdl::process_midi(vstevents *events)
+{
+    m_dispatcher(m_plugin, effProcessEvents, 0, 0, events, 0.f);
+}
+
 void wpn114::audio::plugins::vst_hdl::process_audio(uint16_t samples_per_buffer)
 {
     _silence_channel(m_input_buffer, m_num_inputs, samples_per_buffer);
@@ -168,7 +176,4 @@ void wpn114::audio::plugins::vst_hdl::process_audio(uint16_t samples_per_buffer)
     m_plugin->processReplacing(m_plugin, m_input_buffer, m_output_buffer, samples_per_buffer);
 }
 
-inline void wpn114::audio::plugins::vst_hdl::process_midi(vstevents *events)
-{
-    m_dispatcher(m_plugin, effProcessEvents, 0, 0, events, 0.f);
-}
+

@@ -26,20 +26,10 @@ unit_base::~unit_base()
         delete m_output_buffer[i];
 
     delete m_output_buffer;
-
-    if(m_unit_type == unit_type::EFFECT_UNIT ||
-            m_unit_type == unit_type::HYBRID_UNIT)
-    {
-        for (int i = 0; i < m_num_inputs; ++i)
-            delete m_input_buffer[i];
-
-        delete m_input_buffer;
-    }
 }
 
-void unit_base::initialize_io(uint16_t samples_per_buffer)
+void unit_base::initialize_buffers(uint16_t samples_per_buffer)
 {
-    // allocate input/output buffers if necessary
     m_output_buffer = new float*[m_num_outputs];
 
     for (int i = 0; i < m_num_outputs; ++i)
@@ -47,21 +37,9 @@ void unit_base::initialize_io(uint16_t samples_per_buffer)
         m_output_buffer[i] = new float[samples_per_buffer];
         memset(m_output_buffer[i], 0.f, sizeof(samples_per_buffer));
     }
-
-    if  (m_unit_type == unit_type::EFFECT_UNIT ||
-         m_unit_type == unit_type::HYBRID_UNIT)
-    {
-        m_input_buffer = new float*[m_num_inputs];
-
-        for (int i = 0; i < m_num_inputs; ++i)
-        {
-            m_input_buffer[i] = new float[samples_per_buffer];
-            memset(m_output_buffer[i], 0.f, sizeof(samples_per_buffer));
-        }
-    }
 }
 
-unit_type unit_base::get_unit_type()
+unit_type unit_base::get_unit_type() const
 {
     return m_unit_type;
 }
@@ -76,7 +54,7 @@ uint8_t unit_base::get_num_channels() const
     return m_num_outputs;
 }
 
-bool unit_base::is_active()
+bool unit_base::is_active() const
 {
     return m_active;
 }
@@ -90,3 +68,124 @@ void unit_base::deactivate()
 {
     m_active = false;
 }
+
+float** unit_base::get_output_buffer()
+{
+    return m_output_buffer;
+}
+
+//-------------------------------------------------------------------------------------------------------
+#ifdef WPN_AUDIO_AUX
+//-------------------------------------------------------------------------------------------------------
+aux_unit::aux_unit(const char *name, std::unique_ptr<unit_base> receiver)
+{
+    SET_NAME;
+    SET_UTYPE( unit_type::EFFECT_UNIT );
+    SET_ACTIVE;
+}
+
+aux_unit::~aux_unit() {}
+
+#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+void aux_unit::net_expose(ossia::net::device_base *application_node) override
+{
+
+}
+#endif //------------------------------------------------------------------------------------------------
+
+void aux_unit::preprocessing(uint16_t nsamples) override
+{
+    m_receiver->preprocessing(nsamples);
+}
+
+void aux_unit::process_audio(float **input_buffer, uint16_t nsamples) override {}
+void aux_unit::process_audio(uint16_t nsamples) override
+{
+    for(uint16_t i = 0; i < nsamples; ++i)
+    {
+        for(uint8_t c = 0; i < N_OUTPUTS; ++c)
+        {
+            OUT[c][i] = 0.f;
+
+            for(uint8_t u = 0; i < m_sends.size(); ++u)
+            {
+                // mix input sources
+                OUT[c][i] += m_sends[u].m_sender->get_output_buffer()[c][i] * m_sends[u].m_level;
+            }
+        }
+    }
+
+    // pass mixed output buffer to receiver unit
+    m_receiver->process_audio(OUT, nsamples);
+}
+
+void aux_unit::add_sender(unit_base *sender, float level)
+{
+    aux_send send = {sender,level};
+    m_sends.push_back(send);
+}
+#endif
+
+//-------------------------------------------------------------------------------------------------------
+#ifdef WPN_AUDIO_TRACKS
+//-------------------------------------------------------------------------------------------------------
+track_unit::track_unit(const char* name)
+{
+    SET_NAME;
+    SET_UTYPE(unit_type::HYBRID_UNIT);
+    SET_ACTIVE;
+}
+
+#ifdef WPN_OSSIA
+void track_unit::net_expose(ossia::net::device_base *application_node) override
+{
+
+}
+#endif
+
+void track_unit::preprocessing(uint16_t nsamples) override
+{
+    for (auto& unit : m_units)
+        unit->preprocessing(nsamples);
+}
+
+void track_unit::process_audio(float **input_buffer, uint16_t nsamples) override
+{
+    OUT = input_buffer;
+    for(auto& unit : m_units)
+    {
+        unit->process_audio(OUT, nsamples);
+    }
+}
+
+void track_unit::process_audio(uint16_t nsamples) override
+{
+    for (auto& unit : m_units)
+    {
+        if(unit->get_unit_type() == unit_type::GENERATOR_UNIT)
+        {
+            unit->process_audio(nsamples);
+        }
+
+        else if(unit->get_unit_type() == unit_type::EFFECT_UNIT ||
+                unit->get_unit_type() == unit_type::HYBRID_UNIT )
+        {
+            unit->process_audio(OUT, nsamples);
+        }
+
+        OUT = unit->get_output_buffer();
+    }
+}
+
+void track_unit::add_unit(unit_base *unit)
+{
+    m_units.push_back(unit);
+}
+
+void track_unit::remove_unit(unit_base *unit)
+{
+    m_units.erase(  std::remove(m_units.begin(), m_units.end(), unit),
+                    m_units.end());
+}
+
+#endif

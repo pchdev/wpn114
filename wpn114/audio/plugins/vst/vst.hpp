@@ -41,10 +41,10 @@ typedef vstintptr_t
 (*dispatcher_funcptr)(aeffect* effect, vstint32_t opcode, vstint32_t index,
                       vstint32_t value, void *ptr, float opt);
 
-typedef float (*get_parameter_funcptr)(aeffect* effect, vstint32_t index);
-typedef void (*set_parameter_funcptr)(aeffect* effect, vstint32_t index, float value);
-typedef vstint32_t (*process_events_funcptr) (vstevents *events);
-typedef void (*process_funcptr) (aeffect* effect, float **inputs, float **outputs, vstint32_t sample_frames);
+typedef float       (*get_parameter_funcptr)(aeffect* effect, vstint32_t index);
+typedef void        (*set_parameter_funcptr)(aeffect* effect, vstint32_t index, float value);
+typedef vstint32_t  (*process_events_funcptr) (vstevents *events);
+typedef void        (*process_funcptr) (aeffect* effect, float **inputs, float **outputs, vstint32_t sample_frames);
 
 
 namespace wpn114 {

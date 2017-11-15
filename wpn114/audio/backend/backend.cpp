@@ -17,7 +17,7 @@ static int main_stream_callback
     // copy unit's configuration
     std::vector<unit_base*> units = backend->get_registered_units();
     uint8_t nchannels = backend->get_num_channels();
-    float data[nchannels][frames_per_buffer];
+    float master[nchannels][frames_per_buffer];
 
     // call audio processing on each of the registered units
     for (auto& unit : units)
@@ -29,15 +29,15 @@ static int main_stream_callback
         for (uint8_t n = 0; n < nchannels; ++n)
         {
             // initialize sample data for each channel
-            data[n][i] = 0.f;
+            master[n][i] = 0.f;
 
             //      poll registered units
             for     (auto& unit : units)
             if      (unit->is_active() && n <= unit->get_num_channels()-1)
-                    data[n][i] += unit->get_framedata(n,i);
+                    master[n][i] += unit->get_framedata(n,i);
 
             // output sample data for channel n
-            *out++ = data[n][i];
+            *out++ = master[n][i];
         }
     }
 
@@ -80,7 +80,7 @@ void wpn114::audio::backend_hdl::unregister_unit(wpn114::audio::unit_base* unit)
                 m_registered_units.end());
 }
 
-void wpn114::audio::backend_hdl::initialize()
+void wpn114::audio::backend_hdl::initialize(uint16_t nsamples)
 {
     PaError err;
 
@@ -101,19 +101,19 @@ void wpn114::audio::backend_hdl::initialize()
     for(auto& unit : m_registered_units)
     {
         // initialize registered units
-        unit->initialize_io(512);
-        unit->initialize(512);
+        unit->initialize_io(nsamples);
+        unit->initialize(nsamples);
     }
 }
 
-void wpn114::audio::backend_hdl::start_stream()
+void wpn114::audio::backend_hdl::start_stream(uint32_t sample_rate, uint16_t nsamples)
 {
     PaError err = Pa_OpenStream(
                         &m_main_stream,
                         NULL,
                         &m_output_parameters,
-                        44100,
-                        512,
+                        sample_rate,
+                        nsamples,
                         paClipOff,
                         main_stream_callback,
                         this );
@@ -127,4 +127,6 @@ void wpn114::audio::backend_hdl::start_stream()
 void wpn114::audio::backend_hdl::stop_stream()
 {
     PaError err = Pa_StopStream(m_main_stream);
+    if ( err != paNoError )
+        std::cerr << "error when stopping stream: " << Pa_GetErrorText(err) << std::endl;
 }
