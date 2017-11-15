@@ -8,6 +8,10 @@ if(WPN_AUDIO)
 
     target_link_libraries(${PROJECT_NAME} wpn114audio)
 
+    if(WPN_AUDIO_SNDFILE)
+        add_definitions(-DWPN_AUDIO_SNDFILE)
+    endif()
+
     if(WPN_AUDIO_PLUGINS_AMBISONICS)
         message("WPN114: building with ambisonics audio plugin")
         target_link_libraries(${PROJECT_NAME} ambisonics)

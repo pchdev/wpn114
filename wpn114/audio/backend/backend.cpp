@@ -59,7 +59,7 @@ wpn114::audio::backend_hdl::~backend_hdl()
 inline std::vector<wpn114::audio::unit_base*>
 wpn114::audio::backend_hdl::get_registered_units()  const
 {
-    return m_registered_units;
+    return m_units;
 }
 
 inline uint8_t backend_hdl::get_num_channels()      const
@@ -69,18 +69,18 @@ inline uint8_t backend_hdl::get_num_channels()      const
 
 void wpn114::audio::backend_hdl::register_unit(wpn114::audio::unit_base* unit)
 {
-    m_registered_units.push_back(unit);
+    m_units.push_back(unit);
 }
 
 void wpn114::audio::backend_hdl::unregister_unit(wpn114::audio::unit_base* unit)
 {
-    m_registered_units.erase(
+    m_units.erase(
                 std::remove(
-                    m_registered_units.begin(), m_registered_units.end(), unit),
-                m_registered_units.end());
+                    m_units.begin(), m_units.end(), unit),
+                m_units.end());
 }
 
-void wpn114::audio::backend_hdl::initialize(uint16_t nsamples)
+void wpn114::audio::backend_hdl::initialize(size_t sample_rate, uint16_t nsamples)
 {
     PaError err;
 
@@ -98,15 +98,15 @@ void wpn114::audio::backend_hdl::initialize(uint16_t nsamples)
     auto device_name = Pa_GetDeviceInfo(m_output_parameters.device)->name;
     std::cout << device_name << std::endl;
 
-    for(auto& unit : m_registered_units)
+    for(auto& unit : m_units)
     {
         // initialize registered units
-        unit->initialize_io(nsamples);
-        unit->initialize(nsamples);
+        unit->bufalloc(nsamples);
+        unit->preprocessing(sample_rate, nsamples);
     }
 }
 
-void wpn114::audio::backend_hdl::start_stream(uint32_t sample_rate, uint16_t nsamples)
+void wpn114::audio::backend_hdl::start_stream(size_t sample_rate, uint16_t nsamples)
 {
     PaError err = Pa_OpenStream(
                         &m_main_stream,

@@ -33,8 +33,8 @@ public:
     backend_hdl(uint8_t num_channels = 2);
     ~backend_hdl();
 
-    void initialize(uint16_t nsamples);
-    void start_stream(uint32_t sample_rate, uint16_t nsamples);
+    void initialize(size_t sample_rate, uint16_t nsamples);
+    void start_stream(size_t sample_rate, uint16_t nsamples);
     void stop_stream();
 
     void register_unit(unit_base* unit);

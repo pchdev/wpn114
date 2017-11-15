@@ -23,6 +23,7 @@ enum class unit_type
 };
 
 class aux_unit;
+
 //-------------------------------------------------------------------------------------------------------
 class unit_base
 // the main base class for units
@@ -40,12 +41,13 @@ public:
     virtual void process_audio(float** input_buffer, uint16_t nsamples) = 0;
     // the unit's audio callbacks
 
-    virtual void preprocessing(uint16_t nsamples) = 0;
+    virtual void preprocessing(size_t sample_rate, uint16_t nsamples) = 0;
     // preparing the units user-defined audio processing
 
-    void        alloc(uint16_t nsamples);
-    //          pre-initializes output buffer, setting them to 0
+    void        bufalloc(uint16_t nsamples);
+    //          pre-initializes output buffer, setting it to 0
     float       get_framedata(uint8_t channel, uint16_t frame) const;
+    float**     get_output_buffer();
 
     uint8_t     get_num_channels() const;
     unit_type   get_unit_type() const;
@@ -70,7 +72,6 @@ protected:
 #define SET_NAME            m_name = name
 #define SET_LEVEL           m_level = level
 
-    float**         get_output_buffer();
     bool            m_active;
     float           m_level;
     uint8_t         m_num_inputs;
@@ -86,6 +87,8 @@ protected:
 //-------------------------------------------------------------------------------------------------------
 class buffer_unit : public unit_base
 {
+public:
+    ~buffer_unit();
 protected:
 #define SFBUF          m_sf_buffer
 #define CLEAR_SFBUF    delete m_sf_buffer.data
@@ -97,7 +100,6 @@ protected:
 #ifdef WPN_AUDIO_AUX
 // manages audio aux-buses/tracks
 //-------------------------------------------------------------------------------------------------------
-
 struct aux_send
 {
     unit_base*  m_sender;
@@ -107,13 +109,12 @@ struct aux_send
 class aux_unit : public unit_base
 {
 public:
-
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
     void net_expose(ossia::net::device_base *application_node) override;
 #endif //------------------------------------------------------------------------------------------------
 
     aux_unit(const char* name, std::unique_ptr<unit_base> receiver);
-    void preprocessing(uint16_t nsamples) override;
+    void preprocessing(size_t sample_rate, uint16_t nsamples) override;
     void process_audio(uint16_t nsamples) override;
     void process_audio(float** input_buffer, uint16_t nsamples) override;
     ~aux_unit();
@@ -142,7 +143,7 @@ public:
 
     track_unit(const char* name);
     ~track_unit();
-    void preprocessing(uint16_t nsamples) override;
+    void preprocessing(size_t sample_rate, uint16_t nsamples) override;
     void process_audio(uint16_t nsamples) override;
     void process_audio(float** input_buffer, uint16_t nsamples) override;
     void add_unit(unit_base* unit);

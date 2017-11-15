@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     fields_test.activate();
     fields_test.net_expose(net_hdl.get_application_node());
 
-    audio_hdl.initialize(BLOCKSIZE);
+    audio_hdl.initialize(SAMPLERATE, BLOCKSIZE);
     audio_hdl.start_stream(SAMPLERATE, BLOCKSIZE);
 
     kaivo_1.show_editor();

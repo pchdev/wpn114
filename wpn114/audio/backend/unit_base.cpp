@@ -28,7 +28,7 @@ unit_base::~unit_base()
     delete m_output_buffer;
 }
 
-void unit_base::initialize_buffers(uint16_t samples_per_buffer)
+void unit_base::bufalloc(uint16_t samples_per_buffer)
 {
     m_output_buffer = new float*[m_num_outputs];
 
@@ -87,19 +87,19 @@ aux_unit::aux_unit(const char *name, std::unique_ptr<unit_base> receiver)
 aux_unit::~aux_unit() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void aux_unit::net_expose(ossia::net::device_base *application_node) override
+void aux_unit::net_expose(ossia::net::device_base *application_node)
 {
 
 }
 #endif //------------------------------------------------------------------------------------------------
 
-void aux_unit::preprocessing(uint16_t nsamples) override
+void aux_unit::preprocessing(size_t sample_rate, uint16_t nsamples)
 {
-    m_receiver->preprocessing(nsamples);
+    m_receiver->preprocessing(sample_rate, nsamples);
 }
 
-void aux_unit::process_audio(float **input_buffer, uint16_t nsamples) override {}
-void aux_unit::process_audio(uint16_t nsamples) override
+void aux_unit::process_audio(float **input_buffer, uint16_t nsamples) {}
+void aux_unit::process_audio(uint16_t nsamples)
 {
     for(uint16_t i = 0; i < nsamples; ++i)
     {
@@ -136,20 +136,22 @@ track_unit::track_unit(const char* name)
     SET_ACTIVE;
 }
 
+track_unit::~track_unit() {}
+
 #ifdef WPN_OSSIA
-void track_unit::net_expose(ossia::net::device_base *application_node) override
+void track_unit::net_expose(ossia::net::device_base *application_node)
 {
 
 }
 #endif
 
-void track_unit::preprocessing(uint16_t nsamples) override
+void track_unit::preprocessing(size_t sample_rate, uint16_t nsamples)
 {
     for (auto& unit : m_units)
-        unit->preprocessing(nsamples);
+        unit->preprocessing(sample_rate, nsamples);
 }
 
-void track_unit::process_audio(float **input_buffer, uint16_t nsamples) override
+void track_unit::process_audio(float **input_buffer, uint16_t nsamples)
 {
     OUT = input_buffer;
     for(auto& unit : m_units)
@@ -158,7 +160,7 @@ void track_unit::process_audio(float **input_buffer, uint16_t nsamples) override
     }
 }
 
-void track_unit::process_audio(uint16_t nsamples) override
+void track_unit::process_audio(uint16_t nsamples)
 {
     for (auto& unit : m_units)
     {
@@ -186,6 +188,17 @@ void track_unit::remove_unit(unit_base *unit)
 {
     m_units.erase(  std::remove(m_units.begin(), m_units.end(), unit),
                     m_units.end());
+}
+
+#endif
+
+//-------------------------------------------------------------------------------------------------------
+#ifdef WPN_AUDIO_SNDFILE
+//-------------------------------------------------------------------------------------------------------
+
+buffer_unit::~buffer_unit()
+{
+    CLEAR_SFBUF;
 }
 
 #endif

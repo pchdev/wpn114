@@ -99,7 +99,7 @@ wpn114::audio::plugins::vst_hdl::vst_hdl(const char* name_with_extension)
     SETN_INPUTS(    m_plugin->numInputs);
     SETN_OUTPUTS(   m_plugin->numOutputs);
 
-    SET_ACTIVE
+    SET_ACTIVE;
 }
 
 wpn114::audio::plugins::vst_hdl::~vst_hdl() {}
@@ -137,11 +137,11 @@ void wpn114::audio::plugins::vst_hdl::show_editor()
     this->_show_vst_2x_editor(this->m_plugin, m_plugin_name.c_str(), width, height);
 }
 
-void wpn114::audio::plugins::vst_hdl::initialize(uint16_t samples_per_buffer)
+void wpn114::audio::plugins::vst_hdl::preprocessing(size_t sample_rate, uint16_t nsamples)
 {
     m_dispatcher(m_plugin, effOpen, 0, 0, NULL, 0.0f);
-    m_dispatcher(m_plugin, effSetSampleRate, 0, 0, NULL, 44100);
-    m_dispatcher(m_plugin, effSetBlockSize, 0, samples_per_buffer, NULL, 0.0f);
+    m_dispatcher(m_plugin, effSetSampleRate, 0, 0, NULL, sample_rate);
+    m_dispatcher(m_plugin, effSetBlockSize, 0, nsamples, NULL, 0.0f);
 
     this->resume();
 }
@@ -168,12 +168,18 @@ inline void wpn114::audio::plugins::vst_hdl::process_midi(vstevents *events)
     m_dispatcher(m_plugin, effProcessEvents, 0, 0, events, 0.f);
 }
 
-void wpn114::audio::plugins::vst_hdl::process_audio(uint16_t samples_per_buffer)
+void wpn114::audio::plugins::vst_hdl::process_audio(uint16_t nsamples)
 {
-    _silence_channel(m_input_buffer, m_num_inputs, samples_per_buffer);
-    _silence_channel(m_output_buffer, m_num_outputs, samples_per_buffer);
+    //_silence_channel(m_input_buffer, m_num_inputs, samples_per_buffer);
+    _silence_channel(m_output_buffer, m_num_outputs, nsamples);
 
-    m_plugin->processReplacing(m_plugin, m_input_buffer, m_output_buffer, samples_per_buffer);
+    m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, nsamples);
+}
+
+void wpn114::audio::plugins::vst_hdl::process_audio(float** input, uint16_t nsamples)
+{
+    _silence_channel(m_output_buffer, m_num_outputs, nsamples);
+    m_plugin->processReplacing(m_plugin, input, m_output_buffer, nsamples);
 }
 
 

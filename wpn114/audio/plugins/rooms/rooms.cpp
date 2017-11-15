@@ -58,25 +58,25 @@ public:
         auto level_param      = level_node->create_parameter(ossia::val_type::FLOAT);
 
         azimuth_param->add_callback([&](const ossia::value& v) {
-            m_x = v.get<float>();
+            //m_x = v.get<float>();
         });
 
         level_param->add_callback([&](const ossia::value& v) {
-            m_x = v.get<float>();
+            //m_x = v.get<float>();
         });
     }
 #endif
 
     rooms(const char* name, uint8_t n_inputs, uint8_t n_speakers)
     {
-        SET_NAME
-        SET_ACTIVE
-        SETN_INPUTS(    n_inputs)
-        SETN_OUTPUTS(   n_speakers)
-        SET_UTYPE(      unit_type::EFFECT_UNIT)
+        SET_NAME;
+        SET_ACTIVE;
+        SETN_INPUTS(    n_inputs);
+        SETN_OUTPUTS(   n_speakers);
+        SET_UTYPE(      unit_type::EFFECT_UNIT);
     }
 
-    void initialize(uint16_t samples_per_buffer) override {}
+    void preprocessing(size_t sample_rate, uint16_t samples_per_buffer) override {}
 
     inline bool within_ls_area(const rooms_src& src, const rooms_ls& ls)
     {
@@ -88,7 +88,7 @@ public:
     {
         // compute source position in ls's radius
         float r = (src.pos[0]*src.pos[0]*src.level*ls.level + src.pos[1]*src.pos[1]*src.level*ls.level);
-        return r/ls.m_radius;
+        return r/ls.radius;
     }
 
     void process_audio(uint16_t samples_per_buffer) override
@@ -102,18 +102,18 @@ public:
                     if(within_ls_area(src, ls))
                     {
                         // if source is within the ls's radius
-                        OUT[ls.output_channel][i] =
-                                IN[src.input_channel][i] * compute_speaker_gain(src,ls);
+                        OUT[ls.output_channel][i] = 0.f;
+                                //IN[src.input_channel][i] * compute_speaker_gain(src,ls);
                     }
                     else OUT[ls.output_channel][i] = 0.f;
                 }
             }
         }
     }
-using namespace std;
+
 private:
-    vector<rooms_ls>   m_loudspeakers;
-    vector<rooms_src>  m_sources;
+    std::vector<rooms_ls>   m_loudspeakers;
+    std::vector<rooms_src>  m_sources;
 };
 }
 }

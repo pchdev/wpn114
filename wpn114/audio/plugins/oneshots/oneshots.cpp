@@ -1,5 +1,4 @@
 #include <wpn114/audio/backend/unit_base.hpp>
-#include <wpn114/audio/backend/sndfile_support.hpp>
 
 namespace wpn114 {
 namespace audio {
@@ -32,17 +31,17 @@ public:
 
     oneshots(const char* name, const char* sfpath, float level) : m_phase(0)
     {
-        SET_NAME
-        SET_LEVEL
-        SET_INACTIVE
-        SETN_INPUTS(0)
-        SET_UTYPE(unit_type::GENERATOR_UNIT)
+        SET_NAME;
+        SET_LEVEL;
+        SET_INACTIVE;
+        SETN_INPUTS(0);
+        SET_UTYPE(unit_type::GENERATOR_UNIT);
 
         load_soundfile(SFBUF, sfpath);
-        SETN_OUTPUTS(m_sf_buffer.num_channels)
+        SETN_OUTPUTS(m_sf_buffer.num_channels);
     }
 
-    void initialize(uint16_t samples_per_buffer) override {}
+    void preprocessing(size_t sample_rate, uint16_t samples_per_buffer) override {}
     void process_audio(float** input, uint16_t samples_per_buffer) override {}
     void process_audio(uint16_t samples_per_buffer) override
     {                
@@ -78,7 +77,7 @@ public:
 
     ~oneshots()
     {
-        CLEARBUF
+        CLEAR_SFBUF;
     }
 
 private:

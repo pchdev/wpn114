@@ -1,15 +1,13 @@
-#include <math.h>
 #include <wpn114/audio/backend/unit_base.hpp>
-#include <wpn114/audio/backend/sndfile_support.hpp>
+#include <math.h>
 
 #define ENVSIZE 16384
 
 namespace wpn114 {
 namespace audio {
 namespace plugins {
-
 //-------------------------------------------------------------------------------------------------------
-class fields final : public wpn114::audio::buffer_unit
+class fields final : public buffer_unit
 //-------------------------------------------------------------------------------------------------------
 {
 public:
@@ -26,13 +24,13 @@ public:
         auto level_param    = level_node->create_parameter(ossia::val_type::FLOAT);
 
         play_param->add_callback([&](const ossia::value& v) {
-            SET_ACTIVE
+            SET_ACTIVE;
         });
 
         stop_param->add_callback([&](const ossia::value& v) {
             m_phase         = 0;
             m_env_phase     = 0;
-            SET_INACTIVE
+            SET_INACTIVE;
         });
 
         level_param->add_callback([&](const ossia::value& v) {
@@ -55,8 +53,9 @@ public:
         SETN_OUTPUTS(SFBUF.num_channels);
     }
 
-    void preprocessing(uint16_t nsamples) override
+    void preprocessing(size_t sample_rate, uint16_t nsamples) override
     {
+        (void) sample_rate;
         // initialize crossfade envelope
         m_env_incr      = ENVSIZE/m_xfade_length;
         m_xfade_point   = m_sf_buffer.num_samples - m_xfade_length;
@@ -70,6 +69,7 @@ public:
         return a + x * (b - a);
     }
 
+    void process_audio(float** input, uint16_t nsamples) override {}
     void process_audio(uint16_t frames_per_buffer) override
     {
         for(int i = 0; i < frames_per_buffer; ++i)
@@ -118,7 +118,7 @@ public:
 
     ~fields()
     {
-        CLEARBUF
+        CLEAR_SFBUF;
     }
 
 private:
