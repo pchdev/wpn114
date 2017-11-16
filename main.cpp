@@ -10,11 +10,15 @@
 using namespace wpn114;
 using namespace ossia::net;
 //-------------------------------------------------------------------------------------------------------
-#define BLOCKSIZE 512
-#define SAMPLERATE 44100
+#define BLOCKSIZE   512
+#define SAMPLERATE  44100
 //-------------------------------------------------------------------------------------------------------
 int main(int argc, char* argv[])
 {
+    std::cout << "WPN114_HASH_"
+              << WPN114_VERSION_STRING
+              << std::endl;
+
     // initialize network
     net::net_hdl net_hdl("quarre-audio");
     net_hdl.expose_oscquery_server(1234, 5678);    
@@ -25,7 +29,7 @@ int main(int argc, char* argv[])
 
     // instantiate plugins
     audio::plugins::oneshots os_test("test.wav");
-        os_test.net_expose(appnode, "os_test");
+    os_test.net_expose(appnode, "os_test");
     audio_hdl.register_unit(&os_test);
 
     audio::aux_unit bus_1;

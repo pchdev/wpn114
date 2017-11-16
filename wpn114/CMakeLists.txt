@@ -1,3 +1,6 @@
+
+add_definitions(-DWPN114_VERSION_STRING="16HBMC11")
+
 add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/main.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 
