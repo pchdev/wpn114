@@ -92,6 +92,10 @@ void unit_base::net_expose(ossia::net::node_base &application_node)
         m_active = v.get<bool>();
     });
 
+    active_param->set_value(m_active);
+    auto level_domain = ossia::make_domain(0.f, 1.f);
+    ossia::net::set_domain(*level_node, level_domain);
+
     net_expose_plugin_tree(*m_netnode);
 }
 
