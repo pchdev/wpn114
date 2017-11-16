@@ -8,6 +8,8 @@ namespace audio {
 namespace plugins {
 //-------------------------------------------------------------------------------------------------------
 class soundtracks final : public buffer_unit
+        // designed for live shows / rehearsals
+        // simple sample-player with control on start and end position with looping capabilities
 //-------------------------------------------------------------------------------------------------------
 {
 public:

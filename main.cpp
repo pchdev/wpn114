@@ -1,5 +1,4 @@
 #include <wpn114/audio/backend/backend.hpp>
-#include <wpn114/audio/backend/context.hpp>
 #include <wpn114/audio/plugins/vst/vst.hpp>
 #include <wpn114/audio/plugins/fields/fields.cpp>
 #include <wpn114/audio/plugins/oneshots/oneshots.cpp>
@@ -9,17 +8,20 @@
 #include <time.h>
 
 using namespace wpn114;
-
+//-------------------------------------------------------------------------------------------------------
 #define BLOCKSIZE 512
 #define SAMPLERATE 44100
-
+//-------------------------------------------------------------------------------------------------------
 int main(int argc, char* argv[])
 {
+    // initialize network
     net::net_hdl net_hdl("quarre-audio");
     net_hdl.expose_oscquery_server(1234, 5678);
 
+    // initialize audio backend
     audio::backend_hdl audio_hdl(2);
 
+    // instantiate plugins
     audio::plugins::oneshots os_test("test.wav");
     os_test.net_expose(net_hdl.get_application_node(), "os_test");
     audio_hdl.register_unit(&os_test);
@@ -35,7 +37,6 @@ int main(int argc, char* argv[])
     kaivo_2.net_expose(net_hdl.get_application_node(), "kaivo_2");
 
     auto altiverb = std::make_unique<audio::plugins::vst_hdl>("Audio Ease/Altiverb 7.vst");
-    //audio::plugins::vst_hdl altiverb("Audio Ease/Altiverb 7.vst");
     altiverb->net_expose(net_hdl.get_application_node(), "altiverb");
     bus_1.set_receiver(std::move(altiverb));
 
@@ -43,8 +44,9 @@ int main(int argc, char* argv[])
     audio_hdl.register_unit(&fields_test);
     fields_test.net_expose(net_hdl.get_application_node(), "fields");
 
-    audio_hdl.initialize(SAMPLERATE, BLOCKSIZE);
-    audio_hdl.start_stream(SAMPLERATE, BLOCKSIZE);
+    // start audio
+    audio_hdl.initialize(   SAMPLERATE, BLOCKSIZE);
+    audio_hdl.start_stream( SAMPLERATE, BLOCKSIZE);
 
     kaivo_1.show_editor();
 
@@ -63,7 +65,6 @@ int main(int argc, char* argv[])
       //  ;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-
     audio_hdl.stop_stream();
 
     return 0;

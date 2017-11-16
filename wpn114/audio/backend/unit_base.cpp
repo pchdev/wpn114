@@ -74,14 +74,12 @@ float** unit_base::get_output_buffer()
     return m_output_buffer;
 }
 
-#ifdef WPN_AUDIO_AUX
-
+#ifdef WPN_AUDIO_AUX //----------------------------------------------------------------------------------
 void unit_base::add_aux_send(aux_unit &aux)
 {
     aux.add_sender(this, 1.f);
 }
-
-#endif
+#endif //------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------------
 #ifdef WPN_AUDIO_AUX

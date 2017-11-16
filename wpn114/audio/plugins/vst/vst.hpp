@@ -21,12 +21,13 @@
 #include "aeffectx.h"
 #include <wpn114/audio/backend/unit_base.hpp>
 
+//-------------------------------------------------------------------------------------------------------
 using aeffect = AEffect;
 using vstint32_t = VstInt32;
 using vstint64_t = VstInt64;
 using vstintptr_t = VstIntPtr;
 using vstevents = VstEvents;
-
+//-------------------------------------------------------------------------------------------------------
 extern "C" {
 
 vstintptr_t VSTCALLBACK
@@ -46,24 +47,25 @@ typedef void        (*set_parameter_funcptr)(aeffect* effect, vstint32_t index, 
 typedef vstint32_t  (*process_events_funcptr) (vstevents *events);
 typedef void        (*process_funcptr) (aeffect* effect, float **inputs, float **outputs, vstint32_t sample_frames);
 
-
+//-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace audio {
 namespace plugins {
-
+//-------------------------------------------------------------------------------------------------------
 class vst_hdl final : public wpn114::audio::unit_base
+        // a vst 2x (3x tbi) handler for units
+//-------------------------------------------------------------------------------------------------------
 {
 public:
     vst_hdl(const char* name_with_extension);
     vst_hdl() = delete;
     vst_hdl(const vst_hdl&) = delete;
     vst_hdl(vst_hdl&&) = delete;
-
     ~vst_hdl();
 
-#ifdef WPN_OSSIA
+#ifdef WPN_OSSIA //---------------------------------------------------------------------------------------
     void net_expose(ossia::net::device_base* application_node, const char* name) override;
-#endif
+#endif //-------------------------------------------------------------------------------------------------
 
     void show_editor();
     void process_audio(uint16_t nsamples) override;

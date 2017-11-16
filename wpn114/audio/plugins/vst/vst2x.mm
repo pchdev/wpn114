@@ -6,8 +6,9 @@
 #include <wpn114/audio/plugins/vst/vstwindow.h>
 #include <iostream>
 
+using namespace wpn114::audio::plugins;
     // code from Teragon::MrsWatson
-    aeffect* wpn114::audio::plugins::vst_hdl::_load_vst_2x_plugin(const char* path)
+    aeffect* vst_hdl::_load_vst_2x_plugin(const char* path)
     {
 
         std::cout << path << std::endl;
@@ -58,7 +59,7 @@
     extern "C"
     {
 
-    void wpn114::audio::plugins::vst_hdl::_show_vst_2x_editor
+    void vst_hdl::_show_vst_2x_editor
     (aeffect* effect, const char* plugin_name, uint16_t width, uint16_t height)
     {
         NSRect frame;

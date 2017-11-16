@@ -8,6 +8,8 @@ namespace audio {
 namespace plugins {
 //-------------------------------------------------------------------------------------------------------
 class fields final : public buffer_unit
+        // designed for audio installations,
+        // simple looping sample-player with crossfading sine envelope
 //-------------------------------------------------------------------------------------------------------
 {
 public:

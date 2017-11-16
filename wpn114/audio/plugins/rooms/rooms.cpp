@@ -21,11 +21,14 @@
 namespace wpn114 {
 namespace audio {
 namespace plugins {
-
+//-------------------------------------------------------------------------------------------------------
 class rooms final : public wpn114::audio::unit_base
+        // designed for audio installations,
+        // customizable spatialization interface
+        // similar to Reaper's ReaSurround
+//-------------------------------------------------------------------------------------------------------
 {
 public:
-
     struct rooms_ls
     {
         uint16_t    output_channel;
@@ -46,7 +49,7 @@ public:
         float       level;
     };
 
-#ifdef WPN_OSSIA
+#ifdef WPN_OSSIA //-------------------------------------------------------------------------------------
     void net_expose(ossia::net::device_base* application_node, const char* name) override
     {
         auto root       = application_node->get_root_node().create_child(name);
@@ -65,7 +68,7 @@ public:
             //m_x = v.get<float>();
         });
     }
-#endif
+#endif //------------------------------------------------------------------------------------------------
 
     rooms(uint8_t n_inputs, uint8_t n_speakers)
     {

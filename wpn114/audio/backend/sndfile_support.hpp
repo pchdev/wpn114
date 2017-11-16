@@ -28,10 +28,10 @@ namespace audio {
 struct sndbuf_t
 {
     uint8_t         num_channels;
-    user_size_t     num_frames;
-    user_size_t     num_samples;
-    user_size_t     sample_rate;
-    float*          data;
+    size_t          num_frames;
+    size_t          num_samples;
+    size_t          sample_rate;
+    float*          data;               // interleaved
 };
 
 int load_soundfile(sndbuf_t& buffer, const std::string& path_to_soundfile);

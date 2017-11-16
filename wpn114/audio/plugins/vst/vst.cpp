@@ -23,8 +23,8 @@
 
 using namespace wpn114::audio::plugins;
 
-extern "C" {
-
+extern "C"
+{
 vstintptr_t VSTCALLBACK
 host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index,
               vstintptr_t value, void *ptr, float opt)
