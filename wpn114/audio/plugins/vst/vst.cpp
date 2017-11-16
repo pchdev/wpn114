@@ -26,8 +26,8 @@ using namespace wpn114::audio::plugins;
 extern "C"
 {
 vstintptr_t VSTCALLBACK
-host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index,
-              vstintptr_t value, void *ptr, float opt)
+host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index, vstintptr_t value, void *ptr,
+              float opt)
 {
     vstintptr_t result = 0;
 
@@ -106,11 +106,10 @@ vst_hdl::vst_hdl(const char* name_with_extension)
 vst_hdl::~vst_hdl() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void vst_hdl::net_expose(ossia::net::device_base* application_node, const char *name)
+void vst_hdl::net_expose(ossia::net::node_base& application_node, const char *name)
 
 {
-    auto root = application_node->get_root_node().create_child(name);
-
+    auto root = application_node.create_child(name);
     for(int i = 0; i < m_plugin->numParams; ++i)
     {
         char param_name[256];

@@ -10,10 +10,9 @@
     #include <ossia/ossia.hpp>
 #endif
 //-------------------------------------------------------------------------------------------------------
-
 namespace wpn114 {
 namespace audio {
-
+//-------------------------------------------------------------------------------------------------------
 enum class unit_type
 {
     ANALYSIS_UNIT   = 0,
@@ -22,8 +21,7 @@ enum class unit_type
     HYBRID_UNIT     = 3
 };
 
-class aux_unit;
-
+class aux_unit; // fwd
 //-------------------------------------------------------------------------------------------------------
 class unit_base
 // the main base class for all units
@@ -33,8 +31,12 @@ public:
     virtual ~unit_base();
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    virtual void net_expose(ossia::net::device_base* application_node, const char* name) = 0;
+    virtual void net_expose(ossia::net::node_base& application_node, const char* name) = 0;
+    void net_expose(ossia::net::node_base& application_node);
     // gets called whenever we want to expose the parameters' unit to the network
+    void set_netname(const char* name);
+    const std::string& get_netname() const;
+    void create_master_node();
 #endif //------------------------------------------------------------------------------------------------
 
     virtual void process_audio(uint16_t nsamples) = 0;
@@ -71,14 +73,18 @@ protected:
 #define SET_INACTIVE        m_active = false;
 #define SET_NAME            m_name = name
 #define SET_LEVEL           m_level = level
-
+//-------------------------------------------------------------------------------------------------------
     bool            m_active;
     float           m_level;
     uint8_t         m_num_inputs;
     uint8_t         m_num_outputs;
     float**         m_output_buffer;
     unit_type       m_unit_type;
-    std::string     m_name;
+
+#ifdef WPN_OSSIA // -------------------------------------------------------------------------------------
+    std::string                 m_netname;
+    ossia::net::node_base*      m_netnode;
+#endif //------------------------------------------------------------------------------------------------
 
 };
 //-------------------------------------------------------------------------------------------------------
@@ -106,12 +112,12 @@ struct aux_send
     unit_base*    m_sender;
     float         m_level;
 };
-
+//-------------------------------------------------------------------------------------------------------
 class aux_unit : public unit_base
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose(ossia::net::device_base *application_node, const char* name) override;
+    void net_expose(ossia::net::node_base& application_node, const char* name) override;
 #endif //------------------------------------------------------------------------------------------------
 
     aux_unit();
@@ -139,7 +145,7 @@ class track_unit : public unit_base
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose(ossia::net::device_base *application_node, const char* name) override;
+    void net_expose(ossia::net::node_base& application_node, const char* name) override;
 #endif //------------------------------------------------------------------------------------------------
 
     track_unit();

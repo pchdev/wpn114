@@ -9,10 +9,6 @@ set(WPN114_AUDIO_BACKEND_IMPLEMENTATIONS
     ${CMAKE_CURRENT_SOURCE_DIR}/backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/unit_base.cpp)
 
-if(WPN_OSSIA)
-    add_definitions(-DWPN_OSSIA)
-endif()
-
 if(WPN_AUDIO_AUX)
     add_definitions(-DWPN_AUDIO_AUX)
 endif()
@@ -39,5 +35,10 @@ add_library(wpn114audio SHARED
 target_include_directories(wpn114audio PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(wpn114audio ${PORTAUDIO_LIBRARIES})
 target_link_libraries(wpn114audio ${SNDFILE_LIBRARIES})
+
+if(WPN_OSSIA)
+    add_definitions(-DWPN_OSSIA)
+    target_link_libraries(wpn114audio /usr/local/lib/libossia.dylib)
+endif()
 
 

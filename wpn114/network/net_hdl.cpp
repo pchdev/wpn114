@@ -30,9 +30,9 @@ net_hdl::net_hdl(const char *user_namespace)
 
 net_hdl::~net_hdl() {}
 
-device_base* net_hdl::get_application_node() const
+node_base &net_hdl::get_application_node() const
 {
-    return m_device.get();
+    return m_device->get_root_node();
 }
 
 void net_hdl::expose_oscquery_server(uint32_t udp_port, uint32_t tcp_port)

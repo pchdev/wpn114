@@ -74,6 +74,37 @@ float** unit_base::get_output_buffer()
     return m_output_buffer;
 }
 
+#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+void unit_base::net_expose(ossia::net::node_base &application_node)
+{
+    if(!m_netname.empty())
+    net_expose(application_node, m_netname.c_str());
+}
+
+void unit_base::set_netname(const char *name)
+{
+    m_netname = name;
+}
+
+const std::string& unit_base::get_netname() const
+{
+    return m_netname;
+}
+
+void unit_base::create_master_node()
+{
+    if(m_netnode)
+    {
+        auto master_node    = m_netnode->create_child("master");
+        auto level_node     = master_node->create_child("level");
+        auto level_param    = level_node->create_parameter(ossia::val_type::FLOAT);
+        auto active_node    = master_node->create_child("active");
+        auto active_param   = active_node->create_parameter(ossia::val_type::BOOL);
+    }
+    else std::cerr << "could not create master node...\n";
+}
+#endif //------------------------------------------------------------------------------------------------
+
 #ifdef WPN_AUDIO_AUX //----------------------------------------------------------------------------------
 void unit_base::add_aux_send(aux_unit &aux)
 {
@@ -87,21 +118,25 @@ void unit_base::add_aux_send(aux_unit &aux)
 aux_unit::aux_unit()
 {
     SET_UTYPE(unit_type::EFFECT_UNIT);
-    SET_ACTIVE;
+    SET_INACTIVE;
 }
 
 aux_unit::aux_unit(std::unique_ptr<unit_base> receiver) : m_receiver(std::move(receiver))
 {
     SET_UTYPE( unit_type::EFFECT_UNIT );
     SET_ACTIVE;
+    SETN_OUTPUTS(receiver->get_num_channels());
 }
 
 aux_unit::~aux_unit() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void aux_unit::net_expose(ossia::net::device_base *application_node, const char* name)
+void aux_unit::net_expose(ossia::net::node_base& application_node, const char* name)
 {
-
+    auto root = application_node.create_child(name);
+    auto master_node = root->create_child("master");
+    auto level_node = master_node->create_child("level");
+    auto level_prm = level_node->create_parameter(ossia::val_type::FLOAT);
 }
 #endif //------------------------------------------------------------------------------------------------
 
@@ -135,6 +170,14 @@ void aux_unit::add_sender(unit_base *sender, float level)
 {
     aux_send send = {sender,level};
     m_sends.push_back(send);
+    if(!m_sends.empty()) SET_ACTIVE;
+
+#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+    if(!m_netnode->find_child("sends")) m_netnode->create_child("sends");
+    auto sender_node = m_netnode->create_child(sender->get_netname());
+    auto sends_level_node = sender_node->create_child("level");
+    auto sends_level_param = sends_level_node->create_parameter(ossia::val_type::FLOAT);
+#endif //------------------------------------------------------------------------------------------------
 }
 
 void aux_unit::set_receiver(std::unique_ptr<unit_base> receiver)
@@ -142,23 +185,28 @@ void aux_unit::set_receiver(std::unique_ptr<unit_base> receiver)
     m_receiver = std::move(receiver);
 }
 
-#endif
+#endif //------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------------
 #ifdef WPN_AUDIO_TRACKS
 //-------------------------------------------------------------------------------------------------------
 track_unit::track_unit()
 {
-    SET_UTYPE(unit_type::HYBRID_UNIT);
-    SET_ACTIVE;
+    SET_UTYPE(unit_type::GENERATOR_UNIT);
+    SET_INACTIVE;
+    SETN_OUTPUTS(0);
 }
 
 track_unit::~track_unit() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void track_unit::net_expose(ossia::net::device_base *application_node, const char* name)
+void track_unit::net_expose(ossia::net::node_base& application_node, const char* name)
 {
-
+    auto root = application_node.create_child(name);
+    auto master_node = root->create_child("master");
+    auto level_node = master_node->create_child("level");
+    auto level_prm = level_node->create_parameter(ossia::val_type::FLOAT);
+    //! should find a practical way to allow a recursive net_expose() extending to tracks children
 }
 #endif //------------------------------------------------------------------------------------------------
 
@@ -198,6 +246,7 @@ void track_unit::process_audio(uint16_t nsamples)
 
 void track_unit::add_unit(unit_base *unit)
 {
+    if(m_units.empty()) SET_ACTIVE;
     m_units.push_back(unit);
 }
 
@@ -205,6 +254,8 @@ void track_unit::remove_unit(unit_base *unit)
 {
     m_units.erase(  std::remove(m_units.begin(), m_units.end(), unit),
                     m_units.end());
+
+    if(m_units.empty()) SET_INACTIVE;
 }
 
 #endif

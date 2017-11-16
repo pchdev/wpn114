@@ -11,9 +11,9 @@ class oneshots final : public wpn114::audio::buffer_unit
 public:
 
 #ifdef WPN_OSSIA //---------------------------------------------------------------------------------------
-    void net_expose(ossia::net::device_base* application_node, const char* name) override
+    void net_expose(ossia::net::node_base& application_node, const char* name) override
     {
-        auto root       = application_node->get_root_node().create_child(name);
+        auto root       = application_node.create_child(name);
         auto play_node  = root->create_child("play");
         auto level_node = root->create_child("level");
 
