@@ -85,6 +85,7 @@ vst_hdl::vst_hdl(const char* name_with_extension)
     std::string name = "/Library/Audio/Plug-Ins/VST/";
     name += name_with_extension;
 
+    m_plugin_path = name;
     m_plugin = this->_load_vst_2x_plugin(name.c_str());
 
     if  (m_plugin->magic != kEffectMagic)
@@ -138,7 +139,7 @@ void vst_hdl::show_editor()
         std::cerr << "error, could not get plugin editor's window" << std::endl;
     }
 
-    this->_show_vst_2x_editor(this->m_plugin, m_plugin_name.c_str(), width, height);
+    this->_show_vst_2x_editor(this->m_plugin, m_plugin_path.c_str(), width, height);
 }
 
 void vst_hdl::preprocessing(size_t sample_rate, uint16_t nsamples)
@@ -162,8 +163,8 @@ void vst_hdl::resume()
 
 inline void vst_hdl::_silence_channel(float** channel_data, uint8_t nchannels, uint16_t nsamples)
 {
-    for(uint8_t ch  = 0; ch < num_channels; ++ch)
-        for(uint16_t fr = 0; fr < samples_per_buffer; ++fr)
+    for(uint8_t ch  = 0; ch < nchannels; ++ch)
+        for(uint16_t fr = 0; fr < nsamples; ++fr)
             channel_data[ch][fr] = 0.0f;
 }
 

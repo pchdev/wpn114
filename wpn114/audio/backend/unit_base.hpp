@@ -57,7 +57,7 @@ public:
     bool        is_active() const;
 
 #ifdef WPN_AUDIO_AUX //---------------------------------------------------------------------------------
-    void        add_aux_send(aux_unit& aux) const; // register the unit to an aux bus
+    void        add_aux_send(aux_unit& aux); // register the unit to an aux bus
 #endif //------------------------------------------------------------------------------------------------
 
 protected:
@@ -91,6 +91,7 @@ public:
     ~buffer_unit();
 protected:
 #define SFBUF          m_sf_buffer
+#define SFLOAD(p)      load_soundfile(m_sf_buffer, p)
 #define CLEAR_SFBUF    delete m_sf_buffer.data
     sndbuf_t           m_sf_buffer;
 };
@@ -102,8 +103,8 @@ protected:
 //-------------------------------------------------------------------------------------------------------
 struct aux_send
 {
-    unit_base*  m_sender;
-    float       m_level;
+    unit_base*    m_sender;
+    float         m_level;
 };
 
 class aux_unit : public unit_base
@@ -119,10 +120,8 @@ public:
     void process_audio(uint16_t nsamples) override;
     void process_audio(float** input_buffer, uint16_t nsamples) override;
     void set_receiver(std::unique_ptr<unit_base> receiver);
-    ~aux_unit();
-
-protected:
     void add_sender(unit_base* sender, float level);
+    ~aux_unit();
 
 private:
     std::unique_ptr<unit_base>  m_receiver;

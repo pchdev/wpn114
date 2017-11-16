@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     os_test.net_expose(net_hdl.get_application_node(), "os_test");
     audio_hdl.register_unit(&os_test);
 
-    audio::aux_unit bus_1();
+    audio::aux_unit bus_1;
 
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio_hdl.register_unit(&kaivo_1);
@@ -34,9 +34,10 @@ int main(int argc, char* argv[])
     audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
     kaivo_2.net_expose(net_hdl.get_application_node(), "kaivo_2");
 
-    audio::plugins::vst_hdl altiverb("Audio Ease/Altiverb 7.vst");
-    altiverb.net_expose(net_hdl.get_application_node(), "altiverb");
-    bus_1.set_receiver(std::make_unique<audio::unit_base>(altiverb));
+    auto altiverb = std::make_unique<audio::plugins::vst_hdl>("Audio Ease/Altiverb 7.vst");
+    //audio::plugins::vst_hdl altiverb("Audio Ease/Altiverb 7.vst");
+    altiverb->net_expose(net_hdl.get_application_node(), "altiverb");
+    bus_1.set_receiver(std::move(altiverb));
 
     audio::plugins::fields fields_test("test.wav", 32768);
     audio_hdl.register_unit(&fields_test);

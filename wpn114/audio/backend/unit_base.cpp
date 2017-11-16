@@ -74,12 +74,26 @@ float** unit_base::get_output_buffer()
     return m_output_buffer;
 }
 
+#ifdef WPN_AUDIO_AUX
+
+void unit_base::add_aux_send(aux_unit &aux)
+{
+    aux.add_sender(this, 1.f);
+}
+
+#endif
+
 //-------------------------------------------------------------------------------------------------------
 #ifdef WPN_AUDIO_AUX
 //-------------------------------------------------------------------------------------------------------
-aux_unit::aux_unit(const char *name, std::unique_ptr<unit_base> receiver)
+aux_unit::aux_unit()
 {
-    SET_NAME;
+    SET_UTYPE(unit_type::EFFECT_UNIT);
+    SET_ACTIVE;
+}
+
+aux_unit::aux_unit(std::unique_ptr<unit_base> receiver) : m_receiver(std::move(receiver))
+{
     SET_UTYPE( unit_type::EFFECT_UNIT );
     SET_ACTIVE;
 }
@@ -87,7 +101,7 @@ aux_unit::aux_unit(const char *name, std::unique_ptr<unit_base> receiver)
 aux_unit::~aux_unit() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void aux_unit::net_expose(ossia::net::device_base *application_node)
+void aux_unit::net_expose(ossia::net::device_base *application_node, const char* name)
 {
 
 }
@@ -124,26 +138,31 @@ void aux_unit::add_sender(unit_base *sender, float level)
     aux_send send = {sender,level};
     m_sends.push_back(send);
 }
+
+void aux_unit::set_receiver(std::unique_ptr<unit_base> receiver)
+{
+    m_receiver = std::move(receiver);
+}
+
 #endif
 
 //-------------------------------------------------------------------------------------------------------
 #ifdef WPN_AUDIO_TRACKS
 //-------------------------------------------------------------------------------------------------------
-track_unit::track_unit(const char* name)
+track_unit::track_unit()
 {
-    SET_NAME;
     SET_UTYPE(unit_type::HYBRID_UNIT);
     SET_ACTIVE;
 }
 
 track_unit::~track_unit() {}
 
-#ifdef WPN_OSSIA
-void track_unit::net_expose(ossia::net::device_base *application_node)
+#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+void track_unit::net_expose(ossia::net::device_base *application_node, const char* name)
 {
 
 }
-#endif
+#endif //------------------------------------------------------------------------------------------------
 
 void track_unit::preprocessing(size_t sample_rate, uint16_t nsamples)
 {
