@@ -110,13 +110,15 @@ class aux_unit : public unit_base
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose(ossia::net::device_base *application_node) override;
+    void net_expose(ossia::net::device_base *application_node, const char* name) override;
 #endif //------------------------------------------------------------------------------------------------
 
-    aux_unit(const char* name, std::unique_ptr<unit_base> receiver);
+    aux_unit();
+    aux_unit(std::unique_ptr<unit_base> receiver);
     void preprocessing(size_t sample_rate, uint16_t nsamples) override;
     void process_audio(uint16_t nsamples) override;
     void process_audio(float** input_buffer, uint16_t nsamples) override;
+    void set_receiver(std::unique_ptr<unit_base> receiver);
     ~aux_unit();
 
 protected:
@@ -138,10 +140,10 @@ class track_unit : public unit_base
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose(ossia::net::device_base *application_node) override;
+    void net_expose(ossia::net::device_base *application_node, const char* name) override;
 #endif //------------------------------------------------------------------------------------------------
 
-    track_unit(const char* name);
+    track_unit();
     ~track_unit();
     void preprocessing(size_t sample_rate, uint16_t nsamples) override;
     void process_audio(uint16_t nsamples) override;

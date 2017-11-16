@@ -20,22 +20,27 @@ int main(int argc, char* argv[])
 
     audio::backend_hdl audio_hdl(2);
 
-    /*audio::plugins::oneshots os_test("os_test", "test.wav", 0.25);
-    os_test.net_expose(net_hdl.get_application_node());
-    os_test.activate();
-    audio_hdl.register_unit(&os_test);*/
+    audio::plugins::oneshots os_test("test.wav");
+    os_test.net_expose(net_hdl.get_application_node(), "os_test");
+    audio_hdl.register_unit(&os_test);
+
+    audio::aux_unit bus_1();
 
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio_hdl.register_unit(&kaivo_1);
-    kaivo_1.net_expose(net_hdl.get_application_node());
+    kaivo_1.net_expose(net_hdl.get_application_node(), "kaivo_1");
+    kaivo_1.add_aux_send(bus_1);
 
     audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
-    audio::plugins::vst_hdl altiverb("Audio Ease/Altiverb 7.vst");
+    kaivo_2.net_expose(net_hdl.get_application_node(), "kaivo_2");
 
-    audio::plugins::fields fields_test("fields", "test.wav", 32768, 0.25);
+    audio::plugins::vst_hdl altiverb("Audio Ease/Altiverb 7.vst");
+    altiverb.net_expose(net_hdl.get_application_node(), "altiverb");
+    bus_1.set_receiver(std::make_unique<audio::unit_base>(altiverb));
+
+    audio::plugins::fields fields_test("test.wav", 32768);
     audio_hdl.register_unit(&fields_test);
-    fields_test.activate();
-    fields_test.net_expose(net_hdl.get_application_node());
+    fields_test.net_expose(net_hdl.get_application_node(), "fields");
 
     audio_hdl.initialize(SAMPLERATE, BLOCKSIZE);
     audio_hdl.start_stream(SAMPLERATE, BLOCKSIZE);
