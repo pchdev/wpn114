@@ -81,6 +81,16 @@ void unit_base::net_expose(ossia::net::node_base &application_node)
     auto master_node = m_netnode->create_child("master");
     auto level_node = master_node->create_child("level");
     auto level_param = level_node->create_parameter(ossia::val_type::FLOAT);
+    auto active_node = master_node->create_child("active");
+    auto active_param = active_node->create_parameter(ossia::val_type::BOOL);
+
+    level_param->add_callback([&](const ossia::value& v) {
+        m_level = v.get<float>();
+    });
+
+    active_param->add_callback([&](const ossia::value& v) {
+        m_active = v.get<bool>();
+    });
 
     net_expose_plugin_tree(*m_netnode);
 }
@@ -164,10 +174,13 @@ void aux_unit::add_sender(unit_base *sender, float level)
     if(!m_sends.empty()) SET_ACTIVE;
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    if(!m_netnode->find_child("sends")) m_netnode->create_child("sends");
-    auto sender_node = m_netnode->create_child(sender->get_netname());
-    auto sends_level_node = sender_node->create_child("level");
-    auto sends_level_param = sends_level_node->create_parameter(ossia::val_type::FLOAT);
+    if(m_netnode && !m_netnode->find_child("sends"))
+    {
+        auto send_node = m_netnode->create_child("sends");
+        auto sender_node = send_node->create_child(sender->get_netname());
+        auto sends_level_node = sender_node->create_child("level");
+        auto sends_level_param = sends_level_node->create_parameter(ossia::val_type::FLOAT);
+    }
 #endif //------------------------------------------------------------------------------------------------
 }
 

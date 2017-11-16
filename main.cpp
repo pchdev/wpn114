@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     audio_hdl.register_unit(&os_test);
 
     audio::aux_unit bus_1;
+    bus_1.net_expose(appnode, "reverb_bus");
 
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio_hdl.register_unit(&kaivo_1);

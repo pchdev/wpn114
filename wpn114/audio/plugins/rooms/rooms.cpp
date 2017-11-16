@@ -53,16 +53,10 @@ public:
     void net_expose_plugin_tree(ossia::net::node_base& root) override
     {
         auto azimuth_node   = root.create_child("azimuth");
-        auto level_node     = root.create_child("level");
 
         auto azimuth_param    = azimuth_node->create_parameter(ossia::val_type::FLOAT);
-        auto level_param      = level_node->create_parameter(ossia::val_type::FLOAT);
 
         azimuth_param->add_callback([&](const ossia::value& v) {
-            //m_x = v.get<float>();
-        });
-
-        level_param->add_callback([&](const ossia::value& v) {
             //m_x = v.get<float>();
         });
     }

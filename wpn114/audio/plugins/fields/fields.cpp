@@ -14,30 +14,7 @@ class fields final : public buffer_unit
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose_plugin_tree(ossia::net::node_base& root) override
-    {
-        auto play_node  = root.create_child("play");
-        auto stop_node  = root.create_child("stop");
-        auto level_node = root.create_child("level");
-
-        auto play_param     = play_node->create_parameter(ossia::val_type::IMPULSE);
-        auto stop_param     = stop_node->create_parameter(ossia::val_type::IMPULSE);
-        auto level_param    = level_node->create_parameter(ossia::val_type::FLOAT);
-
-        play_param->add_callback([&](const ossia::value& v) {
-            SET_ACTIVE;
-        });
-
-        stop_param->add_callback([&](const ossia::value& v) {
-            m_phase         = 0;
-            m_env_phase     = 0;
-            SET_INACTIVE;
-        });
-
-        level_param->add_callback([&](const ossia::value& v) {
-            m_level = v.get<float>();
-        });
-    }
+    void net_expose_plugin_tree(ossia::net::node_base& root) override {}
 #endif //------------------------------------------------------------------------------------------------
 
     fields(const char* sfpath, uint32_t xfade_length) :

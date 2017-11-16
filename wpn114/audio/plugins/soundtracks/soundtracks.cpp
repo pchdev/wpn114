@@ -16,33 +16,13 @@ public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override
     {
-        auto play_node      = root.create_child("play");
-        auto stop_node      = root.create_child("stop");
         auto startpos_node  = root.create_child("start_position");
         auto endpos_node    = root.create_child("end_position");
         auto loop_node      = root.create_child("loop");
-        auto level_node     = root.create_child("level");
 
-        auto play_param         = play_node->create_parameter(ossia::val_type::IMPULSE);
-        auto stop_param         = stop_node->create_parameter(ossia::val_type::IMPULSE);
         auto startpos_param     = startpos_node->create_parameter(ossia::val_type::FLOAT);
         auto endpos_param       = endpos_node->create_parameter(ossia::val_type::FLOAT);
         auto loop_param         = loop_node->create_parameter(ossia::val_type::BOOL);
-        auto level_param        = level_node->create_parameter(ossia::val_type::FLOAT);
-
-        play_param->add_callback([&](const ossia::value& v) {
-            SET_ACTIVE;
-        });
-
-        stop_param->add_callback([&](const ossia::value& v) {
-            m_phase         = 0;
-            m_env_phase     = 0;
-            SET_INACTIVE;
-        });
-
-        level_param->add_callback([&](const ossia::value& v) {
-            m_level = v.get<float>();
-        });
     }
 #endif //------------------------------------------------------------------------------------------------
 
