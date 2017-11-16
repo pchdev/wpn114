@@ -50,12 +50,10 @@ public:
     };
 
 #ifdef WPN_OSSIA //-------------------------------------------------------------------------------------
-    void net_expose(ossia::net::node_base& application_node, const char* name) override
+    void net_expose_plugin_tree(ossia::net::node_base& root) override
     {
-        auto root       = application_node.create_child(name);
-
-        auto azimuth_node = root->create_child("azimuth");
-        auto level_node = root->create_child("level");
+        auto azimuth_node   = root.create_child("azimuth");
+        auto level_node     = root.create_child("level");
 
         auto azimuth_param    = azimuth_node->create_parameter(ossia::val_type::FLOAT);
         auto level_param      = level_node->create_parameter(ossia::val_type::FLOAT);

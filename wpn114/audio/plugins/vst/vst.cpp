@@ -106,15 +106,13 @@ vst_hdl::vst_hdl(const char* name_with_extension)
 vst_hdl::~vst_hdl() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void vst_hdl::net_expose(ossia::net::node_base& application_node, const char *name)
-
+void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
 {
-    auto root = application_node.create_child(name);
     for(int i = 0; i < m_plugin->numParams; ++i)
     {
         char param_name[256];
         m_dispatcher(m_plugin, effGetParamName, i, 0, &param_name, 0);
-        auto node = root->create_child(param_name);
+        auto node = root.create_child(param_name);
         auto param = node->create_parameter(ossia::val_type::FLOAT);
     }
 }

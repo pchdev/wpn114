@@ -77,11 +77,21 @@ float** unit_base::get_output_buffer()
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
 void unit_base::net_expose(ossia::net::node_base &application_node)
 {
-    if(!m_netname.empty())
-    net_expose(application_node, m_netname.c_str());
+    m_netnode = application_node.create_child(m_netname);
+    auto master_node = m_netnode->create_child("master");
+    auto level_node = master_node->create_child("level");
+    auto level_param = level_node->create_parameter(ossia::val_type::FLOAT);
+
+    net_expose_plugin_tree(*m_netnode);
 }
 
-void unit_base::set_netname(const char *name)
+void unit_base::net_expose(ossia::net::node_base &application_node, std::string name)
+{
+    m_netname = name;
+    net_expose(application_node);
+}
+
+void unit_base::set_netname(std::string name)
 {
     m_netname = name;
 }
@@ -89,19 +99,6 @@ void unit_base::set_netname(const char *name)
 const std::string& unit_base::get_netname() const
 {
     return m_netname;
-}
-
-void unit_base::create_master_node()
-{
-    if(m_netnode)
-    {
-        auto master_node    = m_netnode->create_child("master");
-        auto level_node     = master_node->create_child("level");
-        auto level_param    = level_node->create_parameter(ossia::val_type::FLOAT);
-        auto active_node    = master_node->create_child("active");
-        auto active_param   = active_node->create_parameter(ossia::val_type::BOOL);
-    }
-    else std::cerr << "could not create master node...\n";
 }
 #endif //------------------------------------------------------------------------------------------------
 
@@ -131,13 +128,7 @@ aux_unit::aux_unit(std::unique_ptr<unit_base> receiver) : m_receiver(std::move(r
 aux_unit::~aux_unit() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void aux_unit::net_expose(ossia::net::node_base& application_node, const char* name)
-{
-    auto root = application_node.create_child(name);
-    auto master_node = root->create_child("master");
-    auto level_node = master_node->create_child("level");
-    auto level_prm = level_node->create_parameter(ossia::val_type::FLOAT);
-}
+void aux_unit::net_expose_plugin_tree(ossia::net::node_base& root) {}
 #endif //------------------------------------------------------------------------------------------------
 
 void aux_unit::preprocessing(size_t sample_rate, uint16_t nsamples)
@@ -200,14 +191,7 @@ track_unit::track_unit()
 track_unit::~track_unit() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void track_unit::net_expose(ossia::net::node_base& application_node, const char* name)
-{
-    auto root = application_node.create_child(name);
-    auto master_node = root->create_child("master");
-    auto level_node = master_node->create_child("level");
-    auto level_prm = level_node->create_parameter(ossia::val_type::FLOAT);
-    //! should find a practical way to allow a recursive net_expose() extending to tracks children
-}
+void track_unit::net_expose_plugin_tree(ossia::net::node_base& application_node) {}
 #endif //------------------------------------------------------------------------------------------------
 
 void track_unit::preprocessing(size_t sample_rate, uint16_t nsamples)

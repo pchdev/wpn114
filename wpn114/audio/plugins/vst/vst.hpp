@@ -64,7 +64,7 @@ public:
     ~vst_hdl();
 
 #ifdef WPN_OSSIA //---------------------------------------------------------------------------------------
-    void net_expose(ossia::net::node_base& application_node, const char* name) override;
+    void net_expose_plugin_tree(ossia::net::node_base& root) override;
 #endif //-------------------------------------------------------------------------------------------------
 
     void show_editor();

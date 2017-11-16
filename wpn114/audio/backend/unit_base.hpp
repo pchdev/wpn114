@@ -31,12 +31,12 @@ public:
     virtual ~unit_base();
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    virtual void net_expose(ossia::net::node_base& application_node, const char* name) = 0;
+    void net_expose(ossia::net::node_base& application_node, std::string name);
     void net_expose(ossia::net::node_base& application_node);
+    virtual void net_expose_plugin_tree(ossia::net::node_base& plugin_root) = 0;
     // gets called whenever we want to expose the parameters' unit to the network
-    void set_netname(const char* name);
+    void set_netname(std::string name);
     const std::string& get_netname() const;
-    void create_master_node();
 #endif //------------------------------------------------------------------------------------------------
 
     virtual void process_audio(uint16_t nsamples) = 0;
@@ -117,7 +117,7 @@ class aux_unit : public unit_base
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose(ossia::net::node_base& application_node, const char* name) override;
+    void net_expose_plugin_tree(ossia::net::node_base& plugin_root) override;
 #endif //------------------------------------------------------------------------------------------------
 
     aux_unit();
@@ -145,7 +145,7 @@ class track_unit : public unit_base
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose(ossia::net::node_base& application_node, const char* name) override;
+    void net_expose_plugin_tree(ossia::net::node_base& plugin_root) override;
 #endif //------------------------------------------------------------------------------------------------
 
     track_unit();

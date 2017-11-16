@@ -14,15 +14,14 @@ class soundtracks final : public buffer_unit
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose(ossia::net::node_base& application_node, const char* name) override
+    void net_expose_plugin_tree(ossia::net::node_base& root) override
     {
-        auto root           = application_node.create_child(name);
-        auto play_node      = root->create_child("play");
-        auto stop_node      = root->create_child("stop");
-        auto startpos_node  = root->create_child("start_position");
-        auto endpos_node    = root->create_child("end_position");
-        auto loop_node      = root->create_child("loop");
-        auto level_node     = root->create_child("level");
+        auto play_node      = root.create_child("play");
+        auto stop_node      = root.create_child("stop");
+        auto startpos_node  = root.create_child("start_position");
+        auto endpos_node    = root.create_child("end_position");
+        auto loop_node      = root.create_child("loop");
+        auto level_node     = root.create_child("level");
 
         auto play_param         = play_node->create_parameter(ossia::val_type::IMPULSE);
         auto stop_param         = stop_node->create_parameter(ossia::val_type::IMPULSE);
