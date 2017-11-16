@@ -10,9 +10,9 @@ class oneshots final : public wpn114::audio::buffer_unit
 public:
 
 #ifdef WPN_OSSIA //---------------------------------------------------------------------------------------
-    void net_expose(ossia::net::device_base* application_node) override
+    void net_expose(ossia::net::device_base* application_node, const char* name) override
     {
-        auto root       = application_node->get_root_node().create_child(m_name);
+        auto root       = application_node->get_root_node().create_child(name);
         auto play_node  = root->create_child("play");
         auto level_node = root->create_child("level");
 
@@ -29,10 +29,8 @@ public:
     }
 #endif //-------------------------------------------------------------------------------------------------
 
-    oneshots(const char* name, const char* sfpath, float level) : m_phase(0)
+    oneshots(const char* sfpath) : m_phase(0)
     {
-        SET_NAME;
-        SET_LEVEL;
         SET_INACTIVE;
         SETN_INPUTS(0);
         SET_UTYPE(unit_type::GENERATOR_UNIT);
@@ -52,7 +50,7 @@ public:
                 // reset buffer, set unit inactive
                 // and fill the rest of the buffer with zeroes
                 m_sf_buffer.data -= m_sf_buffer.num_frames;
-                SET_INACTIVE
+                SET_INACTIVE;
 
                 for (int j = 0; j < N_OUTPUTS; ++j)
                     OUT[j][i] = 0.f;

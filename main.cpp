@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio_hdl.register_unit(&kaivo_1);
+    kaivo_1.net_expose(net_hdl.get_application_node());
 
     audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
     audio::plugins::vst_hdl altiverb("Audio Ease/Altiverb 7.vst");

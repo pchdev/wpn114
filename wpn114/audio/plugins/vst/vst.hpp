@@ -62,7 +62,7 @@ public:
     ~vst_hdl();
 
 #ifdef WPN_OSSIA
-    void net_expose(ossia::net::device_base* application_node) override;
+    void net_expose(ossia::net::device_base* application_node, const char* name) override;
 #endif
 
     void show_editor();
@@ -74,13 +74,16 @@ public:
     void resume();
 
 private:
-    void                _silence_channel(float **channel_data, uint8_t num_channels, uint16_t num_frames);
+    void                _silence_channel(float **channel_data, uint8_t nchannels, uint16_t nsamples);
     aeffect*            _load_vst_2x_plugin(const char* path);
+    void                _load_vst_3x_plugin(const char* path);
     void                _show_vst_2x_editor(aeffect* effect, const char *plugin_name,
                                             uint16_t width, uint16_t height);
+    void                _show_vst_3x_editor();
+
     dispatcher_funcptr  m_dispatcher;
     aeffect*            m_plugin;
-    std::string         m_plugin_name;
+    std::string         m_plugin_path;
 };
 }
 }

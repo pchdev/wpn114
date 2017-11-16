@@ -34,6 +34,10 @@ if(WPN_AUDIO_PLUGINS_ROOMS)
     add_subdirectory(rooms)
 endif()
 
+if(WPN_AUDIO_PLUGINS_SOUNDTRACKS)
+    add_subdirectory(soundtracks)
+endif()
+
 if(WPN_AUDIO_PLUGINS_VBAP)
     add_subdirectory(vbap)
 endif()

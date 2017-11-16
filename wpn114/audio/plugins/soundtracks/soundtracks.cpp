@@ -7,21 +7,27 @@ namespace wpn114 {
 namespace audio {
 namespace plugins {
 //-------------------------------------------------------------------------------------------------------
-class fields final : public buffer_unit
+class soundtracks final : public buffer_unit
 //-------------------------------------------------------------------------------------------------------
 {
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
     void net_expose(ossia::net::device_base* application_node, const char* name) override
     {
-        auto root       = application_node->get_root_node().create_child(name);
-        auto play_node  = root->create_child("play");
-        auto stop_node  = root->create_child("stop");
-        auto level_node = root->create_child("level");
+        auto root           = application_node->get_root_node().create_child(name);
+        auto play_node      = root->create_child("play");
+        auto stop_node      = root->create_child("stop");
+        auto startpos_node  = root->create_child("start_position");
+        auto endpos_node    = root->create_child("end_position");
+        auto loop_node      = root->create_child("loop");
+        auto level_node     = root->create_child("level");
 
-        auto play_param     = play_node->create_parameter(ossia::val_type::IMPULSE);
-        auto stop_param     = stop_node->create_parameter(ossia::val_type::IMPULSE);
-        auto level_param    = level_node->create_parameter(ossia::val_type::FLOAT);
+        auto play_param         = play_node->create_parameter(ossia::val_type::IMPULSE);
+        auto stop_param         = stop_node->create_parameter(ossia::val_type::IMPULSE);
+        auto startpos_param     = startpos_node->create_parameter(ossia::val_type::FLOAT);
+        auto endpos_param       = endpos_node->create_parameter(ossia::val_type::FLOAT);
+        auto loop_param         = loop_node->create_parameter(ossia::val_type::BOOL);
+        auto level_param        = level_node->create_parameter(ossia::val_type::FLOAT);
 
         play_param->add_callback([&](const ossia::value& v) {
             SET_ACTIVE;
@@ -39,13 +45,14 @@ public:
     }
 #endif //------------------------------------------------------------------------------------------------
 
-    fields(const char* sfpath, uint32_t xfade_length) :
+    soundtracks(const char* sfpath, uint32_t xfade_length) :
         m_xfade_length(xfade_length),
         m_phase(0.f), m_env_phase(0.f)
     {
         SET_INACTIVE;
         SETN_INPUTS(0);
         SET_UTYPE(unit_type::GENERATOR_UNIT);
+        SFLOAD(sfpath);
         load_soundfile(SFBUF, sfpath);
 
         SETN_OUTPUTS(SFBUF.num_channels);
@@ -114,7 +121,7 @@ public:
         }
     }
 
-    ~fields()
+    ~soundtracks()
     {
         CLEAR_SFBUF;
     }

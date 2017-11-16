@@ -23,13 +23,16 @@ option(WPN_AUDIO_PLUGINS_GRANARY "Enables granular synthesis support" OFF)
 option(WPN_AUDIO_PLUGINS_ONESHOTS "Enables one-shot soundfile player support" ON)
 option(WPN_AUDIO_PLUGINS_POLY_ONESHOTS "Enables poly one-shots sfplayer support" OFF)
 option(WPN_AUDIO_PLUGINS_ROOMS "Enables rooms spatialization system" ON)
+option(WPN_AUDIO_PLUGINS_SOUNDTRACKS "Enables soundtracks plugin" ON)
 option(WPN_AUDIO_PLUGINS_VBAP "Enables vbap support" OFF)
 option(WPN_AUDIO_PLUGINS_VST "Enables support for VST plugins" ON)
 
 if( WPN_AUDIO_PLUGINS_FIELDS OR
     WPN_AUDIO_PLUGINS_GRANARY OR
     WPN_AUDIO_PLUGINS_ONESHOTS OR
-    WPN_AUDIO_PLUGINS_POLY_ONESHOTS)
+    WPN_AUDIO_PLUGINS_POLY_ONESHOTS OR
+    WPN_AUDIO_PLUGINS_SOUNDTRACKS
+    )
     set(WPN_AUDIO_SNDFILE ON)
 endif()
 

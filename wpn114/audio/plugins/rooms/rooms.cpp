@@ -47,9 +47,9 @@ public:
     };
 
 #ifdef WPN_OSSIA
-    void net_expose(ossia::net::device_base* application_node) override
+    void net_expose(ossia::net::device_base* application_node, const char* name) override
     {
-        auto root       = application_node->get_root_node().create_child(m_name);
+        auto root       = application_node->get_root_node().create_child(name);
 
         auto azimuth_node = root->create_child("azimuth");
         auto level_node = root->create_child("level");
@@ -67,9 +67,8 @@ public:
     }
 #endif
 
-    rooms(const char* name, uint8_t n_inputs, uint8_t n_speakers)
+    rooms(uint8_t n_inputs, uint8_t n_speakers)
     {
-        SET_NAME;
         SET_ACTIVE;
         SETN_INPUTS(    n_inputs);
         SETN_OUTPUTS(   n_speakers);
@@ -91,9 +90,10 @@ public:
         return r/ls.radius;
     }
 
-    void process_audio(uint16_t samples_per_buffer) override
+    void process_audio(float** input, uint16_t nsamples) override {}
+    void process_audio(uint16_t nsamples) override
     {
-        for(int i = 0; i < samples_per_buffer; ++i)
+        for(int i = 0; i < nsamples; ++i)
         {
             for(const auto& src : m_sources)
             {

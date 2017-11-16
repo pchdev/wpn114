@@ -33,7 +33,7 @@ public:
     virtual ~unit_base();
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    virtual void net_expose(ossia::net::device_base* application_node) = 0;
+    virtual void net_expose(ossia::net::device_base* application_node, const char* name) = 0;
     // gets called whenever we want to expose the parameters' unit to the network
 #endif //------------------------------------------------------------------------------------------------
 
