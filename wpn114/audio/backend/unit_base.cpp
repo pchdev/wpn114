@@ -168,6 +168,7 @@ void aux_unit::process_audio(uint16_t nsamples)
     }
 
     // pass mixed output buffer to receiver unit
+    //! DO NOT REGISTER THE RECEIVER TO THE AUDIO_BACKEND_HDL
     m_receiver->process_audio(OUT, nsamples);
 }
 
@@ -184,6 +185,7 @@ void aux_unit::add_sender(unit_base *sender, float level)
         auto sender_node = send_node->create_child(sender->get_netname());
         auto sends_level_node = sender_node->create_child("level");
         auto sends_level_param = sends_level_node->create_parameter(ossia::val_type::FLOAT);
+        sends_level_param->set_value(level);
     }
 #endif //------------------------------------------------------------------------------------------------
 }
@@ -260,14 +262,11 @@ void track_unit::remove_unit(unit_base *unit)
 }
 
 #endif
-
 //-------------------------------------------------------------------------------------------------------
 #ifdef WPN_AUDIO_SNDFILE
 //-------------------------------------------------------------------------------------------------------
-
 buffer_unit::~buffer_unit()
 {
     CLEAR_SFBUF;
 }
-
 #endif

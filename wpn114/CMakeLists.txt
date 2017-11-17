@@ -61,7 +61,6 @@ else()
 endif()
 
 if(WPN_CONTROL)
-
     message("WPN114: Building ${PROJECT_NAME} with control features")
     add_subdirectory(control)
     target_link_libraries(${PROJECT_NAME} wpn114control)
@@ -81,7 +80,6 @@ if(WPN_COMMAND_LINE)
     add_subdirectory(command)
     #target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}command)
 else()
-
     message("WPN114: Building ${PROJECT_NAME} without command-line features")
 endif()
 

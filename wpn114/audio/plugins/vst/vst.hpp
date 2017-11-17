@@ -47,6 +47,19 @@ typedef void        (*set_parameter_funcptr)(aeffect* effect, vstint32_t index, 
 typedef vstint32_t  (*process_events_funcptr) (vstevents *events);
 typedef void        (*process_funcptr) (aeffect* effect, float **inputs, float **outputs, vstint32_t sample_frames);
 
+enum class MIDI
+{
+    SYSEX                   = 0xf0,
+    EOX                     = 0xf7,
+    NOTE_OFF                = 0x80,
+    NOTE_ON                 = 0x90,
+    AFTERTOUCH              = 0xa0,
+    CONTINUOUS_CONTROL      = 0xb0,
+    PATCH_CHANGE            = 0xc0,
+    CHANNEL_PRESSURE        = 0xd0,
+    PITCH_BEND              = 0xe0
+};
+
 //-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace audio {
@@ -83,9 +96,9 @@ private:
                                             uint16_t width, uint16_t height);
     void                _show_vst_3x_editor();
 
-    dispatcher_funcptr  m_dispatcher;
-    aeffect*            m_plugin;
-    std::string         m_plugin_path;
+    dispatcher_funcptr      m_dispatcher;
+    aeffect*                m_plugin;
+    std::string             m_plugin_path;
 };
 }
 }

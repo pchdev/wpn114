@@ -22,7 +22,6 @@
 #include <wpn114/audio/plugins/vst/vst.hpp>
 
 using namespace wpn114::audio::plugins;
-
 extern "C"
 {
 vstintptr_t VSTCALLBACK
@@ -108,12 +107,59 @@ vst_hdl::~vst_hdl() {}
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
 void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
 {
+    auto midi_node          = root.create_child("MIDI");
+    auto noteon_node        = midi_node->create_child("note_on");
+    auto noteoff_node       = midi_node->create_child("note_off");
+    auto cc_node            = midi_node->create_child("cc");
+    auto pc_node            = midi_node->create_child("program_change");
+    auto aftertouch_node    = midi_node->create_child("aftertouch");
+    auto polypressure_node  = midi_node->create_child("poly_pressure");
+    auto pitchbend_node     = midi_node->create_child("pitchbend");
+
+    auto noteon_param           = noteon_node->create_parameter(ossia::val_type::VEC3F);
+    auto noteoff_param          = noteoff_node->create_parameter(ossia::val_type::VEC3F);
+    auto cc_param               = cc_node->create_parameter(ossia::val_type::VEC3F);
+    auto pc_param               = pc_node->create_parameter(ossia::val_type::VEC3F);
+    auto aftertouch_param       = aftertouch_node->create_parameter(ossia::val_type::VEC2F);
+    auto polypressure_param     = polypressure_node->create_parameter(ossia::val_type::VEC3F);
+    auto pitchbend_param        = pitchbend_node->create_parameter(ossia::val_type::VEC2F);
+
+    noteon_param->add_callback([=](const ossia::value& v) {
+
+        auto v_array = v.get<std::array<float,3>>();
+
+        vstevents res;
+        res.numEvents = 1;
+        res.events[0] = new VstEvent();
+        res.events[0]->byteSize = 24;
+        res.events[0]->type = kVstMidiType;
+        res.events[0]->flags = 1;
+
+        VstMidiEvent *event = (VstMidiEvent*)res.events[0];
+        event->type = kVstMidiType;
+        event->midiData[0] = (char) MIDI::NOTE_ON + (char) v_array[0];
+        event->midiData[1] = (char) v_array[1]; // index
+        event->midiData[2] = (char) v_array[2]; // value
+        event->midiData[3] = 0;
+        event->flags = kVstMidiEventIsRealtime;
+        event->byteSize = sizeof(VstMidiEvent);
+        event->reserved1 = 0;
+        event->reserved2 = 0;
+
+        res.numEvents = 1;
+        process_midi(&res);
+    });
+
     for(int i = 0; i < m_plugin->numParams; ++i)
     {
         char param_name[256];
         m_dispatcher(m_plugin, effGetParamName, i, 0, &param_name, 0);
         auto node = root.create_child(param_name);
         auto param = node->create_parameter(ossia::val_type::FLOAT);
+
+        param->add_callback([=](const ossia::value& v) {
+            m_plugin->setParameter(m_plugin, i, v.get<float>());
+        });
     }
 }
 #endif //------------------------------------------------------------------------------------------------
@@ -182,5 +228,4 @@ void vst_hdl::process_audio(float** input, uint16_t nsamples)
     _silence_channel(m_output_buffer, m_num_outputs, nsamples);
     m_plugin->processReplacing(m_plugin, input, m_output_buffer, nsamples);
 }
-
 
