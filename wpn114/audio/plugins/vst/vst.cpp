@@ -143,6 +143,7 @@ void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
 {
     // Creating MIDI parameters -------------------------------------
     auto midi_node = root.create_child("MIDI");
+    auto params_node = root.create_child("parameters");
 
     for(auto it = midi_map.begin(); it != midi_map.end(); ++it)
     {
@@ -177,7 +178,7 @@ void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
     {
         char param_name[256];
         m_dispatcher(m_plugin, effGetParamName, i, 0, &param_name, 0);
-        auto node   = root.create_child(param_name);
+        auto node   = params_node->create_child(param_name);
         auto param  = node->create_parameter(ossia::val_type::FLOAT);
 
         param->add_callback([=](const ossia::value& v) {
