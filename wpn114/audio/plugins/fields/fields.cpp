@@ -1,8 +1,8 @@
 #include <wpn114/audio/backend/unit_base.hpp>
 #include <math.h>
-
+//-------------------------------------------------------------------------------------------------------
 #define ENVSIZE 16384
-
+//-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace audio {
 namespace plugins {
@@ -24,8 +24,7 @@ public:
         SET_INACTIVE;
         SETN_INPUTS(0);
         SET_UTYPE(unit_type::GENERATOR_UNIT);
-        load_soundfile(SFBUF, sfpath);
-
+        SFLOAD(sfpath);
         SETN_OUTPUTS(SFBUF.num_channels);
     }
 
@@ -45,8 +44,8 @@ public:
         return a + x * (b - a);
     }
 
-    void process_audio(float** input, uint16_t nsamples) override {}
-    void process_audio(uint16_t frames_per_buffer) override
+    void process_audio(float** input, uint16_t nsamples)    override {}
+    void process_audio(uint16_t frames_per_buffer)          override
     {
         for(int i = 0; i < frames_per_buffer; ++i)
         {

@@ -20,7 +20,6 @@
 #include "aeffect.h"
 #include "aeffectx.h"
 #include <wpn114/audio/backend/unit_base.hpp>
-
 //-------------------------------------------------------------------------------------------------------
 using aeffect = AEffect;
 using vstint32_t = VstInt32;
@@ -33,7 +32,6 @@ extern "C" {
 vstintptr_t VSTCALLBACK
 host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index,
               vstintptr_t value, void *ptr, float opt);
-
 }
 
 typedef aeffect* (*vst_plugin_funcptr)(audioMasterCallback host);
@@ -46,7 +44,7 @@ typedef float       (*get_parameter_funcptr)(aeffect* effect, vstint32_t index);
 typedef void        (*set_parameter_funcptr)(aeffect* effect, vstint32_t index, float value);
 typedef vstint32_t  (*process_events_funcptr) (vstevents *events);
 typedef void        (*process_funcptr) (aeffect* effect, float **inputs, float **outputs, vstint32_t sample_frames);
-
+//-------------------------------------------------------------------------------------------------------
 enum class MIDI
 {
     SYSEX                   = 0xf0,
@@ -59,7 +57,9 @@ enum class MIDI
     CHANNEL_PRESSURE        = 0xd0,
     PITCH_BEND              = 0xe0
 };
-
+//-------------------------------------------------------------------------------------------------------
+typedef std::pair<MIDI,uint8_t> midi_info;
+static  std::map<std::string,   midi_info> midi_map;
 //-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace audio {

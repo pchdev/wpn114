@@ -19,7 +19,6 @@ public:
         SET_INACTIVE;
         SETN_INPUTS(0);
         SET_UTYPE(unit_type::GENERATOR_UNIT);
-
         SFLOAD(sfpath);
         SETN_OUTPUTS(m_sf_buffer.num_channels);
     }

@@ -34,8 +34,6 @@ public:
         SETN_INPUTS(0);
         SET_UTYPE(unit_type::GENERATOR_UNIT);
         SFLOAD(sfpath);
-        load_soundfile(SFBUF, sfpath);
-
         SETN_OUTPUTS(SFBUF.num_channels);
     }
 

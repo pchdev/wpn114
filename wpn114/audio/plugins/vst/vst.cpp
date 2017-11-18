@@ -87,7 +87,7 @@ vst_hdl::vst_hdl(const char* name_with_extension)
     m_plugin_path = name;
     m_plugin = this->_load_vst_2x_plugin(name.c_str());
 
-    if  (m_plugin->magic != kEffectMagic)
+    if  ( m_plugin->magic != kEffectMagic )
         std::cerr << "Plugin's magic number is incorrrect\n";
 
     m_dispatcher = (dispatcher_funcptr)(m_plugin->dispatcher);
@@ -100,62 +100,85 @@ vst_hdl::vst_hdl(const char* name_with_extension)
     SETN_INPUTS(    m_plugin->numInputs);
     SETN_OUTPUTS(   m_plugin->numOutputs);
     SET_ACTIVE;
+
+    if( midi_map.empty())
+    {
+        midi_map["NOTE_ON"]              = midi_info(MIDI::NOTE_ON, 3);
+        midi_map["NOTE_OFF"]             = midi_info(MIDI::NOTE_OFF, 3);
+        midi_map["AFTERTOUCH"]           = midi_info(MIDI::AFTERTOUCH, 2);
+        midi_map["CONTINUOUS_CONTROL"]   = midi_info(MIDI::CONTINUOUS_CONTROL, 3);
+        midi_map["PATCH_CHANGE"]         = midi_info(MIDI::PATCH_CHANGE, 3);
+        midi_map["CHANNEL_PRESSURE"]     = midi_info(MIDI::CHANNEL_PRESSURE, 2);
+        midi_map["PITCH_BEND"]           = midi_info(MIDI::PITCH_BEND, 2);
+    }
 }
 
 vst_hdl::~vst_hdl() {}
 
+template <typename T>
+vstevents* make_vstevent_array(const T& values)
+{
+    auto res = new vstevents();
+    res->numEvents = 1;
+    res->events[0] = new VstEvent();
+    res->events[0]->byteSize = 24;
+    res->events[0]->type = kVstMidiType;
+    res->events[0]->flags = 1;
+
+    VstMidiEvent *event = (VstMidiEvent*)res->events[0];
+
+    for (int i = 0; i < values.size(); ++i)
+        event->midiData[i] = values[i];
+
+    if(values.size() < 4) event->midiData[3] = 0;
+
+    event->flags = kVstMidiEventIsRealtime;
+    event->byteSize = sizeof(VstMidiEvent);
+
+    return res;
+}
+
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
 void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
 {
-    auto midi_node          = root.create_child("MIDI");
-    auto noteon_node        = midi_node->create_child("note_on");
-    auto noteoff_node       = midi_node->create_child("note_off");
-    auto cc_node            = midi_node->create_child("cc");
-    auto pc_node            = midi_node->create_child("program_change");
-    auto aftertouch_node    = midi_node->create_child("aftertouch");
-    auto polypressure_node  = midi_node->create_child("poly_pressure");
-    auto pitchbend_node     = midi_node->create_child("pitchbend");
+    // Creating MIDI parameters -------------------------------------
+    auto midi_node = root.create_child("MIDI");
 
-    auto noteon_param           = noteon_node->create_parameter(ossia::val_type::VEC3F);
-    auto noteoff_param          = noteoff_node->create_parameter(ossia::val_type::VEC3F);
-    auto cc_param               = cc_node->create_parameter(ossia::val_type::VEC3F);
-    auto pc_param               = pc_node->create_parameter(ossia::val_type::VEC3F);
-    auto aftertouch_param       = aftertouch_node->create_parameter(ossia::val_type::VEC2F);
-    auto polypressure_param     = polypressure_node->create_parameter(ossia::val_type::VEC3F);
-    auto pitchbend_param        = pitchbend_node->create_parameter(ossia::val_type::VEC2F);
+    for(auto it = midi_map.begin(); it != midi_map.end(); ++it)
+    {
+        auto node = midi_node->create_child(it->first);
 
-    noteon_param->add_callback([=](const ossia::value& v) {
+        uint8_t nargs = it->second.second;
+        ossia::net::parameter_base* param;
 
-        auto v_array = v.get<std::array<float,3>>();
+        if(nargs == 2)
+        param = node->create_parameter(ossia::val_type::VEC2F);
+        else param = node->create_parameter(ossia::val_type::VEC3F);
 
-        vstevents res;
-        res.numEvents = 1;
-        res.events[0] = new VstEvent();
-        res.events[0]->byteSize = 24;
-        res.events[0]->type = kVstMidiType;
-        res.events[0]->flags = 1;
+        param->add_callback([=](const ossia::value& v) {
+            //! todo: find a more elegant way to do this...
+            if(nargs == 2)
+            {
+                auto v_array = v.get<ossia::vec2f>();
+                v_array[0] += (uint8_t) it->second.first;
+                process_midi(make_vstevent_array<ossia::vec2f>(v_array));
+            }
+            if(nargs == 3)
+            {
+                auto v_array = v.get<ossia::vec3f>();
+                v_array[0] += (uint8_t) it->second.first;
+                process_midi(make_vstevent_array<ossia::vec3f>(v_array));
+            }
+        });
+    }
 
-        VstMidiEvent *event = (VstMidiEvent*)res.events[0];
-        event->type = kVstMidiType;
-        event->midiData[0] = (char) MIDI::NOTE_ON + (char) v_array[0];
-        event->midiData[1] = (char) v_array[1]; // index
-        event->midiData[2] = (char) v_array[2]; // value
-        event->midiData[3] = 0;
-        event->flags = kVstMidiEventIsRealtime;
-        event->byteSize = sizeof(VstMidiEvent);
-        event->reserved1 = 0;
-        event->reserved2 = 0;
-
-        res.numEvents = 1;
-        process_midi(&res);
-    });
-
+    // Creating float parameters -------------------------------------
     for(int i = 0; i < m_plugin->numParams; ++i)
     {
         char param_name[256];
         m_dispatcher(m_plugin, effGetParamName, i, 0, &param_name, 0);
-        auto node = root.create_child(param_name);
-        auto param = node->create_parameter(ossia::val_type::FLOAT);
+        auto node   = root.create_child(param_name);
+        auto param  = node->create_parameter(ossia::val_type::FLOAT);
 
         param->add_callback([=](const ossia::value& v) {
             m_plugin->setParameter(m_plugin, i, v.get<float>());
@@ -180,6 +203,7 @@ void vst_hdl::show_editor()
     else
     {
         std::cerr << "error, could not get plugin editor's window" << std::endl;
+        //! TODO: add error management
     }
 
     this->_show_vst_2x_editor(this->m_plugin, m_plugin_path.c_str(), width, height);
