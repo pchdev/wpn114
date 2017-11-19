@@ -17,7 +17,7 @@ static int main_stream_callback
     // copy unit's configuration
     std::vector<unit_base*> units = backend->get_registered_units();
     uint8_t nchannels = backend->get_num_channels();
-    float master[nchannels][frames_per_buffer];
+    float** master = backend->get_master_output_buffer();
 
     // call audio processing on each of the registered units
     for (auto& unit : units)
@@ -97,6 +97,7 @@ void wpn114::audio::backend_hdl::initialize(size_t sample_rate, uint16_t nsample
 
     auto device_name = Pa_GetDeviceInfo(m_output_parameters.device)->name;
     std::cout << device_name << std::endl;
+    bufalloc(nsamples);
 
     for(auto& unit : m_units)
     {
@@ -104,6 +105,22 @@ void wpn114::audio::backend_hdl::initialize(size_t sample_rate, uint16_t nsample
         unit->bufalloc(nsamples);
         unit->preprocessing(sample_rate, nsamples);
     }
+}
+
+void wpn114::audio::backend_hdl::bufalloc(uint16_t nsamples)
+{
+    m_master_output = new float*[m_num_channels];
+
+    for (int i = 0; i < m_num_channels; ++i)
+    {
+        m_master_output[i] = new float[nsamples];
+        memset(m_master_output[i], 0.f, sizeof(nsamples));
+    }
+}
+
+inline float** wpn114::audio::backend_hdl::get_master_output_buffer()
+{
+    return m_master_output;
 }
 
 void wpn114::audio::backend_hdl::start_stream(size_t sample_rate, uint16_t nsamples)

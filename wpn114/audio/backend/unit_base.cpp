@@ -28,14 +28,14 @@ unit_base::~unit_base()
     delete m_output_buffer;
 }
 
-void unit_base::bufalloc(uint16_t samples_per_buffer)
+void unit_base::bufalloc(uint16_t nsamples)
 {
     m_output_buffer = new float*[m_num_outputs];
 
     for (int i = 0; i < m_num_outputs; ++i)
     {
-        m_output_buffer[i] = new float[samples_per_buffer];
-        memset(m_output_buffer[i], 0.f, sizeof(samples_per_buffer));
+        m_output_buffer[i] = new float[nsamples];
+        memset(m_output_buffer[i], 0.f, sizeof(nsamples));
     }
 }
 
@@ -179,13 +179,18 @@ void aux_unit::add_sender(unit_base *sender, float level)
     if(!m_sends.empty()) SET_ACTIVE;
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-    if(m_netnode && !m_netnode->find_child("sends"))
+    if(m_netnode)
     {
-        auto send_node = m_netnode->create_child("sends");
+        ossia::net::node_base* send_node = m_netnode->find_child("sends");
+        if(!send_node) send_node = m_netnode->create_child("sends");
+
         auto sender_node = send_node->create_child(sender->get_netname());
         auto sends_level_node = sender_node->create_child("level");
         auto sends_level_param = sends_level_node->create_parameter(ossia::val_type::FLOAT);
         sends_level_param->set_value(level);
+
+        auto node_domain = ossia::make_domain(0.f, 1.f);
+        ossia::net::set_domain(*sends_level_node, node_domain);
     }
 #endif //------------------------------------------------------------------------------------------------
 }
@@ -210,7 +215,11 @@ track_unit::track_unit()
 track_unit::~track_unit() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void track_unit::net_expose_plugin_tree(ossia::net::node_base& application_node) {}
+void track_unit::net_expose_plugin_tree(ossia::net::node_base& application_node)
+{
+    for(auto& unit : m_units)
+        unit->net_expose(*m_netnode);
+}
 #endif //------------------------------------------------------------------------------------------------
 
 void track_unit::preprocessing(size_t sample_rate, uint16_t nsamples)

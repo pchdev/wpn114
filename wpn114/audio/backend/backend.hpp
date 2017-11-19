@@ -36,12 +36,14 @@ public:
     void initialize(size_t sample_rate, uint16_t nsamples);
     void start_stream(size_t sample_rate, uint16_t nsamples);
     void stop_stream();
+    void bufalloc(uint16_t nsamples);
 
     void register_unit(unit_base* unit);
     void unregister_unit(unit_base* unit);
 
     uint8_t get_num_channels() const;
     std::vector<wpn114::audio::unit_base*> get_registered_units() const;
+    float** get_master_output_buffer();
 
 private:
     uint8_t                     m_num_channels;
@@ -49,6 +51,7 @@ private:
     PaStreamParameters          m_output_parameters;
     PaStreamCallback*           m_main_stream_cb_funcptr;
     std::vector<unit_base*>     m_units;
+    float**                     m_master_output;
 };
 }
 }

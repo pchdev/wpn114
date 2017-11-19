@@ -21,6 +21,8 @@
 #include <wpn114/audio/backend/context.hpp>
 #include <wpn114/audio/plugins/vst/vst.hpp>
 
+#define PARAMNAME_MAXLE 256
+
 using namespace wpn114::audio::plugins;
 extern "C"
 {
@@ -176,7 +178,7 @@ void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
     // Creating float parameters -------------------------------------
     for(int i = 0; i < m_plugin->numParams; ++i)
     {
-        char param_name[256];
+        char param_name[PARAMNAME_MAXLE];
         m_dispatcher(m_plugin, effGetParamName, i, 0, &param_name, 0);
         auto node   = params_node->create_child(param_name);
         auto param  = node->create_parameter(ossia::val_type::FLOAT);
@@ -184,6 +186,9 @@ void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
         param->add_callback([=](const ossia::value& v) {
             m_plugin->setParameter(m_plugin, i, v.get<float>());
         });
+
+        auto node_domain = ossia::make_domain(0.f, 1.f);
+        ossia::net::set_domain(*node, node_domain);
     }
 }
 #endif //------------------------------------------------------------------------------------------------
