@@ -17,7 +17,7 @@ static int main_stream_callback
     // copy unit's configuration
     std::vector<unit_base*> units = backend->get_registered_units();
     uint8_t nchannels = backend->get_num_channels();
-    float** master = backend->get_master_output_buffer();
+    float*** master = backend->get_master_output_buffer();
 
     // call audio processing on each of the registered units
     for (auto& unit : units)
@@ -29,26 +29,26 @@ static int main_stream_callback
         for (uint8_t n = 0; n < nchannels; ++n)
         {
             // initialize sample data for each channel
-            master[n][i] = 0.f;
+            *master[n][i] = 0.f;
 
             //      poll registered units
             for     (auto& unit : units)
             if      (unit->is_active() && n <= unit->get_num_channels()-1)
-                    master[n][i] += unit->get_framedata(n,i);
+                    *master[n][i] += unit->get_framedata(n,i);
 
             // output sample data for channel n
-            *out++ = master[n][i];
+            *out++ = *master[n][i];
         }
     }
 
     return paContinue;
 }
 
-wpn114::audio::backend_hdl::backend_hdl(uint8_t num_channels) :
+backend_hdl::backend_hdl(uint8_t num_channels) :
     m_main_stream(nullptr),
     m_num_channels(num_channels) {}
 
-wpn114::audio::backend_hdl::~backend_hdl()
+backend_hdl::~backend_hdl()
 {
     PaError err = Pa_StopStream(m_main_stream);
             err = Pa_CloseStream(m_main_stream);
@@ -57,7 +57,7 @@ wpn114::audio::backend_hdl::~backend_hdl()
 }
 
 inline std::vector<wpn114::audio::unit_base*>
-wpn114::audio::backend_hdl::get_registered_units()  const
+backend_hdl::get_registered_units()  const
 {
     return m_units;
 }
@@ -67,12 +67,12 @@ inline uint8_t backend_hdl::get_num_channels()      const
     return m_num_channels;
 }
 
-void wpn114::audio::backend_hdl::register_unit(wpn114::audio::unit_base* unit)
+void backend_hdl::register_unit(wpn114::audio::unit_base* unit)
 {
     m_units.push_back(unit);
 }
 
-void wpn114::audio::backend_hdl::unregister_unit(wpn114::audio::unit_base* unit)
+void backend_hdl::unregister_unit(wpn114::audio::unit_base* unit)
 {
     m_units.erase(
                 std::remove(
@@ -80,7 +80,7 @@ void wpn114::audio::backend_hdl::unregister_unit(wpn114::audio::unit_base* unit)
                 m_units.end());
 }
 
-void wpn114::audio::backend_hdl::initialize(size_t sample_rate, uint16_t nsamples)
+void backend_hdl::initialize(size_t sample_rate, uint16_t nsamples)
 {
     PaError err;
 
@@ -107,7 +107,7 @@ void wpn114::audio::backend_hdl::initialize(size_t sample_rate, uint16_t nsample
     }
 }
 
-void wpn114::audio::backend_hdl::bufalloc(uint16_t nsamples)
+void backend_hdl::bufalloc(uint16_t nsamples)
 {
     m_master_output = new float*[m_num_channels];
 
@@ -118,12 +118,12 @@ void wpn114::audio::backend_hdl::bufalloc(uint16_t nsamples)
     }
 }
 
-inline float** wpn114::audio::backend_hdl::get_master_output_buffer()
+inline float*** backend_hdl::get_master_output_buffer()
 {
-    return m_master_output;
+    return &m_master_output;
 }
 
-void wpn114::audio::backend_hdl::start_stream(size_t sample_rate, uint16_t nsamples)
+void backend_hdl::start_stream(size_t sample_rate, uint16_t nsamples)
 {
     PaError err = Pa_OpenStream(
                         &m_main_stream,
@@ -141,7 +141,7 @@ void wpn114::audio::backend_hdl::start_stream(size_t sample_rate, uint16_t nsamp
     err = Pa_StartStream(m_main_stream);
 }
 
-void wpn114::audio::backend_hdl::stop_stream()
+void backend_hdl::stop_stream()
 {
     PaError err = Pa_StopStream(m_main_stream);
     if ( err != paNoError )

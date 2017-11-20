@@ -41,9 +41,9 @@ public:
     void register_unit(unit_base* unit);
     void unregister_unit(unit_base* unit);
 
-    uint8_t get_num_channels() const;
-    std::vector<wpn114::audio::unit_base*> get_registered_units() const;
-    float** get_master_output_buffer();
+    uint8_t                     get_num_channels() const;
+    std::vector<unit_base*>     get_registered_units() const;
+    float***                    get_master_output_buffer();
 
 private:
     uint8_t                     m_num_channels;

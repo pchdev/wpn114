@@ -12,6 +12,8 @@ public:
 
 #ifdef WPN_OSSIA //---------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override {}
+    // nothing to expose, as all required parameters are already taken care of
+    // by the 'master' node
 #endif //-------------------------------------------------------------------------------------------------
 
     oneshots(const char* sfpath) : m_phase(0)

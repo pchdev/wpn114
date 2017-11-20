@@ -28,9 +28,12 @@ public:
     net_hdl(const char* user_namespace);
     ~net_hdl();
 
-    void expose_oscquery_server(uint32_t udp_port, uint32_t tcp_port);
-    void expose_osc(const char *remote_addr, uint32_t remote_port, uint32_t local_port);
-    void expose_minuit(const char *remote_addr, uint32_t remote_port, uint32_t local_port);
+    void expose_oscquery_server(
+            uint32_t udp_port, uint32_t tcp_port);
+    void expose_osc(
+            const char *remote_addr, uint32_t remote_port, uint32_t local_port);
+    void expose_minuit(
+            const char *remote_addr, uint32_t remote_port, uint32_t local_port);
 
     ossia::net::node_base& get_application_node() const;
 

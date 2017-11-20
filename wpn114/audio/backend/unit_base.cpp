@@ -142,7 +142,13 @@ aux_unit::aux_unit(std::unique_ptr<unit_base> receiver) : m_receiver(std::move(r
 aux_unit::~aux_unit() {}
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
-void aux_unit::net_expose_plugin_tree(ossia::net::node_base& root) {}
+void aux_unit::net_expose_plugin_tree(ossia::net::node_base& root)
+{
+    if(m_receiver.get())
+    {
+        m_receiver->net_expose(m_netnode);
+    }
+}
 #endif //------------------------------------------------------------------------------------------------
 
 void aux_unit::preprocessing(size_t sample_rate, uint16_t nsamples)

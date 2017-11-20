@@ -90,7 +90,10 @@ vst_hdl::vst_hdl(const char* name_with_extension)
     m_plugin = this->_load_vst_2x_plugin(name.c_str());
 
     if  ( m_plugin->magic != kEffectMagic )
+    {
         std::cerr << "Plugin's magic number is incorrrect\n";
+        return;
+    }
 
     m_dispatcher = (dispatcher_funcptr)(m_plugin->dispatcher);
 
@@ -117,8 +120,7 @@ vst_hdl::vst_hdl(const char* name_with_extension)
 
 vst_hdl::~vst_hdl() {}
 
-template <typename T>
-vstevents* make_vstevent_array(const T& values)
+template <typename T> vstevents* make_vstevent_array(const T& values)
 {
     auto res = new vstevents();
     res->numEvents = 1;
@@ -248,7 +250,6 @@ inline void vst_hdl::process_midi(vstevents *events)
 
 void vst_hdl::process_audio(uint16_t nsamples)
 {
-    //_silence_channel(m_input_buffer, m_num_inputs, samples_per_buffer);
     _silence_channel(m_output_buffer, m_num_outputs, nsamples);
     m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, nsamples);
 }
