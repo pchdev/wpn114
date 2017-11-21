@@ -146,7 +146,7 @@ void aux_unit::net_expose_plugin_tree(ossia::net::node_base& root)
 {
     if(m_receiver.get())
     {
-        m_receiver->net_expose(m_netnode);
+        m_receiver->net_expose(*m_netnode);
     }
 }
 #endif //------------------------------------------------------------------------------------------------

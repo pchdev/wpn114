@@ -4,7 +4,7 @@
 using namespace wpn114::audio;
 
 static int main_stream_callback
-(const void *input_buffer, void *output_buffer, unsigned long frames_per_buffer,
+(const void *input_buffer, void *output_buffer, unsigned long nsamples,
  const PaStreamCallbackTimeInfo *time_info, PaStreamCallbackFlags status_flags, void *user_data)
 {
     float*          out     = (float*) output_buffer;
@@ -17,36 +17,36 @@ static int main_stream_callback
     // copy unit's configuration
     std::vector<unit_base*> units = backend->get_registered_units();
     uint8_t nchannels = backend->get_num_channels();
-    float*** master = backend->get_master_output_buffer();
+    auto master = *backend->get_master_output_buffer();
 
     // call audio processing on each of the registered units
     for (auto& unit : units)
     if  (unit->is_active())
-         unit->process_audio(frames_per_buffer);
+         unit->process_audio(nsamples);
 
-    for(uint16_t i = 0; i < frames_per_buffer; ++i)
+    for(uint16_t i = 0; i < nsamples; ++i)
     {
         for (uint8_t n = 0; n < nchannels; ++n)
         {
             // initialize sample data for each channel
-            *master[n][i] = 0.f;
+            master[n][i] = 0.f;
 
             //      poll registered units
             for     (auto& unit : units)
             if      (unit->is_active() && n <= unit->get_num_channels()-1)
-                    *master[n][i] += unit->get_framedata(n,i);
+                    master[n][i] += unit->get_framedata(n,i);
 
             // output sample data for channel n
-            *out++ = *master[n][i];
+            *out++ = master[n][i];
         }
     }
 
     return paContinue;
 }
 
-backend_hdl::backend_hdl(uint8_t num_channels) :
+backend_hdl::backend_hdl(uint8_t nchannels) :
     m_main_stream(nullptr),
-    m_num_channels(num_channels) {}
+    m_num_channels(nchannels) {}
 
 backend_hdl::~backend_hdl()
 {
