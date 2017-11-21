@@ -102,19 +102,19 @@ void device_hdl::enable_reception() { m_is_enabled = true; }
 void device_hdl::disable_reception() { m_is_enabled = false; }
 bool device_hdl::is_enabled() const { return m_is_enabled; }
 
-inline void device_hdl::send_note_on(uint8_t channel, uint8_t index, uint8_t value) const
+void device_hdl::send_note_on(uint8_t channel, uint8_t index, uint8_t value) const
 {
     std::vector<uint8_t> output = { static_cast<uint8_t>(NOTE_ON + channel), index, value };
     m_midi_output->sendMessage(&output);
 }
 
-inline void device_hdl::send_note_off(uint8_t channel, uint8_t index, uint8_t value) const
+void device_hdl::send_note_off(uint8_t channel, uint8_t index, uint8_t value) const
 {
     std::vector<uint8_t> output = { static_cast<uint8_t>(NOTE_OFF + channel), index, value };
     m_midi_output->sendMessage(&output);
 }
 
-inline void device_hdl::send_control_change(uint8_t channel, uint8_t index, uint8_t value) const
+void device_hdl::send_control_change(uint8_t channel, uint8_t index, uint8_t value) const
 {
     std::vector<uint8_t> output = { static_cast<uint8_t>(CONTINUOUS_CONTROL + channel), index, value };
     m_midi_output->sendMessage(&output);
@@ -126,7 +126,7 @@ void device_hdl::send_program_change(uint8_t channel, uint8_t index, uint8_t val
     m_midi_output->sendMessage(&output);
 }
 
-inline void device_hdl::send_sysex(std::vector<uint8_t> byte_array) const
+void device_hdl::send_sysex(std::vector<uint8_t> byte_array) const
 {
     m_midi_output->sendMessage(&byte_array);
 }

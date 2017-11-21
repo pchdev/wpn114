@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  push_controller.cpp
+ *       Filename:  push_1.cpp
  *
  *    Description:  
  *
@@ -19,36 +19,36 @@
 
 #include <wpn114/control/plugins/push_1/push_controller.hpp>
 
-wpn114::control::midi::push_controller::push_controller(unique_device_hdl hdl) :
+using namespace wpn114::control::midi;
+
+push_1::push_1(unique_device_hdl hdl) :
     m_device_hdl(std::move(hdl))
 {
     this->light_pad(0, pad_colors::BLUE_GREEN, pad_lighting_mode::FLASH_EIGHTH_BEATS);
 }
 
-wpn114::control::midi::push_controller::~push_controller()
+push_1::~push_1()
 {
     //m_device_hdl->stop();
     m_device_hdl.reset();
 }
 
-std::string wpn114::control::midi::push_controller::get_controller_id() const
+std::string push_1::get_controller_id() const
 {
     return (std::string) "Ableton Push User Port";
 }
 
-void wpn114::control::midi::push_controller::light_pad
-(uint8_t target, pad_colors color, pad_lighting_mode mode)
+void push_1::light_pad(uint8_t target, pad_colors color, pad_lighting_mode mode)
 {
     m_device_hdl->send_note_on(static_cast<uint8_t>(mode), target, static_cast<uint8_t>(color));
 }
 
-void wpn114::control::midi::push_controller::light_cc_commmand_button
-(command_buttons target, toggle_lighting_mode mode)
+void push_1::light_cc_commmand_button(command_buttons target, toggle_lighting_mode mode)
 {
     m_device_hdl->send_control_change(0, static_cast<uint8_t>(target), static_cast<uint8_t>(mode));
 }
 
-void wpn114::control::midi::push_controller::light_cc_toggle(uint8_t row, uint8_t target, toggle_lighting_mode mode)
+void push_1::light_cc_toggle(uint8_t row, uint8_t target, toggle_lighting_mode mode)
 {
     uint8_t offset = 0;
     if (row == 1) offset = 19;
@@ -57,11 +57,8 @@ void wpn114::control::midi::push_controller::light_cc_toggle(uint8_t row, uint8_
     m_device_hdl->send_control_change(1, target+offset, static_cast<uint8_t>(mode));
 }
 
-void wpn114::control::midi::push_controller::lcd_display
-(std::string text_to_display, uint8_t line, uint8_t divide, uint8_t slot, lcd_alignment align)
+void push_1::lcd_display (std::string text_to_display, uint8_t line, uint8_t divide, uint8_t slot, lcd_alignment align)
 {
-
-
 
 }
 

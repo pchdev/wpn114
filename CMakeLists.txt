@@ -36,8 +36,8 @@ if( WPN_AUDIO_PLUGINS_FIELDS OR
     set(WPN_AUDIO_SNDFILE ON)
 endif()
 
-option(WPN_CONTROL "Enables controller functionnalities" OFF)
-option(WPN_CONTROL_PUSH "Enables Ableton Push functionnalities" OFF)
+option(WPN_CONTROL "Enables controller functionnalities" ON)
+option(WPN_CONTROL_PUSH "Enables Ableton Push functionnalities" ON)
 option(WPN_COMMAND_LINE "Enables command-line functionnalities" OFF)
 option(WPN_OSSIA "Enables libossia network functionnalities" ON)
 

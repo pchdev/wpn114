@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  push_controller.hpp
+ *       Filename:  push_1.hpp
  *
  *    Description:  
  *
@@ -19,6 +19,7 @@
 #include <wpn114/control/backend/controller_base.hpp>
 #include <cstdint>
 #include <string>
+#include <initializer_list>
 
 namespace wpn114 {
 namespace control {
@@ -26,7 +27,7 @@ namespace midi {
 
 //! TODO: to have different setups/maps for the controller
 //! maybe a JSON or TOML mapping file?
-class push_controller final : public controller_base
+class push_1 final : public controller_base
 {
 public:
     enum class command_buttons
@@ -207,13 +208,14 @@ public:
 
 #define LCD_LINE_SIZE 68
 
-    push_controller(unique_device_hdl hdl);
-    ~push_controller();
+    push_1(unique_device_hdl hdl);
+    ~push_1();
 
     std::string get_controller_id() const override;
 
     //   output (-> physical device) methods
     void light_pad(uint8_t target, pad_colors color, pad_lighting_mode mode);
+    void light_pad(std::initializer_list<uint8_t> targets, pad_colors color, pad_lighting_mode mode);
     void light_cc_commmand_button(command_buttons target, toggle_lighting_mode mode);
     void light_cc_toggle(uint8_t row, uint8_t target, toggle_lighting_mode mode);
 
@@ -228,3 +230,4 @@ private:
 }
 }
 }
+

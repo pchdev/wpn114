@@ -2,7 +2,7 @@
 #include <wpn114/audio/plugins/vst/vst.hpp>
 #include <wpn114/audio/plugins/fields/fields.cpp>
 #include <wpn114/audio/plugins/oneshots/oneshots.cpp>
-//#include <wpn114/control/plugins/push_1/push_controller.hpp>
+#include <wpn114/control/plugins/push_1/push_controller.hpp>
 #include <wpn114/network/net_hdl.hpp>
 #include <iostream>
 #include <time.h>
@@ -58,19 +58,20 @@ int main(int argc, char* argv[])
     kaivo_1.show_editor();
 
     // init controller
-    /*wpn114::control::midi::device_factory push_device_factory;
+    control::midi::device_factory push_device_factory;
     std::string push_port_name = "Ableton Push User Port";
 
     auto push_hdl = push_device_factory.make_device_hdl(push_port_name,
-                                 wpn114::control::device_io_type::IN_OUT);
+                                 control::device_io_type::IN_OUT);
 
-    wpn114::control::midi::push_controller push(std::move(push_hdl));
+    control::midi::push_1 push(std::move(push_hdl));
 
-    // init view (qml or command line)*/
+    using namespace wpn114::control::midi;
 
-    //while(true)
-      //  ;
+    push.light_pad(0,   push_1::pad_colors::BLUE_GREEN_2,
+                        push_1::pad_lighting_mode::FLASH_TWO_BEATS);
 
+    // sleep
     std::this_thread::sleep_for(std::chrono::milliseconds(20000));
     audio_hdl.stop_stream();
 
