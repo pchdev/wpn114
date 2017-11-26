@@ -20,6 +20,7 @@
 #include "aeffect.h"
 #include "aeffectx.h"
 #include <wpn114/audio/backend/unit_base.hpp>
+#include <AppKit/AppKit.h>
 //-------------------------------------------------------------------------------------------------------
 using aeffect = AEffect;
 using vstint32_t = VstInt32;
@@ -81,24 +82,28 @@ public:
 #endif //-------------------------------------------------------------------------------------------------
 
     void show_editor();
+    void close_editor();
     void process_audio(uint16_t nsamples) override;
     void process_audio(float** input, uint16_t nsamples) override;
     void preprocessing(size_t sample_rate, uint16_t nsamples) override;
     void process_midi(vstevents *events);
     void suspend();
     void resume();
-
 private:
-    void                _silence_channel(float **channel_data, uint8_t nchannels, uint16_t nsamples);
-    aeffect*            _load_vst_2x_plugin(const char* path);
-    void                _load_vst_3x_plugin(const char* path);
-    void                _show_vst_2x_editor(aeffect* effect, const char *plugin_name,
-                                            uint16_t width, uint16_t height);
-    void                _show_vst_3x_editor();
+    void        _silence_channel(float **channel_data, uint8_t nchannels, uint16_t nsamples);
+    aeffect*    _load_vst_2x_plugin(const char* path);
+    void        _load_vst_3x_plugin(const char* path);
+#ifdef __APPLE__
+    NSWindow*   _show_vst_2x_editor(aeffect* effect, const char *name, uint16_t width, uint16_t height);
+    void        _close_vst_2x_editor(aeffect* effect, NSWindow* window);
+#endif
+    void        _show_vst_3x_editor();
 
     dispatcher_funcptr      m_dispatcher;
     aeffect*                m_plugin;
     std::string             m_plugin_path;
+    NSWindow*               m_editwindow;
+    std::thread             m_editthread;
 };
 }
 }

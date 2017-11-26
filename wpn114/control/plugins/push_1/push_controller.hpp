@@ -16,21 +16,25 @@
  * =====================================================================================
  */
 
+//-------------------------------------------------------------------------------------------------------
 #include <wpn114/control/backend/controller_base.hpp>
 #include <cstdint>
 #include <string>
 #include <initializer_list>
-
+//-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace control {
 namespace midi {
-
+//-------------------------------------------------------------------------------------------------------
 //! TODO: to have different setups/maps for the controller
 //! maybe a JSON or TOML mapping file?
-class push_1 final : public controller_base
+class push_1 : public controller_base
+//-------------------------------------------------------------------------------------------------------
 {
 public:
+//-------------------------------------------------------------------------------------------------------
     enum class command_buttons
+//-------------------------------------------------------------------------------------------------------
     {
         PLAY                    = 85,
         RECORD                  = 86,
@@ -81,8 +85,9 @@ public:
         MASTER                  = 28,
         STOP                    = 29
     };
-
+//-------------------------------------------------------------------------------------------------------
     enum class toggle_lighting_mode
+//-------------------------------------------------------------------------------------------------------
     {
         OFF                     = 0,
         RED_DIM                 = 1,
@@ -110,8 +115,9 @@ public:
         GREEN_FULL_SLOW         = 23,
         GREEN_FULL_FAST         = 24
     };
-
+//-------------------------------------------------------------------------------------------------------
     enum class pad_lighting_mode
+//-------------------------------------------------------------------------------------------------------
     {
         OFF                     = 0,
         NORMAL                  = 1,
@@ -129,8 +135,9 @@ public:
         FLASH_WHOLE_BEATS       = 15,
         FLASH_TWO_BEATS         = 16
     };
-
+//-------------------------------------------------------------------------------------------------------
     enum class pad_colors
+//-------------------------------------------------------------------------------------------------------
     {
         BLACK                   = 0,
         LIGHTEST_WHITE          = 1,
@@ -198,8 +205,9 @@ public:
         YELLOW_GREEN            = 63,
         DARK_GREEN              = 64
     };
-
+//-------------------------------------------------------------------------------------------------------
     enum class lcd_alignment
+//-------------------------------------------------------------------------------------------------------
     {
         LEFT        = 0,
         CENTER      = 1,
@@ -216,17 +224,20 @@ public:
     //   output (-> physical device) methods
     void light_pad(uint8_t target, pad_colors color, pad_lighting_mode mode);
     void light_pad(std::initializer_list<uint8_t> targets, pad_colors color, pad_lighting_mode mode);
-    void light_cc_commmand_button(command_buttons target, toggle_lighting_mode mode);
+    void light_pad(std::initializer_list<uint8_t> target, std::initializer_list<pad_colors> colors,
+                   std::initializer_list<pad_lighting_mode> modes);
+
+    void light_cc(command_buttons target, toggle_lighting_mode mode);
+    void light_cc(std::initializer_list<command_buttons> targets, toggle_lighting_mode mode);
+    void light_cc(std::initializer_list<command_buttons> targets,
+                  std::initializer_list<toggle_lighting_mode> modes);
+
     void light_cc_toggle(uint8_t row, uint8_t target, toggle_lighting_mode mode);
 
     void lcd_display(std::string text_to_display, uint8_t line,
                      uint8_t divide, uint8_t slot, lcd_alignment align);
-
-private:
-    unique_device_hdl m_device_hdl;
-
 };
-
+//-------------------------------------------------------------------------------------------------------
 }
 }
 }

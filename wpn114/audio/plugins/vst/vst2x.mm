@@ -59,13 +59,11 @@ using namespace wpn114::audio::plugins;
     extern "C"
     {
 
-    void vst_hdl::_show_vst_2x_editor
-    (aeffect* effect, const char* plugin_name, uint16_t width, uint16_t height)
+    NSWindow *vst_hdl::_show_vst_2x_editor(aeffect* effect, const char* plugin_name, uint16_t width, uint16_t height)
     {
         NSRect frame;
         NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-        //[NSApplication shared_application];
-        //VstWindowAppDelegate *app_delegate = [[[VstWindowAppDelegate alloc] init] autorelease];
+
         VstWindowAppDelegate *app_delegate = [[NSApplication sharedApplication] delegate];
         [NSApp setDelegate:app_delegate];
         NSApplicationLoad();
@@ -85,25 +83,18 @@ using namespace wpn114::audio::plugins;
         NSRect innerFrame = NSMakeRect(0, 0, width, height);
         NSView *view = [[[NSView alloc] initWithFrame:innerFrame] autorelease];
         [window setContentView:view];
-    //    NSString *windowTitle = [[[NSString alloc] initWithBytes:plugin_name
-      //                                                    length:strlen(plugin_name)
-        //                                                encoding:NSASCIIStringEncoding]
-          //                      autorelease];
-  //      [window setTitle:windowTitle];
-//        [window makeKeyAndOrderFront:NSApp];
-
-        std::cerr << "Opening plugin editor window" << std::endl;
 
         effect->dispatcher(effect, effEditOpen, 0, 0, (void*)view, 0);
         [window orderFrontRegardless];
 
-        std::cerr << "Starting app runloop" << std::endl;
-
         [NSApp run];
-
-        std::cerr << "App runloop stopped" << std::endl;
-
         [pool release];
+    }
+
+    void vst_hdl::_close_vst_2x_editor(aeffect* effect, NSWindow* window)
+    {
+        effect->dispatcher(effect, effEditClose, 0, 0, nullptr, 0);
+        [window close];
     }
 
     }

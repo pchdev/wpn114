@@ -37,10 +37,10 @@ int wpn114::audio::load_soundfile(sndbuf_t& buffer, const std::string& path_to_s
     // puts contents into buffer
     readcount = sf_readf_float(infile, buffer.data, sfinfo.frames);
 
-    buffer.num_channels     = sfinfo.channels;
-    buffer.num_frames       = sfinfo.frames * sfinfo.channels;
-    buffer.num_samples      = sfinfo.frames;
-    buffer.sample_rate      = sfinfo.samplerate;
+    buffer.nchannels     = sfinfo.channels;
+    buffer.nframes       = sfinfo.frames * sfinfo.channels;
+    buffer.nsamples      = sfinfo.frames;
+    buffer.sample_rate   = sfinfo.samplerate;
 
     sf_close(infile);
 

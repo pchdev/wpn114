@@ -34,7 +34,7 @@ static int main_stream_callback
             //      poll registered units
             for     (auto& unit : units)
             if      (unit->is_active() && n <= unit->get_num_channels()-1)
-                    master[n][i] += unit->get_framedata(n,i);
+                    master[n][i] += unit->get_framedata(n,i) * unit->get_level();
 
             // output sample data for channel n
             *out++ = master[n][i];
@@ -46,7 +46,10 @@ static int main_stream_callback
 
 backend_hdl::backend_hdl(uint8_t nchannels) :
     m_main_stream(nullptr),
-    m_num_channels(nchannels) {}
+    m_num_channels(nchannels)
+{
+
+}
 
 backend_hdl::~backend_hdl()
 {
@@ -56,23 +59,22 @@ backend_hdl::~backend_hdl()
     Pa_Terminate();
 }
 
-inline std::vector<wpn114::audio::unit_base*>
-backend_hdl::get_registered_units()  const
+inline std::vector<unit_base*> backend_hdl::get_registered_units() const
 {
     return m_units;
 }
 
-inline uint8_t backend_hdl::get_num_channels()      const
+inline uint8_t backend_hdl::get_num_channels() const
 {
     return m_num_channels;
 }
 
-void backend_hdl::register_unit(wpn114::audio::unit_base* unit)
+void backend_hdl::register_unit(unit_base* unit)
 {
     m_units.push_back(unit);
 }
 
-void backend_hdl::unregister_unit(wpn114::audio::unit_base* unit)
+void backend_hdl::unregister_unit(unit_base* unit)
 {
     m_units.erase(
                 std::remove(

@@ -38,14 +38,11 @@ public:
     void set_netname(std::string name);
     const std::string& get_netname() const;
 #endif //------------------------------------------------------------------------------------------------
-
     virtual void process_audio(uint16_t nsamples) = 0;
     virtual void process_audio(float** input_buffer, uint16_t nsamples) = 0;
     // the unit's audio callbacks
-
     virtual void preprocessing(size_t sample_rate, uint16_t nsamples) = 0;
     // preparing the units user-defined audio processing
-
     void        bufalloc(uint16_t nsamples);
     //          pre-initializes output buffer, setting it to 0
     float       get_framedata(uint8_t channel, uint16_t frame) const;
@@ -53,6 +50,8 @@ public:
 
     uint8_t     get_num_channels() const;
     unit_type   get_unit_type() const;
+    float       get_level() const;
+    void        set_level(float level);
 
     void        activate();
     void        deactivate();
@@ -61,18 +60,13 @@ public:
 #ifdef WPN_AUDIO_AUX //---------------------------------------------------------------------------------
     void        add_aux_send(aux_unit& aux); // register the unit to an aux bus
 #endif //------------------------------------------------------------------------------------------------
-
 protected:
 #define OUT                 m_output_buffer
 #define SET_UTYPE(u)        m_unit_type = u
-#define SETN_INPUTS(n)      m_num_inputs = n
-#define SETN_OUTPUTS(n)     m_num_outputs = n
-#define N_OUTPUTS           m_num_outputs
-#define N_INPUTS            m_num_inputs
-#define SET_ACTIVE          m_active = true;
-#define SET_INACTIVE        m_active = false;
-#define SET_NAME            m_name = name
-#define SET_LEVEL           m_level = level
+#define SETN_IN(n)          m_num_inputs = n
+#define SETN_OUT(n)         m_num_outputs = n
+#define N_OUT               m_num_outputs
+#define N_IN                m_num_inputs
 //-------------------------------------------------------------------------------------------------------
     bool            m_active;
     float           m_level;
@@ -121,13 +115,14 @@ public:
 #endif //------------------------------------------------------------------------------------------------
 
     aux_unit();
+    ~aux_unit();
     aux_unit(std::unique_ptr<unit_base> receiver);
     void preprocessing(size_t sample_rate, uint16_t nsamples) override;
     void process_audio(uint16_t nsamples) override;
     void process_audio(float** input_buffer, uint16_t nsamples) override;
+    float get_framedata(uint8_t channel, uint16_t frame) const;
     void set_receiver(std::unique_ptr<unit_base> receiver);
     void add_sender(unit_base* sender, float level);
-    ~aux_unit();
 
 private:
     std::unique_ptr<unit_base>  m_receiver;

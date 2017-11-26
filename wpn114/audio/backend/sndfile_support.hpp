@@ -27,9 +27,9 @@ namespace audio {
 
 struct sndbuf_t
 {
-    uint8_t         num_channels;
-    size_t          num_frames;
-    size_t          num_samples;
+    uint8_t         nchannels;
+    size_t          nframes;
+    size_t          nsamples;
     size_t          sample_rate;
     float*          data;               // interleaved
 };

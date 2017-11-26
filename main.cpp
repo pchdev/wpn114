@@ -6,7 +6,7 @@
 #include <wpn114/network/net_hdl.hpp>
 #include <iostream>
 #include <time.h>
-
+//-------------------------------------------------------------------------------------------------------
 using namespace wpn114;
 using namespace ossia::net;
 //-------------------------------------------------------------------------------------------------------
@@ -32,20 +32,21 @@ int main(int argc, char* argv[])
     os_test.net_expose(appnode, "os_test");
     audio_hdl.register_unit(&os_test);
 
-    audio::aux_unit bus_1;
-    bus_1.net_expose(appnode, "reverb_bus");
-
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio_hdl.register_unit(&kaivo_1);
     kaivo_1.net_expose(appnode, "kaivo_1");
-    kaivo_1.add_aux_send(bus_1);
 
     audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
     kaivo_2.net_expose(appnode, "kaivo_2");
 
+    audio::aux_unit bus_1;
     auto altiverb = std::make_unique<audio::plugins::vst_hdl>("Audio Ease/Altiverb 7.vst");
-    altiverb->net_expose(appnode, "altiverb");
+    altiverb->set_netname("altiverb");
+
     bus_1.set_receiver(std::move(altiverb));
+    bus_1.net_expose(appnode, "reverb_bus");
+    kaivo_1.add_aux_send(bus_1);
+    audio_hdl.register_unit(&bus_1);
 
     audio::plugins::fields fields_test("test.wav", 32768);
     audio_hdl.register_unit(&fields_test);
@@ -56,6 +57,8 @@ int main(int argc, char* argv[])
     audio_hdl.start_stream( SAMPLERATE, BLOCKSIZE);
 
     kaivo_1.show_editor();
+    //altiverb->show_editor();
+
 
     // init controller
     control::midi::device_factory push_device_factory;
@@ -65,11 +68,6 @@ int main(int argc, char* argv[])
                                  control::device_io_type::IN_OUT);
 
     control::midi::push_1 push(std::move(push_hdl));
-
-    using namespace wpn114::control::midi;
-
-    push.light_pad(0,   push_1::pad_colors::BLUE_GREEN_2,
-                        push_1::pad_lighting_mode::FLASH_TWO_BEATS);
 
     // sleep
     std::this_thread::sleep_for(std::chrono::milliseconds(20000));

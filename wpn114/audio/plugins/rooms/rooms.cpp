@@ -17,7 +17,7 @@
  */
 
 #include <wpn114/audio/backend/unit_base.hpp>
-
+//-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace audio {
 namespace plugins {
@@ -53,21 +53,20 @@ public:
     void net_expose_plugin_tree(ossia::net::node_base& root) override
     {
         auto azimuth_node   = root.create_child("azimuth");
-
         auto azimuth_param    = azimuth_node->create_parameter(ossia::val_type::FLOAT);
-
         azimuth_param->add_callback([&](const ossia::value& v) {
             //m_x = v.get<float>();
         });
     }
 #endif //------------------------------------------------------------------------------------------------
 
-    rooms(uint8_t n_inputs, uint8_t n_speakers)
+    rooms(uint8_t ninputs, uint8_t nspeakers)
     {
-        SET_ACTIVE;
-        SETN_INPUTS(    n_inputs);
-        SETN_OUTPUTS(   n_speakers);
-        SET_UTYPE(      unit_type::EFFECT_UNIT);
+        activate();
+
+        SETN_IN     (ninputs);
+        SETN_OUT    (nspeakers);
+        SET_UTYPE   (unit_type::EFFECT_UNIT);
     }
 
     void preprocessing(size_t sample_rate, uint16_t samples_per_buffer) override {}
@@ -85,8 +84,7 @@ public:
         return r/ls.radius;
     }
 
-    void process_audio(float** input, uint16_t nsamples) override {}
-    void process_audio(uint16_t nsamples) override
+    void process_audio(float** input, uint16_t nsamples) override
     {
         for(int i = 0; i < nsamples; ++i)
         {
@@ -97,14 +95,15 @@ public:
                     if(within_ls_area(src, ls))
                     {
                         // if source is within the ls's radius
-                        OUT[ls.output_channel][i] = 0.f;
-                                //IN[src.input_channel][i] * compute_speaker_gain(src,ls);
+                        OUT[ls.output_channel][i] +=
+                                input[src.input_channel][i] * compute_speaker_gain(src,ls);
                     }
-                    else OUT[ls.output_channel][i] = 0.f;
                 }
             }
         }
     }
+
+    void process_audio(uint16_t nsamples) override {}
 
 private:
     std::vector<rooms_ls>   m_loudspeakers;

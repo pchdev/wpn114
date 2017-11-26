@@ -12,6 +12,14 @@ class fields final : public buffer_unit
         // simple looping sample-player with crossfading sine envelope
 //-------------------------------------------------------------------------------------------------------
 {
+private:
+    uint32_t        m_phase;
+    float           m_env_phase;
+    uint32_t        m_xfade_length;
+    uint32_t        m_xfade_point;
+    double          m_env_incr;
+    float           m_env[ENVSIZE];
+
 public:
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override {}
@@ -21,11 +29,12 @@ public:
         m_xfade_length(xfade_length),
         m_phase(0.f), m_env_phase(0.f)
     {
-        SET_INACTIVE;
-        SETN_INPUTS(0);
-        SET_UTYPE(unit_type::GENERATOR_UNIT);
-        SFLOAD(sfpath);
-        SETN_OUTPUTS(SFBUF.num_channels);
+        deactivate();
+
+        SET_UTYPE   (unit_type::GENERATOR_UNIT);
+        SFLOAD      (sfpath);
+        SETN_IN     (0);
+        SETN_OUT    (SFBUF.num_channels);
     }
 
     void preprocessing(size_t sample_rate, uint16_t nsamples) override
@@ -35,8 +44,8 @@ public:
         m_env_incr      = ENVSIZE/m_xfade_length;
         m_xfade_point   = m_sf_buffer.num_samples - m_xfade_length;
 
-        for (int i = 0; i < ENVSIZE; ++i)
-            m_env[i] = sin(i/(float)ENVSIZE*(M_PI_2));
+        for         (int i = 0; i < ENVSIZE; ++i)
+        m_env[i]    = sin(i/(float)ENVSIZE*(M_PI_2));
     }
 
     inline float lininterp(float x, float a, float b)
@@ -47,45 +56,55 @@ public:
     void process_audio(float** input, uint16_t nsamples)    override {}
     void process_audio(uint16_t frames_per_buffer)          override
     {
+        auto xfade_point        = m_xfade_point;
+        auto xfade_length       = m_xfade_length;
+        auto phase              = m_phase;
+        auto nsamples           = m_sf_buffer.nsamples;
+        auto env_phase          = m_env_phase;
+        auto buf_data           = m_sf_buffer.data;
+        auto nchannels          = m_sf_buffer.nchannels;
+        auto env                = m_env;
+
         for(int i = 0; i < frames_per_buffer; ++i)
         {
-            if(m_phase >= m_xfade_point && m_phase < m_sf_buffer.num_samples)
+            if(phase >= xfade_point && phase < nsamples)
             {
                 //                  if phase is in the crossfade zone
                 //                  get data from envelope first (linearly interpolated)
-                int y               = floor(m_env_phase);
-                float x             = m_env_phase - y;
-                float xfade_up      = lininterp(x, m_env[y], m_env[y+1]);
+                int y               = floor(env_phase);
+                float x             = env_phase - y;
+                float xfade_up      = lininterp(x, env[y], env[y+1]);
                 float xfade_down    = 1-xfade_up;
 
-                for(int j = 0; j < m_sf_buffer.num_channels; ++j)
+                for(int j = 0; j < nchannels; ++j)
                 {
-                    OUT[j][i] = *m_sf_buffer.data++ * xfade_down +
-                                *m_sf_buffer.data -m_xfade_point * m_sf_buffer.num_channels * xfade_up;
+                    OUT[j][i] = *buf_data++ * xfade_down +
+                                *buf_data -xfade_point * nchannels * xfade_up;
                 }
 
-                m_phase++;
-                m_env_phase += m_env_incr;
+                phase++;
+                env_phase += env_incr;
             }
-            else if ( m_phase == m_sf_buffer.num_samples )
+            else if ( phase == nsamples )
             {
                 // if phase reaches end of crossfade
                 // main phase continues from end of 'up' xfade
                 // reset the envelope phase
-                m_sf_buffer.data = m_sf_buffer.data + m_xfade_length * N_OUTPUTS - 1;
-                for(int j = 0; j < N_OUTPUTS; ++j)
-                    OUT[j][i] = *m_sf_buffer.data++;
+                buf_data = buf_data + xfade_length * N_OUT - 1;
 
-                m_phase         = m_xfade_length -1;
-                m_env_phase     = 0;
+                for         (int j = 0; j < N_OUT; ++j)
+                OUT[j][i]   = *buf_data++;
+
+                phase         = xfade_length -1;
+                env_phase     = 0;
             }
             else
             {
                 // normal behaviour
-                for(int j = 0; j < N_OUTPUTS; ++j)
-                    OUT[j][i] = *m_sf_buffer.data++;
+                for         (int j = 0; j < N_OUT; ++j)
+                OUT[j][i]   = *buf_data++;
 
-                m_phase++;
+                phase++;
                 // env_phase should be at 0
             }
         }
@@ -95,14 +114,6 @@ public:
     {
         CLEAR_SFBUF;
     }
-
-private:
-    uint32_t        m_phase;
-    float           m_env_phase;
-    uint32_t        m_xfade_length;
-    uint32_t        m_xfade_point;
-    double          m_env_incr;
-    float           m_env[ENVSIZE];
 };
 }
 }

@@ -1,4 +1,5 @@
 /*
+ *
  * =====================================================================================
  *
  *       Filename:  vst.cpp
@@ -15,15 +16,19 @@
  *
  * =====================================================================================
  */
+
+//-------------------------------------------------------------------------------------------------------
 #include <stdlib.h>
 #include <iostream>
-
 #include <wpn114/audio/backend/context.hpp>
 #include <wpn114/audio/plugins/vst/vst.hpp>
-
-#define PARAMNAME_MAXLE 256
-
+//-------------------------------------------------------------------------------------------------------
+#define PARAMNAME_MAXLE 64
+#define PROGRAMNAME_MAXLE 64
+//-------------------------------------------------------------------------------------------------------
 using namespace wpn114::audio::plugins;
+//-------------------------------------------------------------------------------------------------------
+
 extern "C"
 {
 vstintptr_t VSTCALLBACK
@@ -101,10 +106,14 @@ vst_hdl::vst_hdl(const char* name_with_extension)
     m_plugin->processReplacing  = (process_funcptr) m_plugin->processReplacing;
     m_plugin->setParameter      = (set_parameter_funcptr) m_plugin->setParameter;
 
-    SET_UTYPE(      wpn114::audio::unit_type::HYBRID_UNIT);
-    SETN_INPUTS(    m_plugin->numInputs);
-    SETN_OUTPUTS(   m_plugin->numOutputs);
-    SET_ACTIVE;
+    if  (   !m_plugin->numInputs    )
+            SET_UTYPE(unit_type::GENERATOR_UNIT);
+    else    SET_UTYPE(unit_type::EFFECT_UNIT);
+
+    activate();
+
+    SETN_IN     (m_plugin->numInputs);
+    SETN_OUT    (m_plugin->numOutputs);
 
     if( midi_map.empty())
     {
@@ -122,33 +131,48 @@ vst_hdl::~vst_hdl() {}
 
 template <typename T> vstevents* make_vstevent_array(const T& values)
 {
-    auto res = new vstevents();
-    res->numEvents = 1;
-    res->events[0] = new VstEvent();
-    res->events[0]->byteSize = 24;
-    res->events[0]->type = kVstMidiType;
-    res->events[0]->flags = 1;
+    auto res                    = new vstevents();
+    res->numEvents              = 1;
+    res->events[0]              = new VstEvent();
+    res->events[0]->byteSize    = 24;
+    res->events[0]->type        = kVstMidiType;
+    res->events[0]->flags       = 1;
 
-    VstMidiEvent *event = (VstMidiEvent*)res->events[0];
+    VstMidiEvent *event         = (VstMidiEvent*)res->events[0];
 
-    for (int i = 0; i < values.size(); ++i)
-        event->midiData[i] = values[i];
+    for                 (int i = 0; i < values.size(); ++i)
+    event->midiData[i]  = values[i];
 
-    if(values.size() < 4) event->midiData[3] = 0;
+    if                  (values.size() < 4)
+    event->midiData[3]  = 0;
 
-    event->flags = kVstMidiEventIsRealtime;
-    event->byteSize = sizeof(VstMidiEvent);
+    event->flags        = kVstMidiEventIsRealtime;
+    event->byteSize     = sizeof(VstMidiEvent);
 
     return res;
 }
 
 #ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
 void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
-{
-    // Creating MIDI parameters -------------------------------------
-    auto midi_node = root.create_child("MIDI");
-    auto params_node = root.create_child("parameters");
+{    
+    auto midi_node          = root.create_child("MIDI");
+    auto params_node        = root.create_child("parameters");
+    auto editor_node        = root.create_child("editor");
+    auto programs_node      = root.create_child("programs");
+    auto open_node          = editor_node->create_child("open");
+    auto close_node         = editor_node->create_child("close");
+    auto open_param         = open_node->create_parameter(ossia::val_type::IMPULSE);
+    auto close_param        = close_node->create_parameter(ossia::val_type::IMPULSE);
 
+    open_param->add_callback([=](const ossia::value& v) {
+        this->show_editor();
+    });
+
+    close_param->add_callback([=](const ossia::value& v) {
+        this->close_editor();
+    });
+
+    // Creating MIDI parameters -------------------------------------------------
     for(auto it = midi_map.begin(); it != midi_map.end(); ++it)
     {
         auto node = midi_node->create_child(it->first);
@@ -177,11 +201,12 @@ void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
         });
     }
 
-    // Creating float parameters -------------------------------------
+    // Creating float parameters -------------------------------------------
     for(int i = 0; i < m_plugin->numParams; ++i)
     {
         char param_name[PARAMNAME_MAXLE];
         m_dispatcher(m_plugin, effGetParamName, i, 0, &param_name, 0);
+
         auto node   = params_node->create_child(param_name);
         auto param  = node->create_parameter(ossia::val_type::FLOAT);
 
@@ -191,6 +216,15 @@ void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
 
         auto node_domain = ossia::make_domain(0.f, 1.f);
         ossia::net::set_domain(*node, node_domain);
+    }
+
+    // programs -----------------------------------------------------------
+    for(int i = 0; i < m_plugin->numPrograms; ++i)
+    {
+        char program_name[PROGRAMNAME_MAXLE];
+        m_dispatcher(m_plugin, effGetProgramName, i, 0, &program_name, 0);
+        std::cout << program_name << std::endl;
+        //! todo
     }
 }
 #endif //------------------------------------------------------------------------------------------------
@@ -214,7 +248,15 @@ void vst_hdl::show_editor()
         //! TODO: add error management
     }
 
-    this->_show_vst_2x_editor(this->m_plugin, m_plugin_path.c_str(), width, height);
+#ifdef __APPLE__
+    m_editthread = std::thread(_show_vst_2x_editor, m_plugin, m_plugin_path.c_str(), width, height);
+#endif
+
+}
+
+void vst_hdl::close_editor()
+{
+    m_dispatcher(m_plugin, effEditClose, 0, 0, nullptr, 0);
 }
 
 void vst_hdl::preprocessing(size_t sample_rate, uint16_t nsamples)
@@ -222,8 +264,7 @@ void vst_hdl::preprocessing(size_t sample_rate, uint16_t nsamples)
     m_dispatcher(m_plugin, effOpen, 0, 0, NULL, 0.0f);
     m_dispatcher(m_plugin, effSetSampleRate, 0, 0, NULL, sample_rate);
     m_dispatcher(m_plugin, effSetBlockSize, 0, nsamples, NULL, 0.0f);
-
-    this->resume();
+    resume();
 }
 
 void vst_hdl::suspend()
@@ -243,7 +284,7 @@ inline void vst_hdl::_silence_channel(float** channel_data, uint8_t nchannels, u
             channel_data[ch][fr] = 0.0f;
 }
 
-inline void vst_hdl::process_midi(vstevents *events)
+void vst_hdl::process_midi(vstevents *events)
 {
     m_dispatcher(m_plugin, effProcessEvents, 0, 0, events, 0.f);
 }
