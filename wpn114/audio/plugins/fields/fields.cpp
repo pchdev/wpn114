@@ -37,12 +37,12 @@ public:
         SETN_OUT    (SFBUF.nchannels);
     }
 
-    void preprocessing(size_t sample_rate, uint16_t nsamples) override
+    void preprocess(size_t sample_rate, uint16_t nsamples) override
     {
         (void) sample_rate;
         // initialize crossfade envelope
         m_env_incr      = ENVSIZE/m_xfade_length;
-        m_xfade_point   = m_sf_buffer.nsamples - m_xfade_length;
+        m_xfade_point   = m_sndbuf.nsamples - m_xfade_length;
 
         for         (int i = 0; i < ENVSIZE; ++i)
         m_env[i]    = sin(i/(float)ENVSIZE*(M_PI_2));
@@ -53,16 +53,16 @@ public:
         return a + x * (b - a);
     }
 
-    void process_audio(float** input, uint16_t nsamples)    override {}
-    void process_audio(uint16_t frames_per_buffer)          override
+    void process(float** input, uint16_t nsamples)    override {}
+    void process(uint16_t frames_per_buffer)          override
     {
         auto xfade_point        = m_xfade_point;
         auto xfade_length       = m_xfade_length;
         auto phase              = m_phase;
-        auto nsamples           = m_sf_buffer.nsamples;
+        auto nsamples           = m_sndbuf.nsamples;
         auto env_phase          = m_env_phase;
-        auto buf_data           = m_sf_buffer.data;
-        auto nchannels          = m_sf_buffer.nchannels;
+        auto buf_data           = m_sndbuf.data;
+        auto nchannels          = m_sndbuf.nchannels;
         auto env                = m_env;
         auto env_incr           = m_env_incr;
 

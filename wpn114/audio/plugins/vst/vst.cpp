@@ -259,7 +259,7 @@ void vst_hdl::close_editor()
     m_dispatcher(m_plugin, effEditClose, 0, 0, nullptr, 0);
 }
 
-void vst_hdl::preprocessing(size_t sample_rate, uint16_t nsamples)
+void vst_hdl::preprocess(size_t sample_rate, uint16_t nsamples)
 {
     m_dispatcher(m_plugin, effOpen, 0, 0, NULL, 0.0f);
     m_dispatcher(m_plugin, effSetSampleRate, 0, 0, NULL, sample_rate);
@@ -289,13 +289,13 @@ void vst_hdl::process_midi(vstevents *events)
     m_dispatcher(m_plugin, effProcessEvents, 0, 0, events, 0.f);
 }
 
-void vst_hdl::process_audio(uint16_t nsamples)
+void vst_hdl::process(uint16_t nsamples)
 {
     _silence_channel(m_output_buffer, m_num_outputs, nsamples);
     m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, nsamples);
 }
 
-void vst_hdl::process_audio(float** input, uint16_t nsamples)
+void vst_hdl::process(float** input, uint16_t nsamples)
 {
     _silence_channel(m_output_buffer, m_num_outputs, nsamples);
     m_plugin->processReplacing(m_plugin, input, m_output_buffer, nsamples);

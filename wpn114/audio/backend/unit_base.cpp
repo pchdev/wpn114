@@ -22,39 +22,39 @@ using namespace wpn114::audio;
 
 unit_base::~unit_base()
 {
-    for     (int i = 0; i < m_num_outputs; ++i)
-    delete  m_output_buffer[i];
+    for     (int i = 0; i < m_nout; ++i)
+    delete  m_out[i];
 
-    delete  m_output_buffer;
+    delete  m_out;
 }
 
 void unit_base::bufalloc(uint16_t nsamples)
 {
-    m_output_buffer = new float*[m_num_outputs];
+    m_out = new float*[m_nout];
 
-    for (int i = 0; i < m_num_outputs; ++i)
+    for (int i = 0; i < m_nout; ++i)
     {
-        m_output_buffer[i] = new float[nsamples];
-        memset(m_output_buffer[i], 0.f, sizeof(nsamples));
+        m_out[i] = new float[nsamples];
+        memset(m_out[i], 0.f, sizeof(nsamples));
     }
 }
 
-unit_type unit_base::get_unit_type() const
+unit_type unit_base::uttype() const
 {
     return m_unit_type;
 }
 
-float unit_base::get_framedata(uint8_t channel, uint16_t frame) const
+float unit_base::framedata(uint8_t channel, uint16_t frame) const
 {
-    return m_output_buffer[channel][frame];
+    return m_out[channel][frame];
 }
 
-uint8_t unit_base::get_num_channels() const
+uint8_t unit_base::nchannels() const
 {
-    return m_num_outputs;
+    return m_nout;
 }
 
-bool unit_base::is_active() const
+bool unit_base::active() const
 {
     return m_active;
 }
@@ -77,12 +77,12 @@ void unit_base::deactivate()
 #endif //------------------------------------------------------------------------------------------------
 }
 
-float** unit_base::get_output_buffer()
+float** unit_base::bufout()
 {
-    return m_output_buffer;
+    return m_out;
 }
 
-float unit_base::get_level() const
+float unit_base::level() const
 {
     return m_level;
 }
@@ -132,7 +132,7 @@ void unit_base::set_netname(std::string name)
     m_netname = name;
 }
 
-const std::string& unit_base::get_netname() const
+const std::string& unit_base::netname() const
 {
     return m_netname;
 }
@@ -158,8 +158,8 @@ aux_unit::aux_unit()
 
 aux_unit::aux_unit(std::unique_ptr<unit_base> receiver) : m_receiver(std::move(receiver))
 {
-    SET_UTYPE   (unit_type::EFFECT_UNIT );
-    SETN_OUT    (receiver->get_num_channels());
+    SET_UTYPE   (unit_type::EFFECT_UNIT);
+    SETN_OUT    (receiver->nchannels());
 
     activate();
 }
@@ -174,13 +174,13 @@ void aux_unit::net_expose_plugin_tree(ossia::net::node_base& root)
 }
 #endif //------------------------------------------------------------------------------------------------
 
-void aux_unit::preprocessing(size_t sample_rate, uint16_t nsamples)
+void aux_unit::preprocessing(size_t srate, uint16_t nsamples)
 {
     m_receiver->bufalloc(nsamples);
-    m_receiver->preprocessing(sample_rate, nsamples);
+    m_receiver->preprocessing(srate, nsamples);
 }
 
-void aux_unit::process_audio(float **input_buffer, uint16_t nsamples) {}
+void aux_unit::process_audio(float** inputs, uint16_t nsamples) {}
 void aux_unit::process_audio(uint16_t nsamples)
 {
     for(uint16_t i = 0; i < nsamples; ++i)
@@ -191,7 +191,7 @@ void aux_unit::process_audio(uint16_t nsamples)
 
             for(uint8_t u = 0; u < m_sends.size(); ++u)
                 // mix input sources
-                OUT[c][i] += m_sends[u].m_sender->get_framedata(c, i) * m_sends[u].m_level;
+                OUT[c][i] += m_sends[u].m_sender->framedata(c, i) * m_sends[u].m_level;
         }
     }
 
@@ -202,7 +202,7 @@ void aux_unit::process_audio(uint16_t nsamples)
 
 float aux_unit::get_framedata(uint8_t channel, uint16_t frame) const
 {
-    return m_receiver->get_framedata(channel, frame);
+    return m_receiver->framedata(channel, frame);
 }
 
 void aux_unit::add_sender(unit_base *sender, float level)
@@ -232,7 +232,7 @@ void aux_unit::set_receiver(std::unique_ptr<unit_base> receiver)
 {
     activate();
     m_receiver = std::move(receiver);
-    SETN_OUT(m_receiver->get_num_channels());
+    SETN_OUT(m_receiver->nchannels());
 }
 
 #endif //------------------------------------------------------------------------------------------------
@@ -258,18 +258,18 @@ void track_unit::net_expose_plugin_tree(ossia::net::node_base& application_node)
 }
 #endif //------------------------------------------------------------------------------------------------
 
-void track_unit::preprocessing(size_t sample_rate, uint16_t nsamples)
+void track_unit::preprocessing(size_t srate, uint16_t nsamples)
 {
     for (auto& unit : m_units)
     {
         unit->bufalloc(nsamples);
-        unit->preprocessing(sample_rate, nsamples);
+        unit->preprocessing(srate, nsamples);
     }
 }
 
-void track_unit::process_audio(float **input_buffer, uint16_t nsamples)
+void track_unit::process_audio(float **inputs, uint16_t nsamples)
 {
-    OUT = input_buffer;
+    OUT = inputs;
     for(auto& unit : m_units)
     {
         unit->process_audio(OUT, nsamples);

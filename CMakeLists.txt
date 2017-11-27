@@ -36,7 +36,7 @@ if( WPN_AUDIO_PLUGINS_FIELDS OR
     set(WPN_AUDIO_SNDFILE ON)
 endif()
 
-option(WPN_CONTROL "Enables control functionnalities" ON)
+option(WPN_CONTROL "Enables control functionnalities" OFF)
 option(WPN_CONTROL_MIDI "Enables midi support with RtMidi" OFF)
 option(WPN_CONTROL_OSC "Enables osc support with oscpack (tbi)" OFF)
 option(WPN_CONTROL_SERIAL "Enables serial support (tbi)" OFF)

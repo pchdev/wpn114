@@ -36,44 +36,44 @@ public:
     virtual void net_expose_plugin_tree(ossia::net::node_base& plugin_root) = 0;
     // gets called whenever we want to expose the parameters' unit to the network
     void set_netname(std::string name);
-    const std::string& get_netname() const;
+    const std::string& netname() const;
 #endif //------------------------------------------------------------------------------------------------
-    virtual void process_audio(uint16_t nsamples) = 0;
-    virtual void process_audio(float** input_buffer, uint16_t nsamples) = 0;
+    virtual void process(uint16_t nsamples) = 0;
+    virtual void process(float** inputs, uint16_t nsamples) = 0;
     // the unit's audio callbacks
-    virtual void preprocessing(size_t sample_rate, uint16_t nsamples) = 0;
+    virtual void preprocess(size_t srate, uint16_t nsamples) = 0;
     // preparing the units user-defined audio processing
     void        bufalloc(uint16_t nsamples);
     //          pre-initializes output buffer, setting it to 0
-    float       get_framedata(uint8_t channel, uint16_t frame) const;
-    float**     get_output_buffer();
+    float       framedata(uint8_t channel, uint16_t frame) const;
+    float**     bufout();
 
-    uint8_t     get_num_channels() const;
-    unit_type   get_unit_type() const;
-    float       get_level() const;
+    uint8_t     nchannels() const;
+    unit_type   uttype() const;
+    float       level() const;
     void        set_level(float level);
 
     void        activate();
     void        deactivate();
-    bool        is_active() const;
+    bool        active() const;
 
 #ifdef WPN_AUDIO_AUX //---------------------------------------------------------------------------------
     void        add_aux_send(aux_unit& aux); // register the unit to an aux bus
 #endif //------------------------------------------------------------------------------------------------
 protected:
-#define OUT                 m_output_buffer
-#define SET_UTYPE(u)        m_unit_type = u
-#define SETN_IN(n)          m_num_inputs = n
-#define SETN_OUT(n)         m_num_outputs = n
-#define N_OUT               m_num_outputs
-#define N_IN                m_num_inputs
+#define OUT                 m_out
+#define SET_UTYPE(u)        m_utype = u
+#define SETN_IN(n)          m_nin = n
+#define SETN_OUT(n)         m_nout = n
+#define N_OUT               m_nout
+#define N_IN                m_nin
 //-------------------------------------------------------------------------------------------------------
     bool            m_active;
     float           m_level;
-    uint8_t         m_num_inputs;
-    uint8_t         m_num_outputs;
-    float**         m_output_buffer;
-    unit_type       m_unit_type;
+    uint8_t         m_nin;
+    uint8_t         m_nout;
+    float**         m_out;
+    unit_type       m_utype;
 
 #ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
     std::string                 m_netname;
@@ -90,10 +90,10 @@ class buffer_unit : public unit_base
 public:
     ~buffer_unit();
 protected:
-#define SFBUF          m_sf_buffer
-#define SFLOAD(p)      load_soundfile(m_sf_buffer, p)
-#define CLEAR_SFBUF    delete m_sf_buffer.data
-    sndbuf_t           m_sf_buffer;
+#define SFBUF          m_sndbuf
+#define SFLOAD(p)      load_soundfile(m_sndbuf, p)
+#define CLEAR_SFBUF    delete m_sndbuf.data
+    sndbuf_t           m_sndbuf;
 };
 #endif
 
@@ -117,10 +117,11 @@ public:
     aux_unit();
     ~aux_unit();
     aux_unit(std::unique_ptr<unit_base> receiver);
-    void preprocessing(size_t sample_rate, uint16_t nsamples) override;
-    void process_audio(uint16_t nsamples) override;
-    void process_audio(float** input_buffer, uint16_t nsamples) override;
-    float get_framedata(uint8_t channel, uint16_t frame) const;
+
+    void process(uint16_t nsamples) override;
+    void process(float** inputs, uint16_t nsamples) override;
+    void preprocess(size_t srate, uint16_t nsamples) override;
+    float framedata(uint8_t channel, uint16_t frame) const;
     void set_receiver(std::unique_ptr<unit_base> receiver);
     void add_sender(unit_base* sender, float level);
 
@@ -145,9 +146,10 @@ public:
 
     track_unit();
     ~track_unit();
-    void preprocessing(size_t sample_rate, uint16_t nsamples) override;
-    void process_audio(uint16_t nsamples) override;
-    void process_audio(float** input_buffer, uint16_t nsamples) override;
+
+    void process(uint16_t nsamples) override;
+    void process(float** inputs, uint16_t nsamples) override;
+    void preprocess(size_t srate, uint16_t nsamples) override;
     void add_unit(unit_base* unit);
     void remove_unit(unit_base* unit);
 

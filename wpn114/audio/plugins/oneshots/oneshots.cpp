@@ -25,13 +25,13 @@ public:
         SET_UTYPE   (unit_type::GENERATOR_UNIT);
         SFLOAD      (sfpath);
         SETN_IN     (0);
-        SETN_OUT    (m_sf_buffer.nchannels);
+        SETN_OUT    (m_sndbuf.nchannels);
     }
 
-    void preprocessing(size_t sample_rate, uint16_t samples_per_buffer) override {}
-    void process_audio(float** input, uint16_t samples_per_buffer) override {}
+    void preprocess(size_t sample_rate, uint16_t samples_per_buffer) override {}
+    void process(float** input, uint16_t samples_per_buffer) override {}
 
-    void process_audio(uint16_t samples_per_buffer) override
+    void process(uint16_t samples_per_buffer) override
     {
         auto buf_data       = SFBUF.data;
         auto buf_nframes    = SFBUF.nframes;
@@ -44,7 +44,7 @@ public:
             {
                 // reset buffer, set unit inactive
                 // and fill the rest of the buffer with zeroes
-                m_sf_buffer.data -= buf_nframes;
+                m_sndbuf.data -= buf_nframes;
                 deactivate();
 
                 for         (int j = 0; j < N_OUT; ++j)
@@ -61,7 +61,7 @@ public:
             {
                 for         (int j = 0; j < N_OUT; ++j)
                     // note: sfbufs are interleaved
-                OUT[j][i]   = *m_sf_buffer.data++;
+                OUT[j][i]   = *m_sndbuf.data++;
             }
 
             phase++;

@@ -69,7 +69,7 @@ public:
         SET_UTYPE   (unit_type::EFFECT_UNIT);
     }
 
-    void preprocessing(size_t sample_rate, uint16_t samples_per_buffer) override {}
+    void preprocess(size_t sample_rate, uint16_t samples_per_buffer) override {}
 
     inline bool within_ls_area(const rooms_src& src, const rooms_ls& ls)
     {
@@ -84,7 +84,7 @@ public:
         return r/ls.radius;
     }
 
-    void process_audio(float** input, uint16_t nsamples) override
+    void process(float** input, uint16_t nsamples) override
     {
         for(int i = 0; i < nsamples; ++i)
         {
@@ -103,7 +103,7 @@ public:
         }
     }
 
-    void process_audio(uint16_t nsamples) override {}
+    void process(uint16_t nsamples) override {}
 
 private:
     std::vector<rooms_ls>   m_loudspeakers;

@@ -1,5 +1,5 @@
 
-add_definitions(-DWPN114_VERSION_STRING="51CM33")
+add_definitions(-DWPN114_VERSION_STRING="CHEETAHT7b")
 
 add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/main.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})

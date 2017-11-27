@@ -82,9 +82,9 @@ public:
 
     void show_editor();
     void close_editor();
-    void process_audio(uint16_t nsamples) override;
-    void process_audio(float** input, uint16_t nsamples) override;
-    void preprocessing(size_t sample_rate, uint16_t nsamples) override;
+    void process(uint16_t nsamples) override;
+    void process(float** input, uint16_t nsamples) override;
+    void preprocess(size_t sample_rate, uint16_t nsamples) override;
     void process_midi(vstevents *events);
     void suspend();
     void resume();

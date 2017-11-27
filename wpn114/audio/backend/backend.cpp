@@ -15,14 +15,14 @@ static int main_stream_callback
     (void) input_buffer;
 
     // copy unit's configuration
-    std::vector<unit_base*> units = backend->get_registered_units();
-    uint8_t nchannels = backend->get_num_channels();
-    auto master = *backend->get_master_output_buffer();
+    std::vector<unit_base*> units = backend->regunits();
+    uint8_t nchannels = backend->nchannels();
+    auto master = *backend->bufout();
 
     // call audio processing on each of the registered units
     for (auto& unit : units)
-    if  (unit->is_active())
-         unit->process_audio(nsamples);
+    if  (unit->active())
+         unit->process(nsamples);
 
     for(uint16_t i = 0; i < nsamples; ++i)
     {
@@ -33,8 +33,8 @@ static int main_stream_callback
 
             //      poll registered units
             for     (auto& unit : units)
-            if      (unit->is_active() && n <= unit->get_num_channels()-1)
-                    master[n][i] += unit->get_framedata(n,i) * unit->get_level();
+            if      (unit->active() && n <= unit->nchannels()-1)
+                    master[n][i] += unit->framedata(n,i) * unit->level();
 
             // output sample data for channel n
             *out++ = master[n][i];
@@ -45,36 +45,36 @@ static int main_stream_callback
 }
 
 backend_hdl::backend_hdl(uint8_t nchannels) :
-    m_main_stream(nullptr),
-    m_num_channels(nchannels)
+    m_stream(nullptr),
+    m_nchannels(nchannels)
 {
 
 }
 
 backend_hdl::~backend_hdl()
 {
-    PaError err = Pa_StopStream(m_main_stream);
-            err = Pa_CloseStream(m_main_stream);
+    PaError err = Pa_StopStream(m_stream);
+            err = Pa_CloseStream(m_stream);
 
     Pa_Terminate();
 }
 
-inline std::vector<unit_base*> backend_hdl::get_registered_units() const
+inline std::vector<unit_base*> backend_hdl::regunits() const
 {
     return m_units;
 }
 
-inline uint8_t backend_hdl::get_num_channels() const
+inline uint8_t backend_hdl::nchannels() const
 {
-    return m_num_channels;
+    return m_nchannels;
 }
 
-void backend_hdl::register_unit(unit_base* unit)
+void backend_hdl::regunit(unit_base* unit)
 {
     m_units.push_back(unit);
 }
 
-void backend_hdl::unregister_unit(unit_base* unit)
+void backend_hdl::unregunit(unit_base* unit)
 {
     m_units.erase(
                 std::remove(
@@ -82,56 +82,57 @@ void backend_hdl::unregister_unit(unit_base* unit)
                 m_units.end());
 }
 
-void backend_hdl::initialize(size_t sample_rate, uint16_t nsamples)
+void backend_hdl::initialize(size_t srate, uint16_t nsamples)
 {
     PaError err;
 
     // dont't forget error management
     err = Pa_Initialize();
 
-    m_output_parameters.device                      = Pa_GetDefaultOutputDevice();
-    m_output_parameters.channelCount                = m_num_channels;
-    m_output_parameters.sampleFormat                = paFloat32;
-    m_output_parameters.hostApiSpecificStreamInfo   = NULL;
-    m_main_stream_cb_funcptr                        = &main_stream_callback;
-    m_output_parameters.suggestedLatency            = Pa_GetDeviceInfo
-                                                      (m_output_parameters.device)->defaultLowOutputLatency;
+    m_outparameters.device                      = Pa_GetDefaultOutputDevice();
+    m_outparameters.channelCount                = m_num_channels;
+    m_outparameters.sampleFormat                = paFloat32;
+    m_outparameters.hostApiSpecificStreamInfo   = NULL;
+    m_main_stream_cb_funcptr                    = &main_stream_callback;
+    m_outparameters.suggestedLatency            = Pa_GetDeviceInfo
+                                                      (m_outparameters.device)->defaultLowOutputLatency;
 
-    auto device_name = Pa_GetDeviceInfo(m_output_parameters.device)->name;
+    auto device_name = Pa_GetDeviceInfo(m_outparameters.device)->name;
     std::cout << device_name << std::endl;
+
     bufalloc(nsamples);
 
     for(auto& unit : m_units)
     {
         // initialize registered units
         unit->bufalloc(nsamples);
-        unit->preprocessing(sample_rate, nsamples);
+        unit->preprocess(srate, nsamples);
     }
 }
 
 void backend_hdl::bufalloc(uint16_t nsamples)
 {
-    m_master_output = new float*[m_num_channels];
+    m_out = new float*[m_nchannels];
 
-    for (int i = 0; i < m_num_channels; ++i)
+    for (int i = 0; i < m_nchannels; ++i)
     {
-        m_master_output[i] = new float[nsamples];
-        memset(m_master_output[i], 0.f, sizeof(nsamples));
+        m_out[i] = new float[nsamples];
+        memset(m_out[i], 0.f, sizeof(nsamples));
     }
 }
 
-inline float*** backend_hdl::get_master_output_buffer()
+inline float*** backend_hdl::bufout()
 {
-    return &m_master_output;
+    return &m_out;
 }
 
-void backend_hdl::start_stream(size_t sample_rate, uint16_t nsamples)
+void backend_hdl::start(size_t srate, uint16_t nsamples)
 {
     PaError err = Pa_OpenStream(
-                        &m_main_stream,
+                        &m_stream,
                         NULL,
-                        &m_output_parameters,
-                        sample_rate,
+                        &m_outparameters,
+                        srate,
                         nsamples,
                         paClipOff,
                         main_stream_callback,
@@ -140,12 +141,12 @@ void backend_hdl::start_stream(size_t sample_rate, uint16_t nsamples)
     if( err != paNoError )
         std::cerr << "error: " << Pa_GetErrorText(err) << std::endl;
 
-    err = Pa_StartStream(m_main_stream);
+    err = Pa_StartStream(m_stream;
 }
 
-void backend_hdl::stop_stream()
+void backend_hdl::stop()
 {
-    PaError err = Pa_StopStream(m_main_stream);
+    PaError err = Pa_StopStream(m_stream);
     if ( err != paNoError )
         std::cerr << "error when stopping stream: " << Pa_GetErrorText(err) << std::endl;
 }

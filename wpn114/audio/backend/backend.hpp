@@ -23,6 +23,8 @@
 #include <wpn114/audio/backend/unit_base.hpp>
 #include <wpn114/audio/backend/context.hpp>
 
+using namespace std;
+
 namespace wpn114
 {
 namespace audio
@@ -33,25 +35,24 @@ public:
     backend_hdl(uint8_t nchannels = 2);
     ~backend_hdl();
 
-    void initialize(size_t sample_rate, uint16_t nsamples);
-    void start_stream(size_t sample_rate, uint16_t nsamples);
-    void stop_stream();
+    void start(size_t srate, uint16_t nsamples);
+    void stop();
+    void initialize(size_t srate, uint16_t nsamples);
     void bufalloc(uint16_t nsamples);
+    void regunit(unit_base* unit);
+    void unregunit(unit_base* unit);
 
-    void register_unit(unit_base* unit);
-    void unregister_unit(unit_base* unit);
-
-    uint8_t                     get_num_channels() const;
-    std::vector<unit_base*>     get_registered_units() const;
-    float***                    get_master_output_buffer();
+    float***            bufout();
+    uint8_t             nchannels() const;
+    vector<unit_base*>  regunits() const;
 
 private:
-    uint8_t                     m_num_channels;
-    PaStream*                   m_main_stream;
-    PaStreamParameters          m_output_parameters;
+    uint8_t                     m_nchannels;
+    PaStream*                   m_stream;
+    PaStreamParameters          m_outparameters;
     PaStreamCallback*           m_main_stream_cb_funcptr;
     std::vector<unit_base*>     m_units;
-    float**                     m_master_output;
+    float**                     m_out;
 };
 }
 }
