@@ -12,7 +12,7 @@ private:
     uint32_t    m_phase;
 
 public:
-#ifdef WPN_OSSIA //---------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //---------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override {}
     // nothing to expose, as all required parameters are already taken care of
     // by the 'master' node
@@ -25,7 +25,7 @@ public:
         SET_UTYPE   (unit_type::GENERATOR_UNIT);
         SFLOAD      (sfpath);
         SETN_IN     (0);
-        SETN_OUT    (m_sf_buffer.num_channels);
+        SETN_OUT    (m_sf_buffer.nchannels);
     }
 
     void preprocessing(size_t sample_rate, uint16_t samples_per_buffer) override {}

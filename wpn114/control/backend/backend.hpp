@@ -20,14 +20,16 @@
 //-------------------------------------------------------------------------------------------------------
 #include <wpn114/control/backend/controller_base.hpp>
 #include <string>
-#include <RtMidi.h>
 //-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace control {
 //-------------------------------------------------------------------------------------------------------
 enum class device_io_type;
-class controller_base;
+///class controller_base;
 //-------------------------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_MIDI
+#include <RtMidi.h>
+
 namespace midi {
 using rtmidiin  = RtMidiIn;
 using rtmidiout = RtMidiOut;
@@ -44,38 +46,33 @@ enum class commands
     CHANNEL_PRESSURE        = 0xd0,
     PITCH_BEND              = 0xe0
 };
+}
+#endif
 //-------------------------------------------------------------------------------------------------------
 class device_hdl
 //-------------------------------------------------------------------------------------------------------
 {
 public:
-    device_hdl(rtmidiin* input);
-    device_hdl(rtmidiout* output);
-    device_hdl(rtmidiin* input, rtmidiout* output);
+    device_hdl(protocol p);
     device_hdl(const device_hdl&)   = delete;
     device_hdl(device_hdl&&)        = delete;
     ~device_hdl();
 //-------------------------------------------------------------------------------------------------------
-    void enable_reception();
-    void disable_reception();
-    bool is_enabled() const;
-    void add_callback(void (*callback_function)(double, std::vector<uint8_t>&, void*));
+    virtual void enable_reception()     = 0;
+    virtual void disable_reception()    = 0;
+    virtual void add_callback(void (*callback_function)(double, std::vector<uint8_t> &, void *)) = 0;
+    virtual void out(const std::vector<uint8_t> &byte_array) const = 0;
+
     device_io_type get_io_type() const;
-//-------------------------------------------------------------------------------------------------------
-    void out(commands command_id, uint8_t channel, uint8_t index, uint8_t value) const;
-    void sysxout(const std::vector<uint8_t> &byte_array) const;
 //-------------------------------------------------------------------------------------------------------
     template<typename T>  static void   print_all_ports() noexcept;
     template<typename T>  static int    get_port_index(std::string& target_refname) noexcept;
 //-------------------------------------------------------------------------------------------------------
 private:
-    bool            m_is_enabled;
-    rtmidiin*       m_midi_input;
-    rtmidiout*      m_midi_output;
     device_io_type  m_io_type;
 };
 //-------------------------------------------------------------------------------------------------------
-typedef std::unique_ptr<wpn114::control::midi::device_hdl> unique_device_hdl;
+typedef std::unique_ptr<device_hdl> unique_device_hdl;
 //-------------------------------------------------------------------------------------------------------
 class device_factory
 //-------------------------------------------------------------------------------------------------------
@@ -84,12 +81,11 @@ public:
     device_factory  ();
     ~device_factory ();
 //-------------------------------------------------------------------------------------------------------
-    unique_device_hdl make_device_hdl(std::string& controller_id, device_io_type io_type);
-    void emplace_device_hdl(controller_base& target, device_io_type io_type);
+    unique_device_hdl make_device_hdl(std::string& controller_id, io_type t);
+    void emplace_device_hdl(controller_base& target, io_type t);
 //-------------------------------------------------------------------------------------------------------
 private:
-    template<typename T> T* open_port(std::string& controller_id) noexcept;
+    template<typename T> T* open_midi_port(std::string& controller_id) noexcept;
 };
-}
 }
 }

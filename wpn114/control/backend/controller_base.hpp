@@ -17,18 +17,19 @@
  */
 
 #pragma once
-
 #include <wpn114/control/backend/backend.hpp>
 #include <string>
 //-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace control {
 //-------------------------------------------------------------------------------------------------------
-enum class controller_protocol
+enum class protocol
 {
     MIDI    = 0,
     OSC     = 1,
-    SERIAL  = 2
+    SERIAL  = 2,
+    WS      = 3,
+    HTTP    = 4
 };
 //-------------------------------------------------------------------------------------------------------
 enum class device_io_type
@@ -43,11 +44,12 @@ class controller_base
 {
 public:
     virtual ~controller_base() {}
-    virtual std::string get_controller_id() const = 0;
+    std::string get_controller_id() const;
+    device_io_type get_controller_io_type() const;
 
 protected:
-    std::string         m_controller_id;
-    unique_device_hdl   m_device_hdl;
+    std::string           m_controller_id;
+    unique_device_hdl     m_device_hdl;
 };
 //-------------------------------------------------------------------------------------------------------
 }

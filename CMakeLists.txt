@@ -36,10 +36,16 @@ if( WPN_AUDIO_PLUGINS_FIELDS OR
     set(WPN_AUDIO_SNDFILE ON)
 endif()
 
-option(WPN_CONTROL "Enables controller functionnalities" ON)
-option(WPN_CONTROL_PUSH "Enables Ableton Push functionnalities" ON)
-option(WPN_COMMAND_LINE "Enables command-line functionnalities" OFF)
-option(WPN_OSSIA "Enables libossia network functionnalities" ON)
+option(WPN_CONTROL "Enables control functionnalities" ON)
+option(WPN_CONTROL_MIDI "Enables midi support with RtMidi" OFF)
+option(WPN_CONTROL_OSC "Enables osc support with oscpack (tbi)" OFF)
+option(WPN_CONTROL_SERIAL "Enables serial support (tbi)" OFF)
+option(WPN_CONTROL_WS "Enables websocket support (tbi)" OFF)
+option(WPN_CONTROL_HTTP "Enables http support (tbi)" OFF)
+option(WPN_CONTROL_COMMAND_LINE "Enables command-line functionnalities" OFF)
+option(WPN_CONTROL_OSSIA "Enables libossia network functionnalities" ON)
+
+option(WPN_CONTROL_MIDI_PLUGINS_PUSH "Enables Ableton Push functionnalities" ON)
 
 add_subdirectory(wpn114)
 

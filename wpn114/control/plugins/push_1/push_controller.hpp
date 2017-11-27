@@ -18,9 +18,9 @@
 
 //-------------------------------------------------------------------------------------------------------
 #include <wpn114/control/backend/controller_base.hpp>
+#include <initializer_list>
 #include <cstdint>
 #include <string>
-#include <initializer_list>
 //-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace control {

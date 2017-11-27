@@ -5,8 +5,8 @@ set(WPN114_SOUNDTRACKS_IMPLEMENTATIONS
 
 add_library(soundtracks SHARED ${WPN114_SOUNDTRACKS_IMPLEMENTATIONS})
 
-if(WPN_OSSIA)
-    add_definitions(-DWPN_OSSIA)
+if(WPN_CONTROL_OSSIA)
+    add_definitions(-DWPN_CONTROL_OSSIA)
 endif()
 
 target_include_directories(soundtracks PUBLIC ${CMAKE_SOURCE_DIR})

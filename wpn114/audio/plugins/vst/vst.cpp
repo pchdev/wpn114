@@ -152,7 +152,7 @@ template <typename T> vstevents* make_vstevent_array(const T& values)
     return res;
 }
 
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
 void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
 {    
     auto midi_node          = root.create_child("MIDI");
@@ -249,7 +249,7 @@ void vst_hdl::show_editor()
     }
 
 #ifdef __APPLE__
-    m_editthread = std::thread(_show_vst_2x_editor, m_plugin, m_plugin_path.c_str(), width, height);
+    //m_editthread = std::thread(_show_vst_2x_editor, m_plugin, m_plugin_path.c_str(), width, height);
 #endif
 
 }

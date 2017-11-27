@@ -6,7 +6,7 @@
 #include <wpn114/audio/backend/sndfile_support.hpp>
 #endif
 //-------------------------------------------------------------------------------------------------------
-#ifdef WPN_OSSIA
+#ifdef WPN_CONTROL_OSSIA
     #include <ossia/ossia.hpp>
 #endif
 //-------------------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ class unit_base
 public:
     virtual ~unit_base();
 
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
     void net_expose(ossia::net::node_base& application_node, std::string name);
     void net_expose(ossia::net::node_base& application_node);
     virtual void net_expose_plugin_tree(ossia::net::node_base& plugin_root) = 0;
@@ -75,7 +75,7 @@ protected:
     float**         m_output_buffer;
     unit_type       m_unit_type;
 
-#ifdef WPN_OSSIA // -------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
     std::string                 m_netname;
     ossia::net::node_base*      m_netnode;
 #endif //------------------------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ struct aux_send
 class aux_unit : public unit_base
 {
 public:
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& plugin_root) override;
 #endif //------------------------------------------------------------------------------------------------
 
@@ -139,7 +139,7 @@ private:
 class track_unit : public unit_base
 {
 public:
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& plugin_root) override;
 #endif //------------------------------------------------------------------------------------------------
 

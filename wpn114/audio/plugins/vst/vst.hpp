@@ -20,7 +20,6 @@
 #include "aeffect.h"
 #include "aeffectx.h"
 #include <wpn114/audio/backend/unit_base.hpp>
-#include <AppKit/AppKit.h>
 //-------------------------------------------------------------------------------------------------------
 using aeffect = AEffect;
 using vstint32_t = VstInt32;
@@ -77,7 +76,7 @@ public:
     vst_hdl(vst_hdl&&) = delete;
     ~vst_hdl();
 
-#ifdef WPN_OSSIA //---------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //---------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override;
 #endif //-------------------------------------------------------------------------------------------------
 
@@ -94,15 +93,15 @@ private:
     aeffect*    _load_vst_2x_plugin(const char* path);
     void        _load_vst_3x_plugin(const char* path);
 #ifdef __APPLE__
-    NSWindow*   _show_vst_2x_editor(aeffect* effect, const char *name, uint16_t width, uint16_t height);
-    void        _close_vst_2x_editor(aeffect* effect, NSWindow* window);
+    void        _show_vst_2x_editor(aeffect* effect, const char *name, uint16_t width, uint16_t height);
+    void        _close_vst_2x_editor();
 #endif
     void        _show_vst_3x_editor();
 
     dispatcher_funcptr      m_dispatcher;
     aeffect*                m_plugin;
     std::string             m_plugin_path;
-    NSWindow*               m_editwindow;
+    //NSWindow*               m_editwindow;
     std::thread             m_editthread;
 };
 }

@@ -21,7 +21,7 @@ private:
     float           m_env[ENVSIZE];
 
 public:
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override {}
 #endif //------------------------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ public:
         SET_UTYPE   (unit_type::GENERATOR_UNIT);
         SFLOAD      (sfpath);
         SETN_IN     (0);
-        SETN_OUT    (SFBUF.num_channels);
+        SETN_OUT    (SFBUF.nchannels);
     }
 
     void preprocessing(size_t sample_rate, uint16_t nsamples) override
@@ -42,7 +42,7 @@ public:
         (void) sample_rate;
         // initialize crossfade envelope
         m_env_incr      = ENVSIZE/m_xfade_length;
-        m_xfade_point   = m_sf_buffer.num_samples - m_xfade_length;
+        m_xfade_point   = m_sf_buffer.nsamples - m_xfade_length;
 
         for         (int i = 0; i < ENVSIZE; ++i)
         m_env[i]    = sin(i/(float)ENVSIZE*(M_PI_2));
@@ -64,6 +64,7 @@ public:
         auto buf_data           = m_sf_buffer.data;
         auto nchannels          = m_sf_buffer.nchannels;
         auto env                = m_env;
+        auto env_incr           = m_env_incr;
 
         for(int i = 0; i < frames_per_buffer; ++i)
         {

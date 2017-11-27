@@ -4,6 +4,6 @@ set(WPN114_ROOMS_IMPLEMENTATIONS
 add_library(rooms SHARED ${WPN114_ROOMS_IMPLEMENTATIONS})
 target_include_directories(rooms PUBLIC ${CMAKE_SOURCE_DIR})
 
-if(WPN_OSSIA)
-    add_definitions(-DWPN_OSSIA)
+if(WPN_CONTROL_OSSIA)
+    add_definitions(-DWPN_CONTROL_OSSIA)
 endif()

@@ -13,7 +13,7 @@ class soundtracks final : public buffer_unit
 //-------------------------------------------------------------------------------------------------------
 {
 public:
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override
     {
         auto startpos_node  = root.create_child("start_position");

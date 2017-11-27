@@ -5,8 +5,8 @@ add_library(oneshots SHARED ${WPN114_ONESHOTS_IMPLEMENTATIONS})
 target_include_directories(oneshots PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(oneshots wpn114audio)
 
-if(WPN_OSSIA)
-    add_definitions(-DWPN_OSSIA)
+if(WPN_CONTROL_OSSIA)
+    add_definitions(-DWPN_CONTROL_OSSIA)
 endif()
 
 add_definitions(-DWPN_AUDIO_SNDFILE)

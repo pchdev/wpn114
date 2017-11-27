@@ -62,7 +62,7 @@ bool unit_base::is_active() const
 void unit_base::activate()
 {
     m_active = true;
-#ifdef WPN_OSSIA // -------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
     auto parameter = m_netnode->find_child("active")->get_parameter();
     parameter->set_value(true);
 #endif //------------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ void unit_base::activate()
 void unit_base::deactivate()
 {
     m_active = false;
-#ifdef WPN_OSSIA // -------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
     auto parameter = m_netnode->find_child("active")->get_parameter();
     parameter->set_value(false);
 #endif //------------------------------------------------------------------------------------------------
@@ -90,13 +90,13 @@ float unit_base::get_level() const
 void unit_base::set_level(float level)
 {
     m_level = level;
-#ifdef WPN_OSSIA // -------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
     auto parameter = m_netnode->find_child("level")->get_parameter();
     parameter->set_value(level);
 #endif //------------------------------------------------------------------------------------------------
 }
 
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
 void unit_base::net_expose(ossia::net::node_base &application_node)
 {
     m_netnode           = application_node.create_child(m_netname);
@@ -166,7 +166,7 @@ aux_unit::aux_unit(std::unique_ptr<unit_base> receiver) : m_receiver(std::move(r
 
 aux_unit::~aux_unit() {}
 
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
 void aux_unit::net_expose_plugin_tree(ossia::net::node_base& root)
 {
     if  (m_receiver.get())
@@ -211,7 +211,7 @@ void aux_unit::add_sender(unit_base *sender, float level)
     aux_send send = {sender,level};
     m_sends.push_back(send);
 
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
     if(m_netnode)
     {
         ossia::net::node_base* send_node    = m_netnode->find_child("sends");
@@ -250,7 +250,7 @@ track_unit::track_unit()
 
 track_unit::~track_unit() {}
 
-#ifdef WPN_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
 void track_unit::net_expose_plugin_tree(ossia::net::node_base& application_node)
 {
     for(auto& unit : m_units)

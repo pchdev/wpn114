@@ -49,7 +49,7 @@ public:
         float       level;
     };
 
-#ifdef WPN_OSSIA //-------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //-------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override
     {
         auto azimuth_node   = root.create_child("azimuth");

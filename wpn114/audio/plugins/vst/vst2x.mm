@@ -59,7 +59,7 @@ using namespace wpn114::audio::plugins;
     extern "C"
     {
 
-    NSWindow *vst_hdl::_show_vst_2x_editor(aeffect* effect, const char* plugin_name, uint16_t width, uint16_t height)
+    void vst_hdl::_show_vst_2x_editor(aeffect* effect, const char* plugin_name, uint16_t width, uint16_t height)
     {
         NSRect frame;
         NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -91,10 +91,10 @@ using namespace wpn114::audio::plugins;
         [pool release];
     }
 
-    void vst_hdl::_close_vst_2x_editor(aeffect* effect, NSWindow* window)
+    void vst_hdl::_close_vst_2x_editor()
     {
-        effect->dispatcher(effect, effEditClose, 0, 0, nullptr, 0);
-        [window close];
+        //effect->dispatcher(effect, effEditClose, 0, 0, nullptr, 0);
+        //[window close];
     }
 
     }

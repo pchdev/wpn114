@@ -16,8 +16,8 @@ add_library(wpn114vst SHARED
 
 add_definitions(-DDEVELOPMENT)
 
-if(WPN_OSSIA)
-    add_definitions(-DWPN_OSSIA)
+if(WPN_CONTROL_OSSIA)
+    add_definitions(-DWPN_CONTROL_OSSIA)
     target_include_directories(wpn114audio PUBLIC ${CMAKE_SOURCE_DIR}/dependencies/libossia/OSSIA)
     target_link_libraries(wpn114vst ossia)
 endif()
