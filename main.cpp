@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     // initialize network
     net::net_hdl net_hdl("quarre-audio");
     net_hdl.expose_oscquery_server(1234, 5678);    
-    node_base& appnode = net_hdl.get_application_node();
+    node_base& appnode = net_hdl.application_node();
 
     // initialize audio backend
     audio::backend_hdl audio_hdl(2);
@@ -30,10 +30,8 @@ int main(int argc, char* argv[])
     // instantiate plugins
     audio::plugins::oneshots os_test("test.wav");
     os_test.net_expose(appnode, "os_test");
-    audio_hdl.register_unit(&os_test);
 
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
-    audio_hdl.register_unit(&kaivo_1);
     kaivo_1.net_expose(appnode, "kaivo_1");
 
     audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
@@ -46,15 +44,18 @@ int main(int argc, char* argv[])
     bus_1.set_receiver(std::move(altiverb));
     bus_1.net_expose(appnode, "reverb_bus");
     kaivo_1.add_aux_send(bus_1);
-    audio_hdl.register_unit(&bus_1);
 
-    audio::plugins::fields fields_test("test.wav", 32768);
-    audio_hdl.register_unit(&fields_test);
+    audio::plugins::fields fields_test("test.wav", 32768);  
     fields_test.net_expose(appnode, "fields");
 
+    audio_hdl << os_test;
+    audio_hdl << kaivo_1;
+    audio_hdl << bus_1;
+    audio_hdl << fields_test;
+
     // start audio
-    audio_hdl.initialize(   SAMPLERATE, BLOCKSIZE);
-    audio_hdl.start_stream( SAMPLERATE, BLOCKSIZE);
+    audio_hdl.initialize(SAMPLERATE, BLOCKSIZE);
+    audio_hdl.start(SAMPLERATE, BLOCKSIZE);
 
     kaivo_1.show_editor();
     //altiverb->show_editor();
@@ -71,7 +72,7 @@ int main(int argc, char* argv[])
 
     // sleep
     std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-    audio_hdl.stop_stream();
+    audio_hdl.stop();
 
     return 0;
 }

@@ -41,7 +41,7 @@ void unit_base::bufalloc(uint16_t nsamples)
 
 unit_type unit_base::uttype() const
 {
-    return m_unit_type;
+    return m_uttype;
 }
 
 float unit_base::framedata(uint8_t channel, uint16_t frame) const
@@ -77,7 +77,7 @@ void unit_base::deactivate()
 #endif //------------------------------------------------------------------------------------------------
 }
 
-float** unit_base::bufout()
+float** unit_base::out()
 {
     return m_out;
 }
@@ -180,8 +180,8 @@ void aux_unit::preprocessing(size_t srate, uint16_t nsamples)
     m_receiver->preprocessing(srate, nsamples);
 }
 
-void aux_unit::process_audio(float** inputs, uint16_t nsamples) {}
-void aux_unit::process_audio(uint16_t nsamples)
+void aux_unit::process(float** inputs, uint16_t nsamples) {}
+void aux_unit::process(uint16_t nsamples)
 {
     for(uint16_t i = 0; i < nsamples; ++i)
     {
@@ -197,10 +197,10 @@ void aux_unit::process_audio(uint16_t nsamples)
 
     // pass mixed output buffer to receiver unit
     //! DO NOT REGISTER THE RECEIVER TO THE AUDIO_BACKEND_HDL
-    m_receiver->process_audio(OUT, nsamples);
+    m_receiver->process(OUT, nsamples);
 }
 
-float aux_unit::get_framedata(uint8_t channel, uint16_t frame) const
+float aux_unit::framedata(uint8_t channel, uint16_t frame) const
 {
     return m_receiver->framedata(channel, frame);
 }
@@ -235,6 +235,11 @@ void aux_unit::set_receiver(std::unique_ptr<unit_base> receiver)
     SETN_OUT(m_receiver->nchannels());
 }
 
+std::ostream& operator<<(std::ostream& unit, const aux_unit& aux)
+{
+    aux.set_receiver(unit);
+}
+
 #endif //------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------------
@@ -263,35 +268,35 @@ void track_unit::preprocessing(size_t srate, uint16_t nsamples)
     for (auto& unit : m_units)
     {
         unit->bufalloc(nsamples);
-        unit->preprocessing(srate, nsamples);
+        unit->preprocess(srate, nsamples);
     }
 }
 
-void track_unit::process_audio(float **inputs, uint16_t nsamples)
+void track_unit::process(float **inputs, uint16_t nsamples)
 {
     OUT = inputs;
     for(auto& unit : m_units)
     {
-        unit->process_audio(OUT, nsamples);
+        unit->process(OUT, nsamples);
     }
 }
 
-void track_unit::process_audio(uint16_t nsamples)
+void track_unit::process(uint16_t nsamples)
 {
     for (auto& unit : m_units)
     {
-        if(unit->get_unit_type() == unit_type::GENERATOR_UNIT)
+        if(unit->uttype() == unit_type::GENERATOR_UNIT)
         {
-            unit->process_audio(nsamples);
+            unit->process(nsamples);
         }
 
-        else if(unit->get_unit_type() == unit_type::EFFECT_UNIT ||
-                unit->get_unit_type() == unit_type::HYBRID_UNIT )
+        else if(unit->uttype() == unit_type::EFFECT_UNIT ||
+                unit->uttype() == unit_type::HYBRID_UNIT )
         {
-            unit->process_audio(OUT, nsamples);
+            unit->process(OUT, nsamples);
         }
 
-        OUT = unit->get_output_buffer();
+        OUT = unit->out();
     }
 }
 
@@ -310,6 +315,17 @@ void track_unit::remove_unit(unit_base *unit)
 }
 
 #endif
+
+std::ostream& operator<<(std::ostream& unit, const track_unit& track)
+{
+    track.add_unit(&unit);
+}
+
+std::ostream& operator>>(std::ostream& unit, const track_unit& track)
+{
+    track.remove_unit(&unit);
+}
+
 //-------------------------------------------------------------------------------------------------------
 #ifdef WPN_AUDIO_SNDFILE
 //-------------------------------------------------------------------------------------------------------

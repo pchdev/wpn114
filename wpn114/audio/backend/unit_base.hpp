@@ -1,4 +1,5 @@
 #pragma once
+//-------------------------------------------------------------------------------------------------------
 #include <cstdint>
 #include <memory>
 //-------------------------------------------------------------------------------------------------------
@@ -38,31 +39,31 @@ public:
     void set_netname(std::string name);
     const std::string& netname() const;
 #endif //------------------------------------------------------------------------------------------------
-    virtual void process(uint16_t nsamples) = 0;
-    virtual void process(float** inputs, uint16_t nsamples) = 0;
+    virtual void    process(uint16_t nsamples) = 0;
+    virtual void    process(float** inputs, uint16_t nsamples) = 0;
     // the unit's audio callbacks
-    virtual void preprocess(size_t srate, uint16_t nsamples) = 0;
+    virtual void    preprocess(size_t srate, uint16_t nsamples) = 0;
     // preparing the units user-defined audio processing
-    void        bufalloc(uint16_t nsamples);
-    //          pre-initializes output buffer, setting it to 0
-    float       framedata(uint8_t channel, uint16_t frame) const;
-    float**     bufout();
+    void            bufalloc(uint16_t nsamples);
+    //              pre-initializes output buffer, setting it to 0
+    float           framedata(uint8_t channel, uint16_t frame) const;
+    float**         out() const;
 
-    uint8_t     nchannels() const;
-    unit_type   uttype() const;
-    float       level() const;
-    void        set_level(float level);
+    bool            active()        const;
+    float           level()         const;
+    uint8_t         nchannels()     const;
+    unit_type       uttype()        const;
 
-    void        activate();
-    void        deactivate();
-    bool        active() const;
+    void            set_level(float level);
+    void            activate();
+    void            deactivate();
 
 #ifdef WPN_AUDIO_AUX //---------------------------------------------------------------------------------
     void        add_aux_send(aux_unit& aux); // register the unit to an aux bus
 #endif //------------------------------------------------------------------------------------------------
 protected:
 #define OUT                 m_out
-#define SET_UTYPE(u)        m_utype = u
+#define SET_UTYPE(u)        m_uttype = u
 #define SETN_IN(n)          m_nin = n
 #define SETN_OUT(n)         m_nout = n
 #define N_OUT               m_nout
@@ -73,7 +74,7 @@ protected:
     uint8_t         m_nin;
     uint8_t         m_nout;
     float**         m_out;
-    unit_type       m_utype;
+    unit_type       m_uttype;
 
 #ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
     std::string                 m_netname;
@@ -118,17 +119,19 @@ public:
     ~aux_unit();
     aux_unit(std::unique_ptr<unit_base> receiver);
 
-    void process(uint16_t nsamples) override;
-    void process(float** inputs, uint16_t nsamples) override;
-    void preprocess(size_t srate, uint16_t nsamples) override;
-    float framedata(uint8_t channel, uint16_t frame) const;
-    void set_receiver(std::unique_ptr<unit_base> receiver);
-    void add_sender(unit_base* sender, float level);
+    void    process(uint16_t nsamples) override;
+    void    process(float** inputs, uint16_t nsamples) override;
+    void    preprocess(size_t srate, uint16_t nsamples) override;
+    float   framedata(uint8_t channel, uint16_t frame) const;
+    void    set_receiver(std::unique_ptr<unit_base> receiver);
+    void    add_sender(unit_base* sender, float level);
 
 private:
     std::unique_ptr<unit_base>  m_receiver;
     std::vector<aux_send>       m_sends;
 };
+
+std::ostream& operator<<(std::ostream& unit, const aux_unit& aux);
 
 #endif
 
@@ -147,15 +150,18 @@ public:
     track_unit();
     ~track_unit();
 
-    void process(uint16_t nsamples) override;
-    void process(float** inputs, uint16_t nsamples) override;
-    void preprocess(size_t srate, uint16_t nsamples) override;
-    void add_unit(unit_base* unit);
-    void remove_unit(unit_base* unit);
+    void    process(uint16_t nsamples) override;
+    void    process(float** inputs, uint16_t nsamples) override;
+    void    preprocess(size_t srate, uint16_t nsamples) override;
+    void    add_unit(unit_base* unit);
+    void    remove_unit(unit_base* unit);
 
 private:
     std::vector<unit_base*> m_units;
 };
+
+std::ostream& operator<<(std::ostream& unit, const track_unit& track);
+std::ostream& operator>>(std::ostream& unit, const track_unit& track);
 
 #endif
 

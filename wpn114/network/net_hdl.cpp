@@ -30,7 +30,7 @@ net_hdl::net_hdl(const char *user_namespace)
 
 net_hdl::~net_hdl() {}
 
-node_base &net_hdl::get_application_node() const
+node_base &net_hdl::application_node() const
 {
     return m_device->get_root_node();
 }

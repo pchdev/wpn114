@@ -14,10 +14,10 @@ static int main_stream_callback
     (void) status_flags;
     (void) input_buffer;
 
-    // copy unit's configuration
-    std::vector<unit_base*> units = backend->regunits();
-    uint8_t nchannels = backend->nchannels();
-    auto master = *backend->bufout();
+    // copy unit's configuration       
+    auto units          = backend->units();
+    auto master         = *backend->out();
+    uint8_t nchannels   = backend->nchannels();
 
     // call audio processing on each of the registered units
     for (auto& unit : units)
@@ -46,20 +46,17 @@ static int main_stream_callback
 
 backend_hdl::backend_hdl(uint8_t nchannels) :
     m_stream(nullptr),
-    m_nchannels(nchannels)
-{
-
-}
+    m_nchannels(nchannels) {}
 
 backend_hdl::~backend_hdl()
 {
-    PaError err = Pa_StopStream(m_stream);
-            err = Pa_CloseStream(m_stream);
+    PaError     err = Pa_StopStream(m_stream);
+                err = Pa_CloseStream(m_stream);
 
     Pa_Terminate();
 }
 
-inline std::vector<unit_base*> backend_hdl::regunits() const
+inline std::vector<unit_base*> backend_hdl::units() const
 {
     return m_units;
 }
@@ -69,12 +66,12 @@ inline uint8_t backend_hdl::nchannels() const
     return m_nchannels;
 }
 
-void backend_hdl::regunit(unit_base* unit)
+void backend_hdl::register_unit(unit_base* unit)
 {
     m_units.push_back(unit);
 }
 
-void backend_hdl::unregunit(unit_base* unit)
+void backend_hdl::unregister_unit(unit_base* unit)
 {
     m_units.erase(
                 std::remove(
@@ -121,7 +118,7 @@ void backend_hdl::bufalloc(uint16_t nsamples)
     }
 }
 
-inline float*** backend_hdl::bufout()
+inline float*** backend_hdl::out()
 {
     return &m_out;
 }
@@ -149,4 +146,14 @@ void backend_hdl::stop()
     PaError err = Pa_StopStream(m_stream);
     if ( err != paNoError )
         std::cerr << "error when stopping stream: " << Pa_GetErrorText(err) << std::endl;
+}
+
+std::ostream& operator<< (std::ostream& unit, const backend_hdl& hdl)
+{
+    hdl.register_unit(&unit);
+}
+
+std::ostream& operator>> (std::ostream& unit, const backend_hdl& hdl)
+{
+    hdl.unregister_unit(&unit);
 }
