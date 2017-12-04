@@ -1,8 +1,8 @@
 #include <wpn114/audio/backend/backend.hpp>
 #include <iostream>
-
+//-------------------------------------------------------------------------------------------------------
 using namespace wpn114::audio;
-
+//-------------------------------------------------------------------------------------------------------
 static int main_stream_callback
 (const void *input_buffer, void *output_buffer, unsigned long nsamples,
  const PaStreamCallbackTimeInfo *time_info, PaStreamCallbackFlags status_flags, void *user_data)
@@ -43,7 +43,7 @@ static int main_stream_callback
 
     return paContinue;
 }
-
+//-------------------------------------------------------------------------------------------------------
 backend_hdl::backend_hdl(uint8_t nchannels) :
     m_stream(nullptr),
     m_nchannels(nchannels) {}
@@ -55,7 +55,7 @@ backend_hdl::~backend_hdl()
 
     Pa_Terminate();
 }
-
+//-------------------------------------------------------------------------------------------------------
 inline std::vector<unit_base*> backend_hdl::units() const
 {
     return m_units;
@@ -136,7 +136,9 @@ void backend_hdl::start(size_t srate, uint16_t nsamples)
                         this );
 
     if( err != paNoError )
-        std::cerr << "error: " << Pa_GetErrorText(err) << std::endl;
+        std::cerr << "error: "
+                  << Pa_GetErrorText(err)
+                  << std::endl;
 
     err = Pa_StartStream(m_stream);
 }
@@ -144,6 +146,9 @@ void backend_hdl::start(size_t srate, uint16_t nsamples)
 void backend_hdl::stop()
 {
     PaError err = Pa_StopStream(m_stream);
+
     if ( err != paNoError )
-        std::cerr << "error when stopping stream: " << Pa_GetErrorText(err) << std::endl;
+        std::cerr <<"error when stopping stream: "
+                 << Pa_GetErrorText(err)
+                 << std::endl;
 }

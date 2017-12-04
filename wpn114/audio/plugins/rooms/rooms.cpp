@@ -29,9 +29,9 @@ class rooms final : public wpn114::audio::unit_base
 //-------------------------------------------------------------------------------------------------------
 {
 public:
-    struct rooms_ls
+    struct r_ls
     {
-        uint16_t    output_channel;
+        uint16_t    chn;
         float       pos[2];
         float       min[2];
         float       max[2];
@@ -39,9 +39,9 @@ public:
         float       level;
     };
 
-    struct rooms_src
+    struct r_src
     {
-        uint16_t    input_channel;
+        uint16_t    chn;
         float       pos[2];
         float       min[2];
         float       max[2];
@@ -52,32 +52,56 @@ public:
 #ifdef WPN_CONTROL_OSSIA //-------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override
     {
-        auto azimuth_node   = root.create_child("azimuth");
-        auto azimuth_param    = azimuth_node->create_parameter(ossia::val_type::FLOAT);
-        azimuth_param->add_callback([&](const ossia::value& v) {
-            //m_x = v.get<float>();
-        });
+        auto speakers           = root.create_child("speakers");
+        auto sources            = root.create_child("sources");
+
+        auto speakers_pos       = speakers->create_child("positions");
+        auto sources_pos        = sources->create_child("positions");
+        auto speakers_lvl       = speakers->create_child("levels");
+        auto sources_lvl        = sources->create_child("levels");
+
+
     }
 #endif //------------------------------------------------------------------------------------------------
 
-    rooms(uint8_t ninputs, uint8_t nspeakers)
+    template<typename T> void setup(std::vector<T>& target, uint8_t n)
+    {
+        for(uint8_t i = 0; i < n; ++i)
+        {
+            float radius    = 1.f;
+            float level     = 1.f;
+
+            T object =   { i,
+                         { 0.f, 0.f },
+                         { 0.f, 0.f },
+                         { 0.f, 0.f },
+                         radius, level };
+
+            target.push_back(object);
+        }
+    }
+
+    rooms(uint8_t n_srcs, uint8_t n_speakers)
     {
         activate();
 
-        SETN_IN     (ninputs);
-        SETN_OUT    (nspeakers);
+        SETN_IN     (n_srcs);
+        SETN_OUT    (n_speakers);
         SET_UTYPE   (unit_type::EFFECT_UNIT);
+
+        setup<r_src>    (m_sources, n_srcs);
+        setup<r_ls>     (m_loudspeakers, n_speakers);
     }
 
-    void preprocess(size_t sample_rate, uint16_t samples_per_buffer) override {}
+    void preprocess(size_t, uint16_t) override {}
 
-    inline bool within_ls_area(const rooms_src& src, const rooms_ls& ls)
+    inline bool within_ls_area(const r_src& src, const r_ls& ls)
     {
         return src.pos[0] < ls.max[0] && src.pos[0] > ls.min[0] &&
                src.pos[1] < ls.max[1] && src.pos[1] > ls.min[0];
     }
 
-    inline float compute_speaker_gain(const rooms_src& src, const rooms_ls& ls)
+    inline float compute_speaker_gain(const r_src& src, const r_ls& ls)
     {
         // compute source position in ls's radius
         float r = (src.pos[0]*src.pos[0]*src.level*ls.level + src.pos[1]*src.pos[1]*src.level*ls.level);
@@ -86,17 +110,20 @@ public:
 
     void process(float** input, uint16_t nsamples) override
     {
+        auto srcs       = m_sources;
+        auto lss        = m_loudspeakers;
+        auto out        = OUT;
+
         for(int i = 0; i < nsamples; ++i)
         {
-            for(const auto& src : m_sources)
+            for(const auto& src : srcs)
             {
-                for(const auto& ls : m_loudspeakers)
+                for(const auto& ls : lss)
                 {
                     if(within_ls_area(src, ls))
-                    {
+                    {    
+                        out[ls.chn][i] += input[src.chn][i] * compute_speaker_gain(src,ls);
                         // if source is within the ls's radius
-                        OUT[ls.output_channel][i] +=
-                                input[src.input_channel][i] * compute_speaker_gain(src,ls);
                     }
                 }
             }
@@ -106,8 +133,8 @@ public:
     void process(uint16_t nsamples) override {}
 
 private:
-    std::vector<rooms_ls>   m_loudspeakers;
-    std::vector<rooms_src>  m_sources;
+    std::vector<r_ls>   m_loudspeakers;
+    std::vector<r_src>  m_sources;
 };
 }
 }

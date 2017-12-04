@@ -18,7 +18,7 @@ public:
     // by the 'master' node
 #endif //-------------------------------------------------------------------------------------------------
 
-    oneshots(const char* sfpath) : m_phase(0)
+    oneshots(std::string sfpath) : m_phase(0)
     {
         deactivate();
 
@@ -33,10 +33,15 @@ public:
 
     void process(uint16_t samples_per_buffer) override
     {
-        auto buf_data       = SFBUF.data;
+        auto bufdata        = SFBUF.data;
         auto buf_nframes    = SFBUF.nframes;
-        auto buf_nsamples   = SFBUF.nsamples;
+        auto buf_nsamples   = SFBUF.nsamples;        
+        auto n_out          = N_OUT;
+        auto out            = OUT;
         auto phase          = m_phase;
+
+        // set the phase-copy-pointer back in place
+        bufdata += m_phase * SFBUF.nchannels;
 
         for(int i = 0; i < samples_per_buffer; ++i)
         {
@@ -44,33 +49,35 @@ public:
             {
                 // reset buffer, set unit inactive
                 // and fill the rest of the buffer with zeroes
-                m_sndbuf.data -= buf_nframes;
+                bufdata -= buf_nframes;
                 deactivate();
 
-                for         (int j = 0; j < N_OUT; ++j)
-                OUT[j][i]   = 0.f;
+                for         (int j = 0; j < n_out; ++j)
+                out[j][i]   = 0.f;
             }
             else if ( phase > buf_nsamples )
             {
                 // fill the rest of the buffer with zeroes
-                for         (int j = 0; j < N_OUT; ++j)
-                OUT[j][i]   = 0.f;
+                for         (int j = 0; j < n_out; ++j)
+                out[j][i]   = 0.f;
             }
             else
                 // normal behaviour
             {
-                for         (int j = 0; j < N_OUT; ++j)
+                for         (int j = 0; j < n_out; ++j)
                     // note: sfbufs are interleaved
-                OUT[j][i]   = *m_sndbuf.data++;
+                out[j][i]   = *bufdata++;
             }
 
             phase++;
         }
+
+        m_phase = phase;
     }
 
     ~oneshots()
     {
-        CLEAR_SFBUF;
+        SFBUF_CLEAR;
     }
 };
 }

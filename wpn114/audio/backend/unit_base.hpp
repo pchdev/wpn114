@@ -93,7 +93,7 @@ public:
 protected:
 #define SFBUF          m_sndbuf
 #define SFLOAD(p)      load_soundfile(m_sndbuf, p)
-#define CLEAR_SFBUF    delete m_sndbuf.data
+#define SFBUF_CLEAR    delete m_sndbuf.data
     sndbuf_t           m_sndbuf;
 };
 #endif

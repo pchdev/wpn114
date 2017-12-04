@@ -331,6 +331,6 @@ std::ostream& operator>>(std::ostream& unit, const track_unit& track)
 //-------------------------------------------------------------------------------------------------------
 buffer_unit::~buffer_unit()
 {
-    CLEAR_SFBUF;
+    SFBUF_CLEAR;
 }
 #endif

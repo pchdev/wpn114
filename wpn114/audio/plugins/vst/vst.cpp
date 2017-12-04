@@ -92,7 +92,7 @@ vst_hdl::vst_hdl(const char* name_with_extension)
     name += name_with_extension;
 
     m_plugin_path = name;
-    m_plugin = this->_load_vst_2x_plugin(name.c_str());
+    m_plugin = _load_vst_2x_plugin(name.c_str());
 
     if  ( m_plugin->magic != kEffectMagic )
     {

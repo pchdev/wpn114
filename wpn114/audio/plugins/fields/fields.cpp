@@ -25,7 +25,7 @@ public:
     void net_expose_plugin_tree(ossia::net::node_base& root) override {}
 #endif //------------------------------------------------------------------------------------------------
 
-    fields(const char* sfpath, uint32_t xfade_length) :
+    fields(std::string sfpath, uint32_t xfade_length) :
         m_xfade_length(xfade_length),
         m_phase(0.f), m_env_phase(0.f)
     {
@@ -58,13 +58,15 @@ public:
     {
         auto xfade_point        = m_xfade_point;
         auto xfade_length       = m_xfade_length;
-        auto phase              = m_phase;
-        auto nsamples           = m_sndbuf.nsamples;
+        auto phase              = m_phase;        
         auto env_phase          = m_env_phase;
-        auto buf_data           = m_sndbuf.data;
-        auto nchannels          = m_sndbuf.nchannels;
         auto env                = m_env;
         auto env_incr           = m_env_incr;
+        auto nsamples           = SFBUF.nsamples;
+        auto bufdata            = SFBUF.data;
+        auto nchannels          = SFBUF.nchannels;
+        auto out                = OUT;
+        auto n_out              = N_OUT;
 
         for(int i = 0; i < frames_per_buffer; ++i)
         {
@@ -79,8 +81,8 @@ public:
 
                 for(int j = 0; j < nchannels; ++j)
                 {
-                    OUT[j][i] = *buf_data++ * xfade_down +
-                                *buf_data -xfade_point * nchannels * xfade_up;
+                    out[j][i] = *bufdata++ * xfade_down +
+                                *bufdata -xfade_point * nchannels * xfade_up;
                 }
 
                 phase++;
@@ -91,10 +93,10 @@ public:
                 // if phase reaches end of crossfade
                 // main phase continues from end of 'up' xfade
                 // reset the envelope phase
-                buf_data = buf_data + xfade_length * N_OUT - 1;
+                bufdata = bufdata + xfade_length * n_out - 1;
 
-                for         (int j = 0; j < N_OUT; ++j)
-                OUT[j][i]   = *buf_data++;
+                for         (int j = 0; j < n_out; ++j)
+                out[j][i]   = *bufdata++;
 
                 phase         = xfade_length -1;
                 env_phase     = 0;
@@ -102,18 +104,21 @@ public:
             else
             {
                 // normal behaviour
-                for         (int j = 0; j < N_OUT; ++j)
-                OUT[j][i]   = *buf_data++;
+                for         (int j = 0; j < n_out; ++j)
+                out[j][i]   = *bufdata++;
 
                 phase++;
                 // env_phase should be at 0
             }
         }
+
+        m_phase         = phase;
+        m_env_phase     = env_phase;
     }
 
     ~fields()
     {
-        CLEAR_SFBUF;
+        SFBUF_CLEAR;
     }
 };
 }
