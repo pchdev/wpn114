@@ -291,13 +291,13 @@ void vst_hdl::process_midi(vstevents *events)
 
 void vst_hdl::process(uint16_t nsamples)
 {
-    _silence_channel(m_output_buffer, m_num_outputs, nsamples);
-    m_plugin->processReplacing(m_plugin, nullptr, m_output_buffer, nsamples);
+    _silence_channel(m_out, m_nout, nsamples);
+    m_plugin->processReplacing(m_plugin, nullptr, m_out, nsamples);
 }
 
 void vst_hdl::process(float** input, uint16_t nsamples)
 {
-    _silence_channel(m_output_buffer, m_num_outputs, nsamples);
-    m_plugin->processReplacing(m_plugin, input, m_output_buffer, nsamples);
+    _silence_channel(m_out, m_nout, nsamples);
+    m_plugin->processReplacing(m_plugin, input, m_out, nsamples);
 }
 

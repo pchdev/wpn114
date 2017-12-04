@@ -97,7 +97,7 @@ void unit_base::set_level(float level)
 }
 
 #ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
-void unit_base::net_expose(ossia::net::node_base &application_node)
+void unit_base::net_expose(ossia::net::node_base& application_node)
 {
     m_netnode           = application_node.create_child(m_netname);
     auto master_node    = m_netnode->create_child("master");
@@ -121,7 +121,7 @@ void unit_base::net_expose(ossia::net::node_base &application_node)
     net_expose_plugin_tree(*m_netnode);
 }
 
-void unit_base::net_expose(ossia::net::node_base &application_node, std::string name)
+void unit_base::net_expose(ossia::net::node_base& application_node, std::string name)
 {
     m_netname = name;
     net_expose(application_node);
@@ -139,9 +139,9 @@ const std::string& unit_base::netname() const
 #endif //------------------------------------------------------------------------------------------------
 
 #ifdef WPN_AUDIO_AUX //----------------------------------------------------------------------------------
-void unit_base::add_aux_send(aux_unit &aux)
+void unit_base::add_aux_send(aux_unit& aux)
 {
-    aux.add_sender(this, 1.f);
+    aux.add_sender(*this, 1.f);
 }
 #endif //------------------------------------------------------------------------------------------------
 
@@ -174,10 +174,10 @@ void aux_unit::net_expose_plugin_tree(ossia::net::node_base& root)
 }
 #endif //------------------------------------------------------------------------------------------------
 
-void aux_unit::preprocessing(size_t srate, uint16_t nsamples)
+void aux_unit::preprocess(size_t srate, uint16_t nsamples)
 {
     m_receiver->bufalloc(nsamples);
-    m_receiver->preprocessing(srate, nsamples);
+    m_receiver->preprocess(srate, nsamples);
 }
 
 void aux_unit::process(float** inputs, uint16_t nsamples) {}
@@ -191,7 +191,7 @@ void aux_unit::process(uint16_t nsamples)
 
             for(uint8_t u = 0; u < m_sends.size(); ++u)
                 // mix input sources
-                OUT[c][i] += m_sends[u].m_sender->framedata(c, i) * m_sends[u].m_level;
+                OUT[c][i] += m_sends[u].m_sender->framedata(c,i) * m_sends[u].m_level;
         }
     }
 
@@ -205,10 +205,10 @@ float aux_unit::framedata(uint8_t channel, uint16_t frame) const
     return m_receiver->framedata(channel, frame);
 }
 
-void aux_unit::add_sender(unit_base *sender, float level)
+void aux_unit::add_sender(unit_base& sender, float level)
 {
     if ( m_sends.empty() ) activate();
-    aux_send send = {sender,level};
+    aux_send send = {&sender,level};
     m_sends.push_back(send);
 
 #ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ void aux_unit::add_sender(unit_base *sender, float level)
         ossia::net::node_base* send_node    = m_netnode->find_child("sends");
         if(!send_node) send_node            = m_netnode->create_child("sends");
 
-        auto sender_node        = send_node->create_child(sender->get_netname());
+        auto sender_node        = send_node->create_child(sender.netname());
         auto sends_level_node   = sender_node->create_child("level");
         auto sends_level_param  = sends_level_node->create_parameter(ossia::val_type::FLOAT);
 
@@ -235,10 +235,10 @@ void aux_unit::set_receiver(std::unique_ptr<unit_base> receiver)
     SETN_OUT(m_receiver->nchannels());
 }
 
-std::ostream& operator<<(std::ostream& unit, const aux_unit& aux)
+/*std::ostream& operator<<(std::ostream& unit, const aux_unit& aux)
 {
     aux.set_receiver(unit);
-}
+}*/
 
 #endif //------------------------------------------------------------------------------------------------
 
@@ -263,7 +263,7 @@ void track_unit::net_expose_plugin_tree(ossia::net::node_base& application_node)
 }
 #endif //------------------------------------------------------------------------------------------------
 
-void track_unit::preprocessing(size_t srate, uint16_t nsamples)
+void track_unit::preprocess(size_t srate, uint16_t nsamples)
 {
     for (auto& unit : m_units)
     {
@@ -300,15 +300,15 @@ void track_unit::process(uint16_t nsamples)
     }
 }
 
-void track_unit::add_unit(unit_base *unit)
+void track_unit::add_unit(unit_base& unit)
 {
     if(m_units.empty()) activate();
-    m_units.push_back(unit);
+    m_units.push_back(&unit);
 }
 
-void track_unit::remove_unit(unit_base *unit)
+void track_unit::remove_unit(unit_base& unit)
 {
-    m_units.erase(  std::remove(m_units.begin(), m_units.end(), unit),
+    m_units.erase(  std::remove(m_units.begin(), m_units.end(), &unit),
                     m_units.end());
 
     if(m_units.empty()) deactivate();
@@ -316,7 +316,7 @@ void track_unit::remove_unit(unit_base *unit)
 
 #endif
 
-std::ostream& operator<<(std::ostream& unit, const track_unit& track)
+/*std::ostream& operator<<(std::ostream& unit, const track_unit& track)
 {
     track.add_unit(&unit);
 }
@@ -324,7 +324,7 @@ std::ostream& operator<<(std::ostream& unit, const track_unit& track)
 std::ostream& operator>>(std::ostream& unit, const track_unit& track)
 {
     track.remove_unit(&unit);
-}
+}*/
 
 //-------------------------------------------------------------------------------------------------------
 #ifdef WPN_AUDIO_SNDFILE

@@ -2,7 +2,7 @@
 #include <wpn114/audio/plugins/vst/vst.hpp>
 #include <wpn114/audio/plugins/fields/fields.cpp>
 #include <wpn114/audio/plugins/oneshots/oneshots.cpp>
-#include <wpn114/control/plugins/push_1/push_controller.hpp>
+//#include <wpn114/control/plugins/push_1/push_controller.hpp>
 #include <wpn114/network/net_hdl.hpp>
 #include <iostream>
 #include <time.h>
@@ -37,21 +37,21 @@ int main(int argc, char* argv[])
     audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
     kaivo_2.net_expose(appnode, "kaivo_2");
 
-    audio::aux_unit bus_1;
+    audio::aux_unit aux_1;
     auto altiverb = std::make_unique<audio::plugins::vst_hdl>("Audio Ease/Altiverb 7.vst");
     altiverb->set_netname("altiverb");
 
-    bus_1.set_receiver(std::move(altiverb));
-    bus_1.net_expose(appnode, "reverb_bus");
-    kaivo_1.add_aux_send(bus_1);
+    aux_1.set_receiver(std::move(altiverb));
+    aux_1.net_expose(appnode, "reverb_bus");
+    kaivo_1.add_aux_send(aux_1);
 
     audio::plugins::fields fields_test("test.wav", 32768);  
     fields_test.net_expose(appnode, "fields");
 
-    audio_hdl << os_test;
-    audio_hdl << kaivo_1;
-    audio_hdl << bus_1;
-    audio_hdl << fields_test;
+    audio_hdl.register_unit(os_test);
+    audio_hdl.register_unit(kaivo_1);
+    audio_hdl.register_unit(aux_1);
+    audio_hdl.register_unit(fields_test);
 
     // start audio
     audio_hdl.initialize(SAMPLERATE, BLOCKSIZE);
@@ -60,15 +60,15 @@ int main(int argc, char* argv[])
     kaivo_1.show_editor();
     //altiverb->show_editor();
 
-
     // init controller
-    control::midi::device_factory push_device_factory;
+   /* control::midi::device_factory push_device_factory;
     std::string push_port_name = "Ableton Push User Port";
 
     auto push_hdl = push_device_factory.make_device_hdl(push_port_name,
                                  control::device_io_type::IN_OUT);
 
     control::midi::push_1 push(std::move(push_hdl));
+    */
 
     // sleep
     std::this_thread::sleep_for(std::chrono::milliseconds(20000));

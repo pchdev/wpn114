@@ -36,21 +36,20 @@ class backend_hdl
 public:
 //-------------------------------------------------------------------------------------------------------
     backend_hdl(uint8_t nchannels = 2);
-    ~backend_hdl();
+   ~backend_hdl();
 //-------------------------------------------------------------------------------------------------------
     void                start(size_t srate, uint16_t nsamples);
     void                stop();
     void                initialize(size_t srate, uint16_t nsamples);
     void                bufalloc(uint16_t nsamples);
-    void                register_unit(unit_base* unit);
-    void                unregister_unit(unit_base* unit);
+    void                register_unit(unit_base& unit);
+    void                unregister_unit(unit_base& unit);
 //-------------------------------------------------------------------------------------------------------
     uint8_t             nchannels()     const;
     vector<unit_base*>  units()         const;
+    float***            out();
 //-------------------------------------------------------------------------------------------------------
 private:
-    float***                    out()   const;
-//-------------------------------------------------------------------------------------------------------
     uint8_t                     m_nchannels;
     PaStream*                   m_stream;
     PaStreamParameters          m_outparameters;
@@ -59,8 +58,8 @@ private:
     float**                     m_out;
 };
 //-------------------------------------------------------------------------------------------------------
-std::ostream& operator<<(std::ostream& unit, const backend_hdl& hdl);
-std::ostream& operator>>(std::ostream& unit, const backend_hdl& hdl);
+//std::ostream& operator<<(std::ostream& hdl,  const unit_base& unit);
+//std::ostream& operator>>(std::ostream& unit, const backend_hdl& hdl);
 //-------------------------------------------------------------------------------------------------------
 }
 }

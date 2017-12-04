@@ -66,16 +66,16 @@ inline uint8_t backend_hdl::nchannels() const
     return m_nchannels;
 }
 
-void backend_hdl::register_unit(unit_base* unit)
+void backend_hdl::register_unit(unit_base& unit)
 {
-    m_units.push_back(unit);
+    m_units.push_back(&unit);
 }
 
-void backend_hdl::unregister_unit(unit_base* unit)
+void backend_hdl::unregister_unit(unit_base& unit)
 {
     m_units.erase(
                 std::remove(
-                    m_units.begin(), m_units.end(), unit),
+                    m_units.begin(), m_units.end(), &unit),
                 m_units.end());
 }
 
@@ -87,12 +87,12 @@ void backend_hdl::initialize(size_t srate, uint16_t nsamples)
     err = Pa_Initialize();
 
     m_outparameters.device                      = Pa_GetDefaultOutputDevice();
-    m_outparameters.channelCount                = m_num_channels;
+    m_outparameters.channelCount                = m_nchannels;
     m_outparameters.sampleFormat                = paFloat32;
     m_outparameters.hostApiSpecificStreamInfo   = NULL;
     m_main_stream_cb_funcptr                    = &main_stream_callback;
     m_outparameters.suggestedLatency            = Pa_GetDeviceInfo
-                                                      (m_outparameters.device)->defaultLowOutputLatency;
+                                                  (m_outparameters.device)->defaultLowOutputLatency;
 
     auto device_name = Pa_GetDeviceInfo(m_outparameters.device)->name;
     std::cout << device_name << std::endl;
@@ -138,7 +138,7 @@ void backend_hdl::start(size_t srate, uint16_t nsamples)
     if( err != paNoError )
         std::cerr << "error: " << Pa_GetErrorText(err) << std::endl;
 
-    err = Pa_StartStream(m_stream;
+    err = Pa_StartStream(m_stream);
 }
 
 void backend_hdl::stop()
@@ -146,14 +146,4 @@ void backend_hdl::stop()
     PaError err = Pa_StopStream(m_stream);
     if ( err != paNoError )
         std::cerr << "error when stopping stream: " << Pa_GetErrorText(err) << std::endl;
-}
-
-std::ostream& operator<< (std::ostream& unit, const backend_hdl& hdl)
-{
-    hdl.register_unit(&unit);
-}
-
-std::ostream& operator>> (std::ostream& unit, const backend_hdl& hdl)
-{
-    hdl.unregister_unit(&unit);
 }

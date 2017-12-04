@@ -30,19 +30,19 @@ public:
         m_xfade_length(xfade_length),
         m_phase(0.f), m_env_phase(0.f)
     {
-        SET_INACTIVE;
-        SETN_INPUTS(0);
+        deactivate();
+        SETN_IN(0);
         SET_UTYPE(unit_type::GENERATOR_UNIT);
         SFLOAD(sfpath);
-        SETN_OUTPUTS(SFBUF.num_channels);
+        SETN_OUT(SFBUF.nchannels);
     }
 
-    void preprocessing(size_t sample_rate, uint16_t nsamples) override
+    void preprocess(size_t sample_rate, uint16_t nsamples) override
     {
         (void) sample_rate;
         // initialize crossfade envelope
         m_env_incr      = ENVSIZE/m_xfade_length;
-        m_xfade_point   = m_sf_buffer.num_samples - m_xfade_length;
+        m_xfade_point   = SFBUF.nsamples - m_xfade_length;
 
         for (int i = 0; i < ENVSIZE; ++i)
             m_env[i] = sin(i/(float)ENVSIZE*(M_PI_2));
@@ -53,12 +53,12 @@ public:
         return a + x * (b - a);
     }
 
-    void process_audio(float** input, uint16_t nsamples) override {}
-    void process_audio(uint16_t frames_per_buffer) override
+    void process(float** input, uint16_t nsamples) override {}
+    void process(uint16_t frames_per_buffer) override
     {
         for(int i = 0; i < frames_per_buffer; ++i)
         {
-            if(m_phase >= m_xfade_point && m_phase < m_sf_buffer.num_samples)
+            if(m_phase >= m_xfade_point && m_phase < SFBUF.nsamples)
             {
                 //                  if phase is in the crossfade zone
                 //                  get data from envelope first (linearly interpolated)
@@ -67,23 +67,23 @@ public:
                 float xfade_up      = lininterp(x, m_env[y], m_env[y+1]);
                 float xfade_down    = 1-xfade_up;
 
-                for(int j = 0; j < m_sf_buffer.num_channels; ++j)
+                for(int j = 0; j < SFBUF.nchannels; ++j)
                 {
-                    OUT[j][i] = *m_sf_buffer.data++ * xfade_down +
-                                *m_sf_buffer.data -m_xfade_point * m_sf_buffer.num_channels * xfade_up;
+                    OUT[j][i] = *SFBUF.data++ * xfade_down +
+                                *SFBUF.data -m_xfade_point * SFBUF.nchannels * xfade_up;
                 }
 
                 m_phase++;
                 m_env_phase += m_env_incr;
             }
-            else if ( m_phase == m_sf_buffer.num_samples )
+            else if ( m_phase == SFBUF.nsamples )
             {
                 // if phase reaches end of crossfade
                 // main phase continues from end of 'up' xfade
                 // reset the envelope phase
-                m_sf_buffer.data = m_sf_buffer.data + m_xfade_length * N_OUTPUTS - 1;
-                for(int j = 0; j < N_OUTPUTS; ++j)
-                    OUT[j][i] = *m_sf_buffer.data++;
+                SFBUF.data = SFBUF.data + m_xfade_length * N_OUT - 1;
+                for(int j = 0; j < N_OUT; ++j)
+                    OUT[j][i] = *SFBUF.data++;
 
                 m_phase         = m_xfade_length -1;
                 m_env_phase     = 0;
@@ -91,8 +91,8 @@ public:
             else
             {
                 // normal behaviour
-                for(int j = 0; j < N_OUTPUTS; ++j)
-                    OUT[j][i] = *m_sf_buffer.data++;
+                for(int j = 0; j < N_OUT; ++j)
+                    OUT[j][i] = *SFBUF.data++;
 
                 m_phase++;
                 // env_phase should be at 0

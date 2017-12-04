@@ -47,7 +47,7 @@ public:
     void            bufalloc(uint16_t nsamples);
     //              pre-initializes output buffer, setting it to 0
     float           framedata(uint8_t channel, uint16_t frame) const;
-    float**         out() const;
+    float**         out();
 
     bool            active()        const;
     float           level()         const;
@@ -119,19 +119,20 @@ public:
     ~aux_unit();
     aux_unit(std::unique_ptr<unit_base> receiver);
 
-    void    process(uint16_t nsamples) override;
-    void    process(float** inputs, uint16_t nsamples) override;
-    void    preprocess(size_t srate, uint16_t nsamples) override;
-    float   framedata(uint8_t channel, uint16_t frame) const;
+    void    process(uint16_t nsamples)                              override;
+    void    process(float** inputs, uint16_t nsamples)              override;
+    void    preprocess(size_t srate, uint16_t nsamples)             override;
+    float   framedata(uint8_t channel, uint16_t frame)              const;
     void    set_receiver(std::unique_ptr<unit_base> receiver);
-    void    add_sender(unit_base* sender, float level);
+    void    add_sender(unit_base& sender, float level);
 
 private:
     std::unique_ptr<unit_base>  m_receiver;
     std::vector<aux_send>       m_sends;
 };
 
-std::ostream& operator<<(std::ostream& unit, const aux_unit& aux);
+//std::ostream& operator<<(std::ostream& aux, const unit_base& unit);
+//std::ostream& operator>>(std::ostream& unit, const aux_unit& aux);
 
 #endif
 
@@ -150,18 +151,18 @@ public:
     track_unit();
     ~track_unit();
 
-    void    process(uint16_t nsamples) override;
-    void    process(float** inputs, uint16_t nsamples) override;
-    void    preprocess(size_t srate, uint16_t nsamples) override;
-    void    add_unit(unit_base* unit);
-    void    remove_unit(unit_base* unit);
+    void    process(uint16_t nsamples)                      override;
+    void    process(float** inputs, uint16_t nsamples)      override;
+    void    preprocess(size_t srate, uint16_t nsamples)     override;
+    void    add_unit(unit_base& unit);
+    void    remove_unit(unit_base& unit);
 
 private:
     std::vector<unit_base*> m_units;
 };
 
-std::ostream& operator<<(std::ostream& unit, const track_unit& track);
-std::ostream& operator>>(std::ostream& unit, const track_unit& track);
+//std::ostream& operator<<(std::ostream& track, const track_unit& unit);
+//std::ostream& operator>>(std::ostream& track, const track_unit& unit);
 
 #endif
 
