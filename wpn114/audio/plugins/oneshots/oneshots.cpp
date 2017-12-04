@@ -34,8 +34,8 @@ public:
     void process(uint16_t samples_per_buffer) override
     {
         auto bufdata        = SFBUF.data;
-        auto buf_nframes    = SFBUF.nframes;
-        auto buf_nsamples   = SFBUF.nsamples;        
+        auto bufframes      = SFBUF.nframes;
+        auto bufsamples     = SFBUF.nsamples;
         auto n_out          = N_OUT;
         auto out            = OUT;
         auto phase          = m_phase;
@@ -45,17 +45,17 @@ public:
 
         for(int i = 0; i < samples_per_buffer; ++i)
         {
-            if ( phase == buf_nsamples )
+            if ( phase == bufsamples )
             {
                 // reset buffer, set unit inactive
                 // and fill the rest of the buffer with zeroes
-                bufdata -= buf_nframes;
+                bufdata -= bufframes;
                 deactivate();
 
                 for         (int j = 0; j < n_out; ++j)
                 out[j][i]   = 0.f;
             }
-            else if ( phase > buf_nsamples )
+            else if ( phase > bufsamples )
             {
                 // fill the rest of the buffer with zeroes
                 for         (int j = 0; j < n_out; ++j)
