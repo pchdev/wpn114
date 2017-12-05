@@ -38,6 +38,17 @@ public:
         float       l;
     };
 
+    enum class setup_type
+    {
+        STEREO          = 0,
+        QUADRAPHONIC    = 1,
+        HEXAPHONIC      = 2,
+        OCTOPHONIC      = 3,
+        FIVE_ONE        = 4,
+        SEVEN_ONE       = 5,
+        CUSTOM          = 6
+    };
+
 #ifdef WPN_CONTROL_OSSIA //-------------------------------------------------------------------------------------
     void expose_object_set(ossia::net::node_base& node, std::vector<r_object>& set, std::string setname)
     {
@@ -69,7 +80,7 @@ public:
             lsrp->add_callback([&](const ossia::value& v)
             {
                 set[i].r = v.get<float>();
-            })
+            });
         }
     }
     void net_expose_plugin_tree(ossia::net::node_base& root) override
@@ -91,7 +102,7 @@ public:
         }
     }
 
-    rooms(uint8_t n_srcs, uint8_t n_speakers)
+    rooms2D(uint8_t n_srcs, uint8_t n_speakers, setup_type stype)
     {
         activate();
 
@@ -105,26 +116,18 @@ public:
 
     void preprocess(size_t, uint16_t) override {}
 
-    inline bool within_area(const r_object& src, const r_object& ls)
-    {
-        float r = ls.r;
-
-        float dx = abs(ls.x - src.x);
-        if (dx > r) return false;
-        float dy = abs(ls.y - src.y);
-        if (dy > r) return false;
-
-        if (dx+dy <= r) return true;
-        return ( dx*dx + dy*dy <= r*r );
-    }
-
     inline float gain(const r_object& src, const r_object& ls)
     {
-        // compute source position in ls's radius        
         float r = ls.r;
+
         float dx = abs(ls.x - src.x);
+        if (dx > r) return 0.f;
         float dy = abs(ls.y - src.y);
+        if (dy > r) return 0.f;
+
+        if     (dx+dy <= r)
         return (dx*dx + dy*dy) *r * ls.l * src.l;
+        else   return 0.f;
     }
 
     void process(float** input, uint16_t nsamples) override
@@ -136,8 +139,7 @@ public:
         for(int i = 0; i < nsamples; ++i)
             for (const auto& src : srcs)
                 for(const auto& ls : lss)
-                    if  (within_area(src, ls))
-                        out[ls.chn][i] += input[src.chn][i] * gain(src,ls);
+                    out[ls.chn][i] += input[src.chn][i] * gain(src,ls);
     }
 
     void process(uint16_t nsamples) override {}

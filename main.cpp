@@ -2,6 +2,7 @@
 #include <wpn114/audio/plugins/vst/vst.hpp>
 #include <wpn114/audio/plugins/fields/fields.cpp>
 #include <wpn114/audio/plugins/oneshots/oneshots.cpp>
+#include <wpn114/audio/plugins/rooms/rooms.cpp>
 //#include <wpn114/control/plugins/push_1/push_controller.hpp>
 #include <wpn114/network/net_hdl.hpp>
 #include <iostream>
@@ -27,11 +28,19 @@ int main(int argc, char* argv[])
     // initialize audio backend
     audio::backend_hdl audio_hdl(2);
 
+    using namespace wpn114::audio::plugins;
+
     // instantiate plugins
+    audio::track_unit spatest;
     audio::plugins::oneshots os_test("test.wav");
+    audio::plugins::rooms2D rooms(os_test.nchannels(), 2, rooms2D::setup_type::STEREO);
+    spatest.add_unit(os_test);
+    spatest.add_unit(rooms);
+
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
     audio::plugins::fields fields_test("test.wav", 32768);
+
     audio::aux_unit aux_1;
     auto altiverb = std::make_unique<audio::plugins::vst_hdl>("Audio Ease/Altiverb 7.vst");
     aux_1.set_receiver(std::move(altiverb));
