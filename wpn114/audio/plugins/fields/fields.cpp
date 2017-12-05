@@ -37,9 +37,9 @@ public:
         SETN_OUT    (SFBUF.nchannels);
     }
 
-    void preprocess(size_t sample_rate, uint16_t nsamples) override
+    void preprocess(size_t srate, uint16_t nsamples) override
     {
-        (void) sample_rate;
+        (void) srate;
         // initialize crossfade envelope
         m_env_incr      = ENVSIZE/m_xfade_length;
         m_xfade_point   = m_sndbuf.nsamples - m_xfade_length;

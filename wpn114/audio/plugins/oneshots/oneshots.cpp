@@ -28,7 +28,7 @@ public:
         SETN_OUT    (m_sndbuf.nchannels);
     }
 
-    void preprocess(size_t sample_rate, uint16_t samples_per_buffer) override {}
+    void preprocess(size_t, uint16_t) override {}
     void process(float** input, uint16_t samples_per_buffer) override {}
 
     void process(uint16_t samples_per_buffer) override
