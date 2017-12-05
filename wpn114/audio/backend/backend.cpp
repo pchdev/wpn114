@@ -94,7 +94,7 @@ void backend_hdl::initialize(size_t srate, uint16_t nsamples)
     m_outparameters.suggestedLatency            = Pa_GetDeviceInfo
                                                   (m_outparameters.device)->defaultLowOutputLatency;
 
-    auto device_name = Pa_GetDeviceInfo(m_outparameters.device)->name;
+    auto device_name = Pa_GetDeviceInfo(m_outparameters.device)->name;    
     std::cout << device_name << std::endl;
 
     bufalloc(nsamples);

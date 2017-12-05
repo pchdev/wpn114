@@ -13,7 +13,7 @@ private:
 
 public:
 #ifdef WPN_CONTROL_OSSIA //---------------------------------------------------------------------------------------
-    void net_expose_plugin_tree(ossia::net::node_base& root) override {}
+    VOID_NET_EXPOSE
     // nothing to expose, as all required parameters are already taken care of
     // by the 'master' node
 #endif //-------------------------------------------------------------------------------------------------
@@ -25,11 +25,11 @@ public:
         SET_UTYPE   (unit_type::GENERATOR_UNIT);
         SFLOAD      (sfpath);
         SETN_IN     (0);
-        SETN_OUT    (m_sndbuf.nchannels);
+        SETN_OUT    (SFBUF.nchannels);
     }
 
-    void preprocess(size_t, uint16_t) override {}
-    void process(float** input, uint16_t samples_per_buffer) override {}
+    VOID_PREPROCESS
+    VOID_INPUT_PROCESS
 
     void process(uint16_t samples_per_buffer) override
     {
@@ -73,11 +73,6 @@ public:
         }
 
         m_phase = phase;
-    }
-
-    ~oneshots()
-    {
-        SFBUF_CLEAR;
     }
 };
 }

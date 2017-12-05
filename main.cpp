@@ -28,59 +28,21 @@ int main(int argc, char* argv[])
     // initialize audio backend
     audio::backend_hdl audio_hdl(2);
 
-    using namespace wpn114::audio::plugins;
-
     // instantiate plugins
-    audio::track_unit spatest;
-    audio::plugins::oneshots os_test("test.wav");
-    audio::plugins::rooms2D rooms(os_test.nchannels(), 2, rooms2D::setup_type::STEREO);
-    spatest.add_unit(os_test);
-    spatest.add_unit(rooms);
-
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
-    audio::plugins::vst_hdl kaivo_2("Kaivo.vst");
-    audio::plugins::fields fields_test("test.wav", 32768);
-
-    audio::aux_unit aux_1;
-    auto altiverb = std::make_unique<audio::plugins::vst_hdl>("Audio Ease/Altiverb 7.vst");
-    aux_1.set_receiver(std::move(altiverb));
-
-    // expose parameters to the network
-    os_test.net_expose(appnode, "os_test");    
-    kaivo_1.net_expose(appnode, "kaivo_1");    
-    kaivo_2.net_expose(appnode, "kaivo_2");
-    fields_test.net_expose(appnode, "fields");
-    altiverb->set_netname("altiverb");
-    aux_1.net_expose(appnode, "reverb_bus");
-
-    // set unit aux sends
-    kaivo_1.add_aux_send(aux_1);
-
-    // register units to audio backend
-    audio_hdl.register_unit(os_test);
     audio_hdl.register_unit(kaivo_1);
-    audio_hdl.register_unit(aux_1);
-    audio_hdl.register_unit(fields_test);
 
     // start audio
     audio_hdl.initialize(SAMPLERATE, BLOCKSIZE);
     audio_hdl.start(SAMPLERATE, BLOCKSIZE);
 
     kaivo_1.show_editor();
-    //altiverb->show_editor();
 
-    // init controller
-   /* control::midi::device_factory push_device_factory;
-    std::string push_port_name = "Ableton Push User Port";
-
-    auto push_hdl = push_device_factory.make_device_hdl(push_port_name,
-                                 control::device_io_type::IN_OUT);
-
-    control::midi::push_1 push(std::move(push_hdl));
-    */
+    //std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    //kaivo_1.close_editor();
 
     // sleep
-    std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     audio_hdl.stop();
 
     return 0;

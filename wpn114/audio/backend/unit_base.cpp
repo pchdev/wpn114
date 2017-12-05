@@ -63,8 +63,11 @@ void unit_base::activate()
 {
     m_active = true;
 #ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
-    auto parameter = m_netnode->find_child("active")->get_parameter();
-    parameter->set_value(true);
+    if(m_netnode)
+    {
+        auto parameter = m_netnode->find_child("active")->get_parameter();
+        parameter->set_value(true);
+    }
 #endif //------------------------------------------------------------------------------------------------
 }
 
@@ -72,8 +75,11 @@ void unit_base::deactivate()
 {
     m_active = false;
 #ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
-    auto parameter = m_netnode->find_child("active")->get_parameter();
-    parameter->set_value(false);
+    if(m_netnode)
+    {
+        auto parameter = m_netnode->find_child("active")->get_parameter();
+        parameter->set_value(false);
+    }
 #endif //------------------------------------------------------------------------------------------------
 }
 
@@ -176,8 +182,11 @@ void aux_unit::net_expose_plugin_tree(ossia::net::node_base& root)
 
 void aux_unit::preprocess(size_t srate, uint16_t nsamples)
 {
-    m_receiver->bufalloc(nsamples);
-    m_receiver->preprocess(srate, nsamples);
+    if  (m_receiver.get())
+    {
+        m_receiver->bufalloc(nsamples);
+        m_receiver->preprocess(srate, nsamples);
+    }
 }
 
 void aux_unit::process(float** inputs, uint16_t nsamples) {}
@@ -331,6 +340,6 @@ std::ostream& operator>>(std::ostream& unit, const track_unit& track)
 //-------------------------------------------------------------------------------------------------------
 buffer_unit::~buffer_unit()
 {
-    SFBUF_CLEAR;
+    if(SFBUF.data) SFBUF_CLEAR;
 }
 #endif

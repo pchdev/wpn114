@@ -22,7 +22,7 @@ private:
 
 public:
 #ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
-    void net_expose_plugin_tree(ossia::net::node_base& root) override {}
+    VOID_NET_EXPOSE
 #endif //------------------------------------------------------------------------------------------------
 
     fields(std::string sfpath, uint32_t xfade_length) :
@@ -36,6 +36,8 @@ public:
         SETN_IN     (0);
         SETN_OUT    (SFBUF.nchannels);
     }
+
+    VOID_INPUT_PROCESS
 
     void preprocess(size_t srate, uint16_t nsamples) override
     {
@@ -51,9 +53,8 @@ public:
     inline float lininterp(float x, float a, float b)
     { // to be moved in utilities lib
         return a + x * (b - a);
-    }
+    }    
 
-    void process(float** input, uint16_t nsamples)    override {}
     void process(uint16_t frames_per_buffer)          override
     {
         auto xfade_point        = m_xfade_point;
@@ -116,10 +117,6 @@ public:
         m_env_phase     = env_phase;
     }
 
-    ~fields()
-    {
-        SFBUF_CLEAR;
-    }
 };
 }
 }

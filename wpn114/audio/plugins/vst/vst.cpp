@@ -127,7 +127,11 @@ vst_hdl::vst_hdl(const char* name_with_extension)
     }
 }
 
-vst_hdl::~vst_hdl() {}
+vst_hdl::~vst_hdl()
+{
+    if(m_editthread.joinable())
+    m_editthread.join();
+}
 
 template <typename T> vstevents* make_vstevent_array(const T& values)
 {
@@ -242,21 +246,14 @@ void vst_hdl::show_editor()
         width   = editor_rect->right - editor_rect->left;
         height  = editor_rect->bottom - editor_rect->top;
     }
-    else
-    {
-        std::cerr << "error, could not get plugin editor's window" << std::endl;
-        //! TODO: add error management
-    }
 
-#ifdef __APPLE__
-    //m_editthread = std::thread(_show_vst_2x_editor, m_plugin, m_plugin_path.c_str(), width, height);
-#endif
-
+    //_create_vst_2x_editor(width, height);
+    m_editthread = std::thread(&vst_hdl::_create_vst_2x_editor, this, width, height);
 }
 
 void vst_hdl::close_editor()
 {
-    m_dispatcher(m_plugin, effEditClose, 0, 0, nullptr, 0);
+    _close_vst_2x_editor();
 }
 
 void vst_hdl::preprocess(size_t sample_rate, uint16_t nsamples)

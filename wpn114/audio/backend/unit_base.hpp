@@ -68,6 +68,9 @@ protected:
 #define SETN_OUT(n)         m_nout = n
 #define N_OUT               m_nout
 #define N_IN                m_nin
+#define VOID_PROCESS        void process(uint16_t) override {}
+#define VOID_INPUT_PROCESS  void process(float**, uint16_t) override {}
+#define VOID_PREPROCESS     void preprocess(size_t, uint16_t) override {}
 //-------------------------------------------------------------------------------------------------------
     bool            m_active;
     float           m_level;
@@ -79,6 +82,7 @@ protected:
 #ifdef WPN_CONTROL_OSSIA // -------------------------------------------------------------------------------------
     std::string                 m_netname;
     ossia::net::node_base*      m_netnode;
+#define VOID_NET_EXPOSE         void net_expose_plugin_tree(ossia::net::node_base&) override {}
 #endif //------------------------------------------------------------------------------------------------
 
 };

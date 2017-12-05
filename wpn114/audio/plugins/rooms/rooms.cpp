@@ -114,7 +114,8 @@ public:
         setup(m_loudspeakers, n_speakers);
     }
 
-    void preprocess(size_t, uint16_t) override {}
+    VOID_PROCESS
+    VOID_PREPROCESS
 
     inline float gain(const r_object& src, const r_object& ls)
     {
@@ -140,9 +141,7 @@ public:
             for (const auto& src : srcs)
                 for(const auto& ls : lss)
                     out[ls.chn][i] += input[src.chn][i] * gain(src,ls);
-    }
-
-    void process(uint16_t nsamples) override {}
+    }    
 
 private:
     std::vector<r_object>   m_loudspeakers;

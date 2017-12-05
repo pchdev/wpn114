@@ -57,6 +57,12 @@ enum class MIDI
     CHANNEL_PRESSURE        = 0xd0,
     PITCH_BEND              = 0xe0
 };
+
+enum class VSTTYPE
+{
+    TWO_X       = 2,
+    THREE_X     = 3
+};
 //-------------------------------------------------------------------------------------------------------
 typedef std::pair<MIDI,uint8_t> midi_info;
 static  std::map<std::string,   midi_info> midi_map;
@@ -93,7 +99,8 @@ private:
     aeffect*    _load_vst_2x_plugin(const char* path);
     void        _load_vst_3x_plugin(const char* path);
 #ifdef __APPLE__
-    void        _show_vst_2x_editor(aeffect* effect, const char *name, uint16_t width, uint16_t height);
+    void        _create_vst_2x_editor(uint16_t width, uint16_t height);
+    void        _show_vst_2x_editor();
     void        _close_vst_2x_editor();
 #endif
     void        _show_vst_3x_editor();
@@ -101,8 +108,10 @@ private:
     dispatcher_funcptr      m_dispatcher;
     aeffect*                m_plugin;
     std::string             m_plugin_path;
-    //NSWindow*               m_editwindow;
+    void*                   m_editwindow;
+    void*                   m_editview;
     std::thread             m_editthread;
+    ERect*                  m_editrect;
 };
 }
 }
