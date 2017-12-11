@@ -1,0 +1,13 @@
+if(WPN_CONTROL_OSSIA)
+        set(OSSIA_PD 0)
+	set(OSSIA_MAX OFF)
+	set(OSSIA_PYTHON OFF)
+        set(OSSIA_UNITY3D OFF)
+	set(OSSIA_STATIC ON)
+        add_subdirectory(libossia)
+endif()
+
+if(WPN_TOML_PARSING OR
+   WPN_CONTROL_OSSIA_TOML)
+   add_subdirectory(cpptoml)
+endif()

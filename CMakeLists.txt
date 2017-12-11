@@ -10,6 +10,8 @@ set(CMAKE_MODULE_PATH
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+option(WPN_TOML_PARSING "Enables toml configuration files" ON)
+
 option(WPN_AUDIO "Enables audio functionnalities" ON)
 option(WPN_AUDIO_TRACKS "Enables audio tracks support" ON)
 option(WPN_AUDIO_AUX "Enables audio aux/sends support" ON)
@@ -39,19 +41,20 @@ if( WPN_AUDIO_PLUGINS_FIELDS OR
 endif()
 
 option(WPN_GUI "Enables Qt GUI, necessary for displaying VST editors" OFF)
-option(WPN_TOML "Enables TOML parser, loading configuration files" OFF)
 
-option(WPN_CONTROL "Enables control functionnalities" OFF)
+option(WPN_CONTROL "Enables control functionnalities" ON)
 option(WPN_CONTROL_MIDI "Enables midi support with RtMidi" OFF)
 option(WPN_CONTROL_OSC "Enables osc support with oscpack (tbi)" OFF)
 option(WPN_CONTROL_SERIAL "Enables serial support (tbi)" OFF)
 option(WPN_CONTROL_WS "Enables websocket support (tbi)" OFF)
 option(WPN_CONTROL_HTTP "Enables http support (tbi)" OFF)
-option(WPN_CONTROL_COMMAND_LINE "Enables command-line functionnalities" OFF)
+option(WPN_CONTROL_COMMAND_LINE "Enables command-line functionnalities (tbi)" OFF)
 option(WPN_CONTROL_OSSIA "Enables libossia network functionnalities" ON)
+option(WPN_CONTROL_OSSIA_TOML "Enables toml network configuration file for libossia" ON)
 
-option(WPN_CONTROL_PLUGINS_PUSH1 "Enables Ableton Push 1 functionnalities" ON)
+option(WPN_CONTROL_PLUGINS_PUSH1 "Enables Ableton Push 1 functionnalities" OFF)
 
 add_subdirectory(wpn114)
+add_subdirectory(thirdparty)
 
 set(WPN114_INCLUDES ${CMAKE_SOURCE_DIR})
