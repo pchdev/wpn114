@@ -105,7 +105,13 @@ void unit_base::set_level(float level)
 #ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
 void unit_base::net_expose(ossia::net::node_base& application_node)
 {
-    m_netnode           = application_node.create_child(m_netname);
+    m_netnode = application_node.create_child(m_netname);
+
+#ifdef WPN_CONTROL_OSSIA_TOML
+    wpn114::net::toml_netparse(application_node, "unit_base.toml");
+    wpn114::net::toml_netparse(*m_netnode);
+#else
+
     auto master_node    = m_netnode->create_child("master");
     auto level_node     = master_node->create_child("level");
     auto active_node    = master_node->create_child("active");
@@ -123,8 +129,8 @@ void unit_base::net_expose(ossia::net::node_base& application_node)
     active_param->set_value(m_active);
     auto level_domain = ossia::make_domain(0.f, 1.f);
     ossia::net::set_domain(*level_node, level_domain);
-
     net_expose_plugin_tree(*m_netnode);
+#endif
 }
 
 void unit_base::net_expose(ossia::net::node_base& application_node, std::string name)

@@ -1,0 +1,11 @@
+[[parameters]]
+
+address = "/master/active"
+type = "bool"
+default = false
+
+[[parameters]]
+address = "/master/level"
+type = "float"
+default = 1.0
+min = 0.0

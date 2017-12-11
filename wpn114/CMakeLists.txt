@@ -1,7 +1,7 @@
 
 add_definitions(-DWPN114_VERSION_STRING="94BDBE44300-34B")
 
-set(CPPTOML_INCLUDE_HEADER ${CMAKE_SOURCE_DIR}/thirdparty/cpptoml/cpptoml.h)
+set(CPPTOML_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/cpptoml)
 add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/main.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 
@@ -83,11 +83,15 @@ endif()
 if(WPN_CONTROL)
 
     message("WPN114: Building ${PROJECT_NAME} with control features")
-    add_subdirectory(control)
-    target_link_libraries(${PROJECT_NAME} wpn114control)
+
+    if(WPN_CONTROL_MIDI) #to update with other protocols
+        add_subdirectory(control)
+        target_link_libraries(${PROJECT_NAME} wpn114control)
+    endif()
 
     if(WPN_CONTROL_OSSIA)
-        set(OSSIA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/libossia/OSSIA/ossia)
+        message("WPN114: Building ${PROJECT_NAME} with libossia features")
+        set(OSSIA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/libossia/OSSIA)
         target_include_directories(${PROJECT_NAME} PUBLIC ${OSSIA_INCLUDE_DIR})
         add_definitions(-DWPN_CONTROL_OSSIA)
         add_subdirectory(network)

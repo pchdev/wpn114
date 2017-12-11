@@ -34,11 +34,19 @@ add_library(wpn114audio SHARED
 
 target_include_directories(wpn114audio PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(wpn114audio ${PORTAUDIO_LIBRARIES})
-target_link_libraries(wpn114audio ${SNDFILE_LIBRARIES})
+
+if(WPN_AUDIO_SNDFILE)
+    target_link_libraries(wpn114audio ${SNDFILE_LIBRARIES})
+endif()
 
 if(WPN_CONTROL_OSSIA)
     add_definitions(-DWPN_CONTROL_OSSIA)
-    target_link_libraries(wpn114audio /usr/local/lib/libossia.dylib)
+    target_include_directories(wpn114audio PUBLIC ${OSSIA_INCLUDE_DIR})
+    target_link_libraries(wpn114audio ossia)
+    if(WPN_CONTROL_OSSIA_TOML)
+        add_definitions(-DWPN_CONTROL_OSSIA_TOML)
+    endif()
 endif()
+
 
 

@@ -9,6 +9,9 @@
 //-------------------------------------------------------------------------------------------------------
 #ifdef WPN_CONTROL_OSSIA
     #include <ossia/ossia.hpp>
+    #ifdef WPN_CONTROL_OSSIA_TOML
+        #include <wpn114/network/net_toml.hpp>
+    #endif
 #endif
 //-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
@@ -34,7 +37,9 @@ public:
 #ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
     void net_expose(ossia::net::node_base& application_node, std::string name);
     void net_expose(ossia::net::node_base& application_node);
+    #ifndef WPN_CONTROL_OSSIA_TOML
     virtual void net_expose_plugin_tree(ossia::net::node_base& plugin_root) = 0;
+    #endif
     // gets called whenever we want to expose the parameters' unit to the network
     void set_netname(std::string name);
     const std::string& netname() const;
