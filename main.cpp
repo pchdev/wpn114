@@ -31,18 +31,13 @@ int main(int argc, char* argv[])
     // instantiate plugins
     audio::plugins::vst_hdl kaivo_1("Kaivo.vst");
     audio_hdl.register_unit(kaivo_1);
+    kaivo_1.net_expose(appnode, "kaivo_1");
 
     // start audio
     audio_hdl.initialize(SAMPLERATE, BLOCKSIZE);
     audio_hdl.start(SAMPLERATE, BLOCKSIZE);
 
-    kaivo_1.show_editor();
-
-    //std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    //kaivo_1.close_editor();
-
-    // sleep
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20000));
     audio_hdl.stop();
 
     return 0;

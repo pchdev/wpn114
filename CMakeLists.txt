@@ -15,6 +15,7 @@ option(WPN_AUDIO_TRACKS "Enables audio tracks support" ON)
 option(WPN_AUDIO_AUX "Enables audio aux/sends support" ON)
 option(WPN_AUDIO_SNDFILE "Enables libsndfile soundfile support" ON)
 option(WPN_AUDIO_FFMPEG "Enables libffmpeg soundfile support" OFF)
+
 option(WPN_AUDIO_PLUGINS_AMBISONICS "Enables ambisonics support" OFF)
 option(WPN_AUDIO_PLUGINS_ASH "Enables pink/white noise support" OFF)
 option(WPN_AUDIO_PLUGINS_BURSTS "Enables pink noise audio tests bursts" OFF)
@@ -37,6 +38,9 @@ if( WPN_AUDIO_PLUGINS_FIELDS OR
     set(WPN_AUDIO_SNDFILE ON)
 endif()
 
+option(WPN_GUI "Enables Qt GUI, necessary for displaying VST editors" OFF)
+option(WPN_TOML "Enables TOML parser, loading configuration files" OFF)
+
 option(WPN_CONTROL "Enables control functionnalities" OFF)
 option(WPN_CONTROL_MIDI "Enables midi support with RtMidi" OFF)
 option(WPN_CONTROL_OSC "Enables osc support with oscpack (tbi)" OFF)
@@ -46,7 +50,7 @@ option(WPN_CONTROL_HTTP "Enables http support (tbi)" OFF)
 option(WPN_CONTROL_COMMAND_LINE "Enables command-line functionnalities" OFF)
 option(WPN_CONTROL_OSSIA "Enables libossia network functionnalities" ON)
 
-option(WPN_CONTROL_MIDI_PLUGINS_PUSH "Enables Ableton Push functionnalities" ON)
+option(WPN_CONTROL_PLUGINS_PUSH1 "Enables Ableton Push 1 functionnalities" ON)
 
 add_subdirectory(wpn114)
 

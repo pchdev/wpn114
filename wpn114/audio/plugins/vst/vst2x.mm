@@ -101,8 +101,5 @@ using namespace wpn114::audio::plugins;
         NSWindow* window = (NSWindow*) m_editwindow;
         m_plugin->dispatcher(m_plugin, effEditClose, 0, 0, nullptr, 0);
         [window close];
-
-        if(m_editthread.joinable())
-            m_editthread.join();
     }
     }

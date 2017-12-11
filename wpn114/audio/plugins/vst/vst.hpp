@@ -65,7 +65,7 @@ enum class VSTTYPE
 };
 //-------------------------------------------------------------------------------------------------------
 typedef std::pair<MIDI,uint8_t> midi_info;
-static  std::map<std::string,   midi_info> midi_map;
+static  std::map<std::string,midi_info> midi_map;
 //-------------------------------------------------------------------------------------------------------
 namespace wpn114 {
 namespace audio {
@@ -110,7 +110,6 @@ private:
     std::string             m_plugin_path;
     void*                   m_editwindow;
     void*                   m_editview;
-    std::thread             m_editthread;
     ERect*                  m_editrect;
 };
 }

@@ -4,15 +4,15 @@
  *
  *       Filename:  vst.cpp
  *
- *    Description:  
+ *    Description:
  *
  *        Version:  1.0
  *        Created:  15.10.2017 17:39:17
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  YOUR NAME (), 
- *   Organization:  
+ *         Author:  YOUR NAME (),
+ *   Organization:
  *
  * =====================================================================================
  */
@@ -127,11 +127,7 @@ vst_hdl::vst_hdl(const char* name_with_extension)
     }
 }
 
-vst_hdl::~vst_hdl()
-{
-    if(m_editthread.joinable())
-    m_editthread.join();
-}
+vst_hdl::~vst_hdl() {}
 
 template <typename T> vstevents* make_vstevent_array(const T& values)
 {
@@ -158,7 +154,7 @@ template <typename T> vstevents* make_vstevent_array(const T& values)
 
 #ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
 void vst_hdl::net_expose_plugin_tree(ossia::net::node_base& root)
-{    
+{
     auto midi_node          = root.create_child("MIDI");
     auto params_node        = root.create_child("parameters");
     auto editor_node        = root.create_child("editor");
@@ -247,8 +243,7 @@ void vst_hdl::show_editor()
         height  = editor_rect->bottom - editor_rect->top;
     }
 
-    //_create_vst_2x_editor(width, height);
-    m_editthread = std::thread(&vst_hdl::_create_vst_2x_editor, this, width, height);
+    _create_vst_2x_editor(width, height);
 }
 
 void vst_hdl::close_editor()
