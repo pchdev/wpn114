@@ -108,29 +108,13 @@ void unit_base::net_expose(ossia::net::node_base& application_node)
     m_netnode = application_node.create_child(m_netname);
 
 #ifdef WPN_CONTROL_OSSIA_TOML
-    wpn114::net::toml_netparse(application_node, "unit_base.toml");
-    wpn114::net::toml_netparse(*m_netnode);
+    wpn114::net::parse_toml(m_netnode, "unit_base.toml");
 #else
-
-    auto master_node    = m_netnode->create_child("master");
-    auto level_node     = master_node->create_child("level");
-    auto active_node    = master_node->create_child("active");
-    auto level_param    = level_node->create_parameter(ossia::val_type::FLOAT);
-    auto active_param   = active_node->create_parameter(ossia::val_type::BOOL);
-
-    level_param->add_callback([&](const ossia::value& v) {
-        m_level = v.get<float>();
-    });
-
-    active_param->add_callback([&](const ossia::value& v) {
-        m_active = v.get<bool>();
-    });
-
-    active_param->set_value(m_active);
-    auto level_domain = ossia::make_domain(0.f, 1.f);
-    ossia::net::set_domain(*level_node, level_domain);
-    net_expose_plugin_tree(*m_netnode);
+    declare_parameter<bool>("/master/active", m_active, false);
+    auto level = declare_parameter<float>("/master/level", m_level, { 0.f, 1.f }, 1.f);
+    level.set_bounding(ossia::bounding_mode::LOW);
 #endif
+    net_expose_plugin_tree(*m_netnode);
 }
 
 void unit_base::net_expose(ossia::net::node_base& application_node, std::string name)
@@ -226,19 +210,12 @@ void aux_unit::add_sender(unit_base& sender, float level)
     aux_send send = {&sender,level};
     m_sends.push_back(send);
 
-#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //------------------------------------------------------------------------------
     if(m_netnode)
     {
-        ossia::net::node_base* send_node    = m_netnode->find_child("sends");
-        if(!send_node) send_node            = m_netnode->create_child("sends");
-
-        auto sender_node        = send_node->create_child(sender.netname());
-        auto sends_level_node   = sender_node->create_child("level");
-        auto sends_level_param  = sends_level_node->create_parameter(ossia::val_type::FLOAT);
-
-        sends_level_param       ->set_value(level);
-        auto node_domain        = ossia::make_domain(0.f, 1.f);
-        ossia::net::set_domain(*sends_level_node, node_domain);
+        auto addr   = (std::string) "/sends/" + sender.netname() + "/level";
+        auto send_p = declare_parameter<float>(addr, m_sends[m_sends.size()-1], {0.f, 1.f}, level);
+        send_p.set_bounding(ossia::bounding_mode::LOW);
     }
 #endif //------------------------------------------------------------------------------------------------
 }

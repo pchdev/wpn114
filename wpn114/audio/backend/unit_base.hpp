@@ -34,15 +34,29 @@ class unit_base
 public:
     virtual ~unit_base();
 
-#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
+#ifdef WPN_CONTROL_OSSIA //------------------------------------------------------------------------------
     void net_expose(ossia::net::node_base& application_node, std::string name);
     void net_expose(ossia::net::node_base& application_node);
-    #ifndef WPN_CONTROL_OSSIA_TOML
     virtual void net_expose_plugin_tree(ossia::net::node_base& plugin_root) = 0;
-    #endif
     // gets called whenever we want to expose the parameters' unit to the network
     void set_netname(std::string name);
     const std::string& netname() const;
+
+    typedef std::vector<std::vector<ossia::net::parameter_base*>> parameter_array;
+
+    template<typename T> ossia::net::parameter_base&
+    declare_parameter(std::string address, T& target, ossia::domain domain, T default_value);
+
+    template<typename T>
+    parameter_array declare_parameters(size_t n, std::string address_pattern,
+                                       std::vector<T*> targets, ossia::domain domain,
+                                       std::vector<T> default_values);
+
+    template<typename T>
+    parameter_array declare_parameters(std::string address_pattern,
+                                       std::vector<T*> targets, ossia::domain domain,
+                                       std::vector<T> default_values);
+
 #endif //------------------------------------------------------------------------------------------------
     virtual void    process(uint16_t nsamples) = 0;
     virtual void    process(float** inputs, uint16_t nsamples) = 0;
@@ -63,6 +77,10 @@ public:
     void            activate();
     void            deactivate();
 
+#ifdef WPN_TOML_PARSING
+    virtual std::string register_unit() const = 0;
+#endif
+
 #ifdef WPN_AUDIO_AUX //---------------------------------------------------------------------------------
     void        add_aux_send(aux_unit& aux); // register the unit to an aux bus
 #endif //------------------------------------------------------------------------------------------------
@@ -76,6 +94,10 @@ protected:
 #define VOID_PROCESS        void process(uint16_t) override {}
 #define VOID_INPUT_PROCESS  void process(float**, uint16_t) override {}
 #define VOID_PREPROCESS     void preprocess(size_t, uint16_t) override {}
+
+#ifdef WPN_TOML_PARSING
+#define REGISTER_UNIT_REF(s) std::string register_unit() const { return s; }
+#endif
 //-------------------------------------------------------------------------------------------------------
     bool            m_active;
     float           m_level;
@@ -120,7 +142,7 @@ struct aux_send
 class aux_unit : public unit_base
 {
 public:
-#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
+#ifndef WPN_CONTROL_OSSIA_TOML //--------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& plugin_root) override;
 #endif //------------------------------------------------------------------------------------------------
 
@@ -153,7 +175,7 @@ private:
 class track_unit : public unit_base
 {
 public:
-#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
+#ifndef WPN_CONTROL_OSSIA_TOML //--------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& plugin_root) override;
 #endif //------------------------------------------------------------------------------------------------
 

@@ -31,6 +31,10 @@ public:
     VOID_PREPROCESS
     VOID_INPUT_PROCESS
 
+#ifdef WPN_TOML_PARSING
+    REGISTER_UNIT_REF("oneshots")
+#endif
+
     void process(uint16_t samples_per_buffer) override
     {
         auto bufdata        = SFBUF.data;

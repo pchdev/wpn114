@@ -82,7 +82,7 @@ public:
     vst_hdl(vst_hdl&&) = delete;
     ~vst_hdl();
 
-#ifdef WPN_CONTROL_OSSIA //---------------------------------------------------------------------------------------
+#ifndef WPN_CONTROL_OSSIA_TOML //---------------------------------------------------------------------------------------
     void net_expose_plugin_tree(ossia::net::node_base& root) override;
 #endif //-------------------------------------------------------------------------------------------------
 
@@ -99,11 +99,13 @@ private:
     aeffect*    _load_vst_2x_plugin(const char* path);
     void        _load_vst_3x_plugin(const char* path);
 #ifdef __APPLE__
+#ifdef WPN_GUI
     void        _create_vst_2x_editor(uint16_t width, uint16_t height);
     void        _show_vst_2x_editor();
     void        _close_vst_2x_editor();
 #endif
     void        _show_vst_3x_editor();
+#endif
 
     dispatcher_funcptr      m_dispatcher;
     aeffect*                m_plugin;

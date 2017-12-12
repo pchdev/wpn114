@@ -29,11 +29,12 @@ class rooms2D final : public wpn114::audio::unit_base
 //-------------------------------------------------------------------------------------------------------
 {
 public:
+
+    typedef std::array<float,2> vec2f;
     struct r_object
     {
         uint16_t    chn;
-        float       x;
-        float       y;
+        vec2f       pos;
         float       r;
         float       l;
     };
@@ -48,6 +49,7 @@ public:
         SEVEN_ONE       = 5,
         CUSTOM          = 6
     };
+
 
 #ifdef WPN_CONTROL_OSSIA //-------------------------------------------------------------------------------------
     void expose_object_set(ossia::net::node_base& node, std::vector<r_object>& set, std::string setname)
@@ -113,6 +115,10 @@ public:
         setup(m_sources, n_srcs);
         setup(m_loudspeakers, n_speakers);
     }
+
+#ifdef WPN_TOML_PARSING
+    REGISTER_UNIT_REF("rooms")
+#endif
 
     VOID_PROCESS
     VOID_PREPROCESS

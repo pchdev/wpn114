@@ -7,6 +7,9 @@ target_link_libraries(oneshots wpn114audio)
 
 if(WPN_CONTROL_OSSIA)
     add_definitions(-DWPN_CONTROL_OSSIA)
+    if(WPN_CONTROL_OSSIA_TOML)
+        add_definitions(-DWPN_CONTROL_OSSIA_TOML)
+    endif()
 endif()
 
 add_definitions(-DWPN_AUDIO_SNDFILE)

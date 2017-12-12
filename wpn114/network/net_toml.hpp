@@ -22,6 +22,6 @@
 namespace wpn114 {
 namespace net {
 
-void toml_netparse(ossia::net::node_base& unit_root, std::string path);
+void parse_toml(ossia::net::node_base& unit_root, std::string path);
 }
 }

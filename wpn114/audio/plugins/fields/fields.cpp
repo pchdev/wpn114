@@ -20,11 +20,7 @@ private:
     double          m_env_incr;
     float           m_env[ENVSIZE];
 
-public:
-#ifdef WPN_CONTROL_OSSIA //--------------------------------------------------------------------------------------
-    VOID_NET_EXPOSE
-#endif //------------------------------------------------------------------------------------------------
-
+public:        
     fields(std::string sfpath, uint32_t xfade_length) :
         m_xfade_length(xfade_length),
         m_phase(0.f), m_env_phase(0.f)
@@ -37,6 +33,11 @@ public:
         SETN_OUT    (SFBUF.nchannels);
     }
 
+#ifdef WPN_TOML_PARSING
+    REGISTER_UNIT_REF("fields")
+#endif
+
+    VOID_NET_EXPOSE
     VOID_INPUT_PROCESS
 
     void preprocess(size_t srate, uint16_t nsamples) override

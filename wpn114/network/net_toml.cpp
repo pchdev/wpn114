@@ -20,7 +20,7 @@
 #include "net_toml.hpp"
 #include <ossia/network/common/complex_type.hpp>
 
-void wpn114::net::toml_netparse(ossia::net::node_base &unit_root, std::string path)
+void wpn114::net::parse_toml(ossia::net::node_base &unit_root, std::string path)
 {
     std::shared_ptr<cpptoml::table> config;
 
