@@ -55,6 +55,9 @@ option(WPN_CONTROL_OSSIA_TOML "Enables toml network configuration file for libos
 option(WPN_CONTROL_PLUGINS_PUSH1 "Enables Ableton Push 1 functionnalities" OFF)
 
 add_subdirectory(wpn114)
-add_subdirectory(thirdparty)
+
+if(WPN_CONTROL_OSSIA OR WPN_TOML_PARSING)
+    add_subdirectory(thirdparty)
+endif()
 
 set(WPN114_INCLUDES ${CMAKE_SOURCE_DIR})

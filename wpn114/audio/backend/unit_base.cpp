@@ -132,6 +132,33 @@ const std::string& unit_base::netname() const
 {
     return m_netname;
 }
+
+template<typename T> ossia::net::parameter_base&
+declare_parameter(std::string address, T& target, T default_value)
+{
+
+}
+
+template<typename T> ossia::net::parameter_base&
+declare_parameter(std::string address, T& target, ossia::domain domain, T default_value)
+{
+
+}
+
+template<typename T> parameter_array
+declare_parameters (size_t n, std::string address_pattern, std::vector<T*> targets,
+                    ossia::domain domain, std::vector<T> default_values)
+{
+
+}
+
+template<typename T> parameter_array
+declare_parameters(std::string address_pattern, std::vector<T*> targets,
+                   ossia::domain domain, std::vector<T> default_values)
+{
+
+}
+
 #endif //------------------------------------------------------------------------------------------------
 
 #ifdef WPN_AUDIO_AUX //----------------------------------------------------------------------------------

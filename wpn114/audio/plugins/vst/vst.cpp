@@ -86,6 +86,10 @@ host_callback(aeffect* effect, vstint32_t opcode, vstint32_t index, vstintptr_t 
 }
 }
 
+#ifdef WPN_TOML_PARSING
+REGISTER_UNIT_REF("vst_hdl")
+#endif
+
 vst_hdl::vst_hdl(const char* name_with_extension)
 {
     std::string name = "/Library/Audio/Plug-Ins/VST/";

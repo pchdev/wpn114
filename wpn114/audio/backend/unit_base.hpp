@@ -45,17 +45,18 @@ public:
     typedef std::vector<std::vector<ossia::net::parameter_base*>> parameter_array;
 
     template<typename T> ossia::net::parameter_base&
+    declare_parameter(std::string address, T& target, T default_value);
+
+    template<typename T> ossia::net::parameter_base&
     declare_parameter(std::string address, T& target, ossia::domain domain, T default_value);
 
-    template<typename T>
-    parameter_array declare_parameters(size_t n, std::string address_pattern,
-                                       std::vector<T*> targets, ossia::domain domain,
-                                       std::vector<T> default_values);
+    template<typename T> parameter_array
+    declare_parameters (size_t n, std::string address_pattern, std::vector<T*> targets,
+                        ossia::domain domain, std::vector<T> default_values);
 
-    template<typename T>
-    parameter_array declare_parameters(std::string address_pattern,
-                                       std::vector<T*> targets, ossia::domain domain,
-                                       std::vector<T> default_values);
+    template<typename T> parameter_array
+    declare_parameters(std::string address_pattern, std::vector<T*> targets,
+                       ossia::domain domain, std::vector<T> default_values);
 
 #endif //------------------------------------------------------------------------------------------------
     virtual void    process(uint16_t nsamples) = 0;
@@ -150,9 +151,6 @@ public:
     ~aux_unit();
     aux_unit(std::unique_ptr<unit_base> receiver);
 
-    void    process(uint16_t nsamples)                              override;
-    void    process(float** inputs, uint16_t nsamples)              override;
-    void    preprocess(size_t srate, uint16_t nsamples)             override;
     float   framedata(uint8_t channel, uint16_t frame)              const;
     void    set_receiver(std::unique_ptr<unit_base> receiver);
     void    add_sender(unit_base& sender, float level);
@@ -182,9 +180,6 @@ public:
     track_unit();
     ~track_unit();
 
-    void    process(uint16_t nsamples)                      override;
-    void    process(float** inputs, uint16_t nsamples)      override;
-    void    preprocess(size_t srate, uint16_t nsamples)     override;
     void    add_unit(unit_base& unit);
     void    remove_unit(unit_base& unit);
 

@@ -79,8 +79,9 @@ n_out		= 8
 [[unit]]
 
 type		= "fields"
+netname		= "fields_test"
 sfpath		= "/audio/soundfiles/test.wav"
+xfade_len	= 32768
 level 		= 0.5
 expose		= true
-netname		= "fields_test"
 active		= false

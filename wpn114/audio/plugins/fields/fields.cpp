@@ -21,7 +21,7 @@ private:
     float           m_env[ENVSIZE];
 
 public:        
-    fields(std::string sfpath, uint32_t xfade_length) :
+    fields(std::string sfpath, uint32_t xfade_length = 32768) :
         m_xfade_length(xfade_length),
         m_phase(0.f), m_env_phase(0.f)
     {

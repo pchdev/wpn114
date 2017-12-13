@@ -1,8 +1,14 @@
 
-add_definitions(-DWPN114_VERSION_STRING="94BDBE44300-34B")
+add_definitions(-DWPN114_VERSION_STRING="CRNA17004017")
 
 set(CPPTOML_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/cpptoml)
-add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/main.cpp)
+set(WPN_EXEC ${CMAKE_SOURCE_DIR}/main.cpp)
+
+if(WPN_TOML_PARSING)
+    list(APPEND WPN_EXEC ${CMAKE_SOURCE_DIR}/main.toml)
+endif()
+
+add_executable(${PROJECT_NAME} ${WPN_EXEC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 
 if(WPN_AUDIO)
