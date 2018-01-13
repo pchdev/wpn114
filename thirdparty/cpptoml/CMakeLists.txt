@@ -1,2 +1,0 @@
-set(CPPTOML_HEADERS
-    {CMAKE_CURRENT_SOURCE_DIR}/cpptoml.h)
