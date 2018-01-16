@@ -45,11 +45,11 @@ void Fields_Ctor(Fields *unit)
     unit->m_env_samplepos = 0.f;
 
     unit->m_xfade_length = IN0(1);
-    unit->m_xfade_point = unit->m_buf->samples - unit->m_xfade_length;
+    unit->m_xfade_point = unit->m_buf->frames - unit->m_xfade_length;
 
     // envelope phase increment,
     // a simple ratio will suffice, as it is linearly interpolated
-    unit->m_env_incr = ENVSIZE/IN0(1);
+    unit->m_env_incr = (float) ENVSIZE/IN0(1);
 
     // building envelope, only one is necessary for the xfade
     // using reaper-like sine envelope
@@ -83,7 +83,7 @@ void Fields_next(Fields *unit, int inNumSamples)
 
     for(int i = 0; i < inNumSamples; ++i)
     {        
-        if(samplepos >= xfade_point && samplepos < bufSamples)
+        if(samplepos >= xfade_point && samplepos < bufFrames -1)
         {
             // if phase is in the crossfade zone
             // get data from envelope first (with linear interpolation)
@@ -95,24 +95,29 @@ void Fields_next(Fields *unit, int inNumSamples)
 
             for(int j = 0; j < bufChannels; ++j)
             {
-                out[j][i] = *bufData++ * xfade_down +
-                            *(bufData - xfade_point * bufChannels) * xfade_up;
+                float s_up      = *bufData++;
+                float s_down    = *(bufData - xfade_point * bufChannels);
+
+                out[j][i]       = s_up * xfade_down + s_down * xfade_up;
             }
 
             samplepos++;
             env_samplepos += xfade_incr;
         }
-        else if ( samplepos == bufSamples )
+        else if ( samplepos == bufFrames -1)
         {
             // if phase reaches end of crossfade
             // main phase continues from end of 'up' xfade
             // reset the envelope phase
-            bufData = unit->m_buf->data + xfade_length * bufChannels - 1;
+            bufData = unit->m_buf->data + xfade_length * bufChannels;
 
-            for         (int j = 0; j < bufChannels; ++j)
-            out[j][i]   = *bufData++;
+            for (int j = 0; j < bufChannels; ++j)
+            {
+                out[j][i]   = *bufData;
+                bufData++;
+            }
 
-            samplepos        = xfade_length+1;
+            samplepos        = xfade_length;
             env_samplepos    = 0;
         }
         else
