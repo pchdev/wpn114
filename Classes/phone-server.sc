@@ -16,15 +16,22 @@ QuarreUser {
 			"turnover",
 			"freefall",
 			"twist",
+			"twist/left",
+			"twist/right",
 			"shake",
-			"pickup"
+			"shake/left",
+			"shake/right",
+			"shake/up",
+			"shake/down",
+			"pickup",
+			"swipe"
 		]
 	}
 
 	at { |element|
 		var res;
 		m_gestures.do({|gesture|
-			if(element == gesture.id) { res = gesture };
+			if(element == gesture.id) { res = gesture; gesture.id.postln;};
 		});
 
 		res ?? { m_sensors.do({|sensor|
@@ -106,7 +113,6 @@ QuarreUser {
 	}
 
 	snsolo { |... ids|
-
 		m_sensors.do({|sensor|
 			if(ids.includes(sensor.id.asSymbol)) { sensor.activate() } { sensor.deactivate() }
 		});
@@ -213,7 +219,7 @@ QuarreGesture : QuarrePhoneElement {
 QuarreServer {
 
 	var users_max, <users, <user_names, <user_status;
-	var <device;
+	var <device, <registered_user_refs;
 	var available_slot;
 	var scenario_start, scenario_end, scene_name;
 	var <server_quit;
@@ -248,9 +254,41 @@ QuarreServer {
 	}
 
 	update_user_names { |index, value|
+
+		// check if name already exists
+		user_names.do({|name,i|
+			if(name.asSymbol == value.asSymbol) {
+				user_names[i] = nil;
+				user_status[i] = false;
+
+				registered_user_refs.do({|ref|
+					// if a ref was registered with this user name, update it
+					var registered_name = ref.value.name;
+					if(name.asSymbol == registered_name.asSymbol) {
+						ref.value = this[registered_name];
+					};
+				});
+			};
+		});
+
 		if(value == "") { value = nil };
 		user_names[index] = value;
 		user_names.postln;
+		user_status.postln;
+	}
+
+	refreg { |ref|
+		registered_user_refs = registered_user_refs.add(Ref(ref));
+	}
+
+	unset_user { |index|
+		user_names[index] = nil;
+		user_status[index] = false;
+	}
+
+	reset_users {
+		user_status = Array.fill(users_max, { false });
+		user_names  = Array.fill(users_max, { nil });
 	}
 
 	init {
@@ -258,8 +296,7 @@ QuarreServer {
 		// put the quit signal on top, to avoid ossia cleanup coming before it...
 		ShutDown.objects.insert(0, { this.server_quit.v = 1 });
 
-		user_status = Array.fill(users_max, { false });
-		user_names  = Array.fill(users_max, { nil });
+		this.reset_users();
 
 		device = OSSIA.device("quarre-server").exposeOSCQueryServer(1234, 5678, {
 

@@ -13,12 +13,24 @@ WPN114
 		^WPN114_FIELDS(out, node, netname, sfpath, xfadelength);
 	}
 
-	*oneshots { |out, node, netname, sfpath|
-		^WPN114_ONESHOTS(out, node, netname, sfpath);
+	*oneshots { |out, node, netname, sfpath, mts = false|
+		^WPN114_ONESHOTS(out, node, netname, sfpath, mts);
+	}
+
+	*playlist { |out, netnode, netname, sfpath_array|
+		^WPN114_PLAYLIST(out, netnode, netname, sfpath_array);
 	}
 
 	*rooms { |out, node, netname, n_inputs, n_outputs, lsarr|
 		^WPN114_ROOMS(out, node, netname, n_inputs, n_outputs, lsarr);
+	}
+
+	*granary { |out, netnode, netname, sfpath|
+		^WPN114_GRANARY(out, netnode, netname, sfpath);
+	}
+
+	*grainsc { |out, netnode, netname, sfpath|
+		^WPN114_GRAINSC(out, netnode, netname, sfpath);
 	}
 
 	*master { |out_offset, node, netname, n_outputs|
@@ -58,7 +70,7 @@ WPN114_MODULE_BASE
 
 	net { ^m_netnode }
 
-	level  { ^m_level }
+	level  { ^m_level.v }
 	level_ { |v| m_level.v = v }
 
 	n_inputs   { ^m_nin }
@@ -130,72 +142,214 @@ WPN114_ROOMS : WPN114_EFFECT_MODULE_BASE
 		.rooms_ctor(lsarr)
 	}
 
-	rooms_ctor { |lsarr| var arr = Array.newClear(m_nout);
+	rooms_ctor { |lsarr|
+
+		lsarr ?? { lsarr = Array.fill { |i| RoomsLS(i) }};
+		m_mix.v = 1.0;
 
 		m_srcx = OSSIA.parameter_array(m_nin, m_netnode,
-			'/sources/%/position/x', Float, [0, 1], [0, 0], 'clip');
+			"/sources/%/position/xpos", Float, [0, 1], 0, 'clip');
 
 		m_srcy = OSSIA.parameter_array(m_nin, m_netnode,
-			'/sources/%/position/y', Float, [0, 1], [0, 0], 'clip');
+			"/sources/%/position/ypos", Float, [0, 1], 0, 'clip');
 
-		m_lsx  = OSSIA.parameter_array(m_nin, m_netnode,
-			'/speakers/%/position/x', Float, [0, 1], [0, 0], 'clip');
+		m_lsx  = OSSIA.parameter_array(m_nout, m_netnode,
+			"/speakers/%/position/xpos", Float, [0, 1], 0, 'clip');
 
 		m_lsy  = OSSIA.parameter_array(m_nout, m_netnode,
-			'/speakers/%/position/y', Float, [0, 1], [0, 0], 'clip');
+			"/speakers/%/position/ypos", Float, [0, 1], 0, 'clip');
 
-		m_lsr  = OSSIA.parameter_array(m_nout, m_netnode, '/speakers/%/radius', Float, [0, 1], 0.25);
-		m_lsl  = OSSIA.parameter_array(m_nout, m_netnode, '/speakers/%/level', Float, [-96, 12], 0);
+		m_lsr  = OSSIA.parameter_array(m_nout, m_netnode, "/speakers/%/radius", Float, [0, 1], 0.5);
+		m_lsl  = OSSIA.parameter_array(m_nout, m_netnode, "/speakers/%/level", Float, [-96, 12], 1.0);
 
 		// setup --------------------------------------------------------------------------------
-		m_stp = RoomsSetup(m_server, m_nout, lsarr);
+		m_stp = RoomsSetup(m_server, m_nout, lsarr, { |buf|
 
-		// callbacks -----------------------------------------------------------------------------
-		m_nout.do({|i|
-			m_lsx[i].callback = { |v| m_stp.buffer.set(i*4,v) };
-			m_lsy[i].callback = { |v| m_stp.buffer.set(i*4+1,v) };
-			m_lsr[i].callback = { |v| m_stp.buffer.set(i*4+2,v) };
-			m_lsl[i].callback = { |v| m_stp.buffer.set(i*4+3,v) };
+			m_nout.do({|i|
+				// update buffer values when value changes
+				m_lsx[i].callback = { |v| m_stp.buffer.set(i*4,v) };
+				m_lsy[i].callback = { |v| m_stp.buffer.set(i*4+1,v) };
+				m_lsr[i].callback = { |v| m_stp.buffer.set(i*4+2,v) };
+				m_lsl[i].callback = { |v| m_stp.buffer.set(i*4+3,v) };
+
+				// updating parameter values
+				m_lsx[i].v = lsarr[i].x;
+				m_lsy[i].v = lsarr[i].y;
+				m_lsr[i].v = lsarr[i].r;
+				m_lsl[i].v = lsarr[i].l;
+			});
+
+			if(m_nin == 1) {
+				m_def = SynthDef(m_name, {
+					var rms = Rooms.ar(buf.bufnum, m_nout, InBus.ar(m_inbus, 1),
+						m_srcx[0].kr, m_srcy[0].kr);
+					Out.ar(m_out, rms);
+				}).add;
+			};
+
+			if(m_nin == 2) {
+				m_def = SynthDef(m_name, {
+					var rms = Rooms2.ar(buf.bufnum, m_nout,
+						InBus.ar(m_inbus, 1), InBus.ar(m_inbus, 1, 1),
+						m_srcx[0].kr, m_srcy[0].kr, m_srcx[1].kr, m_srcy[1].kr);
+					Out.ar(m_out, rms);
+				}).add;
+			};
 		});
-
-		// defs ---------------------------------------------------------------------------------
-		if(m_nin == 1) {
-			m_def = SynthDef(m_name, {
-				var rms = Rooms.ar(m_stp.bufnum, m_nout, m_inbus,
-					m_srcx[0].kr, m_srcy[0].kr);
-				Out.ar(m_out, rms);
-			}).add;
-		};
-
-		if(m_nin == 2) {
-			m_def = SynthDef(m_name, {
-				var rms = Rooms2.ar(m_stp.bufnum, m_nout, m_inbus[0], m_inbus[1],
-					m_srcx[0].kr, m_srcy[0].kr, m_srcx[1].kr, m_srcy[1].kr);
-				Out.ar(m_out, rms);
-			}).add;
-		};
 	}
 }
 
-WPN114_ONESHOTS : WPN114_MODULE_BASE
+WPN114_GRANARY : WPN114_MODULE_BASE
 {
+	var p_rfsh, p_gsize, p_rate, p_pos, p_pan;
+	var p_randposfreq, p_randposwidth;
 	var m_buf;
+
 	*new { |out, netnode, netname, sfpath|
 		^super.new(out, 0, 0, netnode, netname)
 		.module_base_ctor
-		.oneshots_ctor(sfpath)
+		.granary_ctor(sfpath)
 	}
 
-	oneshots_ctor { |sfpath|
-		m_buf = Buffer.read(WPN114.server, sfpath, action: {
+	granary { |sfpath|
+
+		m_buf = Buffer.read(WPN114.server, sfpath, action: { |buf|
 			m_def = SynthDef(m_name, {
-				var f = PlayBuf.ar(m_buf.numChannels, m_buf, doneAction: 2);
-				Out.ar(m_out, f * m_level.kr.dbamp);
+			}).add;
+		});
+	}
+}
+
+
+
+WPN114_ONESHOTS : WPN114_MODULE_BASE
+{
+	var m_buf, m_pan;
+	*new { |out, netnode, netname, sfpath, mts = false|
+		^super.new(out, 0, 0, netnode, netname)
+		.module_base_ctor
+		.oneshots_ctor(sfpath, mts)
+	}
+
+	oneshots_ctor { |sfpath, mts|
+
+		if(mts) {
+
+			// if mono to stereo sample: add pan
+			m_pan = OSSIA.parameter(m_netnode, 'pan', Float, [-1, 1], 0, 'clip');
+
+			m_buf = Buffer.read(WPN114.server, sfpath, action: {
+				m_def = SynthDef(m_name, {
+					var f = PlayBuf.ar(m_buf.numChannels, m_buf, doneAction: 2);
+					Out.ar(m_out, Pan2.ar(f, m_pan.kr, m_level.kr.dbamp));
+				}).add;
+			});
+
+		} {
+			// else normal
+			m_buf = Buffer.read(WPN114.server, sfpath, action: {
+				m_def = SynthDef(m_name, {
+					var f = PlayBuf.ar(m_buf.numChannels, m_buf, doneAction: 2);
+					Out.ar(m_out, f * m_level.kr.dbamp);
+				}).add;
+			});
+		};
+	}
+
+	soundfile_ { |path|
+		m_buf.free;
+		m_buf = Buffer.read(WPN114.server, path, action: {
+			m_def.add();
+		});
+	}
+}
+
+WPN114_PLAYLIST : WPN114_MODULE_BASE
+{
+	var m_buf_array;
+	var <index, <loop, <gate;
+
+	*new { |out, netnode, netname, sfpath_array|
+
+		^super.new(out, 0, 0, netnode, netname)
+		.module_base_ctor
+		.playlist_ctor(sfpath_array)
+	}
+
+	playlist_ctor { |sfpath_array|
+
+		m_buf_array = [];
+		m_def = [];
+
+		index  = OSSIA.parameter(m_netnode, 'index', Integer, [0, sfpath_array.size - 1], 0, 'clip');
+		loop   = OSSIA.parameter(m_netnode, 'loop', Boolean);
+		gate   = OSSIA.parameter(m_netnode, 'gate', Integer, [0, 1], 0, 'clip');
+
+		gate.callback = { |v|
+			if(v == 1) { this.trigger(index.v) };
+			m_group.set(\gate, v,);
+		};
+
+		sfpath_array.do({|sfpath,i|
+			m_buf_array = m_buf_array.add(
+				Buffer.read(WPN114.server, sfpath, action: { |buf|
+					m_def = m_def.add(
+						SynthDef(m_name ++ "_" ++ i, {
+							var env = Env.adsr(sustainLevel: 1.0, releaseTime: 1);
+							var envgen = EnvGen.kr(env, \gate.kr, doneAction: 2);
+							var f = PlayBuf.ar(buf.numChannels, buf, loop: loop.kr, doneAction: 2);
+							Out.ar(m_out, f * envgen * m_level.kr.dbamp);
+						}).add;
+					);
+				});
+			);
+		});
+	}
+
+	trigger { |index|
+		m_synths = m_synths.add(
+			Synth.head(m_group, m_name ++ "_" ++ index, m_netnode.snapshot));
+	}
+}
+
+WPN114_GRAINSC : WPN114_MODULE_BASE
+{
+	var <m_buf;
+	var <freq, <grainsize, <rate, <pos, <pan;
+
+	*new { |out, netnode, netname, sfpath|
+		^super.new(out, 0, 0, netnode, netname)
+		.module_base_ctor
+		.grainsc_ctor(sfpath);
+	}
+
+	grainsc_ctor { |sfpath|
+
+		freq = OSSIA.parameter(m_netnode, 'freq', Float, [0.001, 100], 10, 'clip');
+		grainsize = OSSIA.parameter(m_netnode, 'grainsize', Float, [0.001, 5], 1, 'clip');
+		rate = OSSIA.parameter(m_netnode, 'rate', Float, [0.001, 10], 1, 'clip');
+		pos = OSSIA.parameter(m_netnode, 'pos', Float, [0, 1], 0, 'clip');
+		pan = OSSIA.parameter(m_netnode, 'pan', Float, [-1, 1], 0, 'clip');
+
+		m_buf = Buffer.readChannel(WPN114.server, sfpath, channels: [0], action: { |buf|
+			m_def = SynthDef(m_name, {
+				var imp = Impulse.ar(freq.kr);
+				var g = GrainBuf.ar(2, imp, grainsize.kr, buf.bufnum, rate.kr, pos.kr, 2, pan.kr,
+					mul: m_level.kr.dbamp);
+				Out.ar(m_out, g);
 			}).add;
 		});
 	}
 
+	soundfile_ { |sfpath|
+		m_buf.free;
+		m_buf = Buffer.readChannel(WPN114.server, sfpath, channels: [0], action: { |buf|
+			m_def.add();
+		});
+	}
 }
+
+
 WPN114_FIELDS : WPN114_MODULE_BASE
 {
 	var m_xflen;
@@ -211,14 +365,21 @@ WPN114_FIELDS : WPN114_MODULE_BASE
 
 		m_xflen   = OSSIA.parameter(m_netnode, 'xfade_length', Integer, [0, inf], xfl, 'clip');
 		m_buf     = Buffer.read(WPN114.server, sfpath, action: { |buf|
-
+			buf.numFrames.postln;
 			m_def = SynthDef(m_name, {
-				var f = Fields.ar(buf.numChannels, buf.bufnum, m_xflen.kr,
-					m_level.kr);
-				Out.ar(m_out, f)}).add
+				var f = Fields.ar(buf.numChannels, buf.bufnum, m_xflen.kr);
+				Out.ar(m_out, f * m_level.kr.dbamp)
+			}).add
 		});
 
 		m_nout = m_buf.numChannels;
+	}
+
+	soundfile_ { |path|
+		m_buf.free;
+		m_buf = Buffer.read(WPN114.server, path, action: {
+			m_def.add();
+		});
 	}
 }
 
