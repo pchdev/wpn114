@@ -104,17 +104,36 @@ Kaivo {
 	spring_whip { |user|
 
 		QMIDI.program(channel, Kaivo.programs['spring']);
+		QMIDI.control(channel, 3, 30);
 
 		user.gsolo('whip', 'swipe');
 		user.snsolo('accelerometer');
 
-		user["whip"].assign({ ~kaivo.randchord(2, 0.01, 60, 10, 50) });
-		user["swipe"].assign({ ~kaivo.kill });
+		user["whip"].assign({ this.randchord(2, 0.01, 60, 10, 50) });
+		user["swipe"].assign({ this.kill });
 
 		user["accelerometer"].assign({ |v|
-			QMIDI.control(0, 1, v[0].abs.linlin(0, 10, 0, 127));
+			QMIDI.control(channel, 1, v[0].abs.linlin(0, 10, 0, 127));
+			QMIDI.control(channel, 2, v[1].abs.linlin(0, 10, 0, 127));
 		});
 
+	}
+
+	spring_percs { |user|
+
+		QMIDI.program(channel, Kaivo.programs['spring']);
+		QMIDI.control(channel, 3, 0);
+
+		user.gsolo('whip', 'swipe');
+		user.snsolo('accelerometer');
+
+		user["whip"].assign({ this.randchord(2, 0.01, 50, 10, 50) });
+		user["swipe"].assign({ this.kill });
+
+		user["accelerometer"].assign({ |v|
+			QMIDI.control(channel, 1, v[0].abs.linlin(0, 10, 0, 127));
+			QMIDI.control(channel, 2, v[1].abs.linlin(0, 10, 0, 127));
+		});
 	}
 
 	temples { |user|
@@ -138,16 +157,21 @@ Kaivo {
 
 	rainbells { |user|
 		user.reset();
-		user.gsolo('shake');
+		user.gsolo('shake', 'swipe');
 		user.snsolo('proximity', 'rotation');
+		QMIDI.program(channel, Kaivo.programs['rainbells']);
 		user["proximity"].assign({ |v|
-			QMIDI.program(channel, Kaivo.programs['rainbells']);
 			if(v) { QMIDI.noteOn(channel, 60 + 20.rand, 20) }
 		});
 
 		user["rotation"].assign({|v|
 			QMIDI.control(channel, 1, v[0].abs.linlin(0, 85, 0, 127));
+			QMIDI.control(channel, 2, v[1].abs.linlin(0, 90, 0, 127));
+			QMIDI.control(channel, 3, v[2].linlin(-180, 180, 0, 127));
+
 		});
+
+		user["swipe"].assign({this.kill});
 
 		user["shake"].assign({this.kill});
 		user["shake/left"].assign({this.kill});
@@ -169,6 +193,7 @@ Kaivo {
 		user["rotation"].assign({ |v|
 			QMIDI.control(channel, 1, v[0].abs.linlin(0, 90, 0, 127));
 			QMIDI.control(channel, 2, v[1].abs.linlin(0, 90, 0, 127));
+			QMIDI.control(channel, 3, v[2].linlin(-180, 180, 0, 127));
 		});
 
 	}
@@ -208,6 +233,7 @@ Falcon {
 		user.snsolo('rotation');
 		user["rotation"].assign({|v|
 			QMIDI.control(channel,1, v[0].abs.linlin(0, 90, 0, 127));
+			QMIDI.control(channel, 7, v[1].abs.linlin(0, 90, 0, 127));
 		});
 	}
 
