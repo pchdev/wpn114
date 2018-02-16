@@ -54,14 +54,14 @@ Rectangle {
                 active: false
             }
 
-            /*AudioPlugin {
+            AudioPlugin {
                 id: vsttest
                 path: "/Library/Audio/Plug-Ins/VST/Kaivo.vst"
                 Component.onCompleted: {
                     active = true;
-                    //vsttest.showEditorWindow();
+                    vsttest.showEditorWindow();
                 }
-            }*/
+            }
         }
 
         Component.onCompleted: {

@@ -6,6 +6,7 @@
 #include "aeffect.h"
 #include "aeffectx.h"
 #include <QMacNativeWidget>
+#include <QMacCocoaViewContainer>
 
 static VstIntPtr VSTCALLBACK HostCallback
 (AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void* ptr, float opt);
@@ -127,7 +128,8 @@ private:
     plugin_hdl*    m_plugin_hdl;
 
 #ifdef __APPLE__
-    QMacNativeWidget*   m_view;
+    QMacNativeWidget*           m_view;
+    QMacCocoaViewContainer*     m_view_container;
 #endif
 
 };

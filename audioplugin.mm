@@ -5,6 +5,7 @@
 #endif
 
 #include <array>
+#include <QMacCocoaViewContainer>
 
 #define PARAMNAME_MAXLE     256
 #define PROGRAMNAME_MAXLE   256
@@ -12,7 +13,11 @@
 // QT INSTANCE --------------------------------------------------------------------
 
 AudioPlugin::AudioPlugin() : m_path(""), m_view(0), m_plugin_hdl(0) {}
-AudioPlugin::~AudioPlugin() {}
+AudioPlugin::~AudioPlugin()
+{
+    delete m_view;
+    delete m_view_container;
+}
 
 void AudioPlugin::classBegin() {}
 void AudioPlugin::componentComplete()
@@ -37,11 +42,13 @@ void AudioPlugin::componentComplete()
     INITIALIZE_AUDIO_IO;
 
 #ifdef __APPLE__ //----------------------------------------------------------
-    m_view          = new QMacNativeWidget();
+    m_view              = new QMacNativeWidget();
+    m_view_container    = new QMacCocoaViewContainer(m_view->nativeView());
 #endif //--------------------------------------------------------------------
 
-    auto size       = m_plugin_hdl->get_editor_size();
-    m_view          ->setFixedSize(size[0], size[1]);
+    auto size           = m_plugin_hdl->get_editor_size();
+    m_view_container    ->setFixedSize(size[0], size[1]);
+    m_view              ->setFixedSize(size[0], size[1]);
 }
 
 void AudioPlugin::showEditorWindow()
@@ -50,7 +57,7 @@ void AudioPlugin::showEditorWindow()
     m_plugin_hdl->open_editor((void*) m_view->nativeView());
 #endif //--------------------------------------------------------------------
 
-    m_view->show();
+    m_view_container->show();
 }
 
 float** AudioPlugin::process(const quint16 nsamples)
@@ -314,7 +321,7 @@ std::array<uint16_t, 2>  vst2x_plugin::get_editor_size() const
     std::array<uint16_t, 2> res = { 0, 0 };
     ERect* rect = 0;
 
-    m_aeffect->dispatcher(m_aeffect, effEditGetRect, 0, 0, rect, 0.f);
+    m_aeffect->dispatcher(m_aeffect, effEditGetRect, 0, 0, &rect, 0.f);
 
     if ( rect )
     {
