@@ -6,11 +6,11 @@ import WPN114 1.0
 Rectangle {
 
     // for quarrè:
-    // sends, vsts, vumeters, rooms, fields
-    // independent channel dispatching
-    // audio groups (tracks)
+    // sends, vumeters, rooms, fields, oneshots
+    // audio groups // or tracks
     // bursts audio tests
 
+    color: "grey"
     visible: true
     width: 640
     height: 480
@@ -23,6 +23,14 @@ Rectangle {
         }
     }
 
+    Button {
+        text: "note"
+        y: 50
+        onClicked: {
+            vsttest.noteOn(0, 60, 100);
+        }
+    }
+
     Slider {
         x: 100
         onValueChanged: {
@@ -30,9 +38,20 @@ Rectangle {
         }
     }
 
-    RoomsSetup {
+    /*RoomsSetup {
         id: rooms_setup
-    }
+        numOutputs: 8
+        positions: [
+            0.0, 0.0,
+            0.0, 0.0,
+            0.0, 0.0,
+            0.0, 0.0,
+            0.0, 0.0,
+            0.0, 0.0,
+            0.0, 0.0,
+            0.0, 0.0 ]
+        // + gui
+    }*/
 
     AudioOut {
         id: audio_backend
@@ -47,21 +66,31 @@ Rectangle {
             level: 1
             muted: false
 
-            SinOsc {
-                id: sinosc_test
-                frequency: 440
-                level: 0.25
-                active: false
+            /*Rooms {
+                // inputs are automatically defined by the children AudioObjects
+                // outputs are defned by the room setup object
+                id: rooms_test
+                setup: rooms_setup
+
+                SinOsc {
+                    id: sinosc_test
+                    frequency: 440
+                    level: 0.25
+                    active: false
+                }
+            }*/
+
+            Fields {
+                id: fields
+                path: "/Users/pchd/Desktop/tester.wav"
+                xfade: 65536
             }
 
-            AudioPlugin {
+            /*AudioPlugin {
                 id: vsttest
                 path: "/Library/Audio/Plug-Ins/VST/Kaivo.vst"
-                Component.onCompleted: {
-                    active = true;
-                    vsttest.showEditorWindow();
-                }
-            }
+                Component.onCompleted: {}
+            }*/
         }
 
         Component.onCompleted: {

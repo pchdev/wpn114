@@ -46,9 +46,11 @@ void AudioPlugin::componentComplete()
     m_view_container    = new QMacCocoaViewContainer(m_view->nativeView());
 #endif //--------------------------------------------------------------------
 
-    auto size           = m_plugin_hdl->get_editor_size();
+    auto size           = m_plugin_hdl->get_editor_size();    
+    m_view              ->resize(size[0], size[1]);
+    m_view              ->update();
     m_view_container    ->setFixedSize(size[0], size[1]);
-    m_view              ->setFixedSize(size[0], size[1]);
+    m_view_container    ->update();
 }
 
 void AudioPlugin::showEditorWindow()

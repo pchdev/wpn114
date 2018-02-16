@@ -5,6 +5,7 @@
 #include "qsine.h"
 #include "audioplugin.h"
 #include "rooms.h"
+#include "fields.h"
 
 #include <QApplication>
 #include <QQuickWidget>
@@ -23,21 +24,13 @@ int main(int argc, char *argv[])
     qmlRegisterType<AudioPlugin, 1>     ( "WPN114", 1, 0, "AudioPlugin" );
     qmlRegisterType<RoomsSetup, 1>      ( "WPN114", 1, 0, "RoomsSetup" );
     qmlRegisterType<Rooms, 1>           ( "WPN114", 1, 0, "Rooms" );
+    qmlRegisterType<Fields, 1>          ( "WPN114", 1, 0, "Fields" );
 
     QApplication app(argc, argv);
-    //QGuiApplication app(argc, argv);
-
 
     QQuickWidget* view = new QQuickWidget;
-    view->setSource(QUrl::fromLocalFile("/Users/pchd/Repositories/wpn114-qt/main.qml"));
+    view->setSource(QUrl::fromLocalFile("/Users/pchd/Repositories/wpn114/main.qml"));
     view->show();
-
-    /*QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;*/
-
-
 
     return app.exec();
 }
