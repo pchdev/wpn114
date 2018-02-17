@@ -1,80 +1,103 @@
 #include "fields.h"
-#include <QFile>
-#include <QtEndian>
+#include <math.h>
 
 #define AUDIO_BUFFER_SIZE 2 << 17
 
-Fields::Fields() : m_path(""), m_xfade(65536), m_buffer(0), m_file(0),
-    m_spos(0), m_bpos(0)
+Fields::Fields() : m_path(""), m_xfade(65536),
+    m_spos(0), m_epos(0)
 {
     SETN_IN ( 0 );
 }
 
 Fields::~Fields() {}
 
-QAudioFormat get_audio_format(const QFile& file)
-{
-    QByteArray      hdr;
-    QAudioFormat    fmt;
-    QDataStream     str ( &file );
-
-    //                  get the 36 first header bytes
-    str.readRawData     ( hdr.data(), 36 );
-    auto ptr            = hdr.data();
-    ptr                 += 22;
-
-    quint16 nchannels       = qFromLittleEndian<quint16>( ptr ); ptr += 2;
-    quint32 sample_rate     = qFromLittleEndian<quint32>( ptr ); ptr += 10;
-    quint16 sample_size     = qFromLittleEndian<quint16>( ptr );
-
-    fmt.setByteOrder        ( QAudioFormat::LittleEndian );
-    fmt.setSampleType       ( QAudioFormat::SignedInt );
-    fmt.setCodec            ( "audio/pcm" );
-    fmt.setChannelCount     ( nchannels );
-    fmt.setSampleRate       ( sample_rate );
-    fmt.setSampleSize       ( sample_size );
-
-    return fmt;
-}
-
 void Fields::setNumInputs(const quint16) {}
 void Fields::classBegin() {}
 void Fields::componentComplete()
 {
-     m_file = new QFile ( m_path );
+    // build sin xfade envelope
+    for ( int i = 0; i < ENVSIZE; ++ i )
+        m_env = sin ( (float) i/ENVSIZE*M_PI_2 );
 
-    if ( !m_file->open( QIODevice::ReadOnly ))
-    {
-         qDebug() << "couln't open file";
-         return;
-    }
+    // full memory buffering is convenient for the crossfade
+    // but implementing both streaming & fullmem would be a good choice, for longer files
+    // DiskFields audio object to implement then...
 
-    auto format         = get_audio_format( *m_file );
-    quint64 nbytes      = m_file->size() - 44;
-    quint16 bpf         = format.sampleSize()/8; // bytes per frame
-    quint16 nframes     = nbytes/bpf;
-    quint64 nsamples    = nframes/format.channelCount();
+    m_buf = new sndbuf( m_path.toStdString(), 0);
 
-    m_buffer = new QAudioBuffer( AUDIO_BUFFER_SIZE, format );
+    m_xfade_point   = m_buf->nsamples - m_xfade;
+    m_env_incr      = (float) ENVSIZE / m_xfade;
 
-    SETN_OUT ( format.channelCount() );
+    SETN_OUT ( m_buf->nchannels );
     INITIALIZE_AUDIO_IO;
 
-    //                      prepare first audio buffer
-    m_stream                = new QDataStream( *m_file );
-    m_stream->setByteOrder  ( QDataStream::LittleEndian );
-    auto ptr                = m_buffer->data<qint8>();
+    emit bufferReady( );
+}
 
-    m_stream->skipRawData     ( 44 );
-    m_stream->readRawData     ( ptr, AUDIO_BUFFER_SIZE * bpf );
-
-    emit bufferReady();
+inline float lininterp(float x, float a, float b)
+{
+    return a + x * (b - a);
 }
 
 float** Fields::process(const quint16 nsamples)
 {
-    quint32 spos    = m_spos;
-    quint32 bpos    = m_bpos;
+    auto spos           = m_spos;
+    auto epos           = m_epos;
+    auto env            = m_env;
+    auto env_incr       = m_env_incr;
+    auto nsamples       = m_buf->nsamples;
+    auto nch            = m_buf->nchannels;
+    auto bufdata        = m_buf->data;
+    auto xfp            = m_xfade_point;
+    auto xfl            = m_xfade;
+    auto out            = OUT;
+
+    for ( int s = 0; s < nsamples; ++s )
+    {
+        if ( spos >= xfp && spos < nsamples )
+        {
+            //              if phase is in the crossfade zone
+            //              get data from envelope first (linearly interpolated)
+            int y           = floor(epos);
+            float x         = epos - y;
+            float xfu       = lininterp( x, env[y], env[y+1] );
+            float xfd       = 1-xfu;
+
+            for ( int ch = 0; ch < nch; ++ ch )
+            {
+                out[ch][s] =    *bufdata++ * xfd +
+                                *bufdata - xfp * nch * xfu;
+            }
+
+            spos++;
+            epos += env_incr;
+        }
+        else if ( spos  == nsamples )
+        {
+            // if phase reaches end of crossfade
+            // main phase continues from end of 'up' crossfade
+            // reset envelope phase
+            bufdata = bufdata + xfl * nch -1;
+
+            for ( int ch = 0; ch < nch; ++ch )
+                  out[ch][s]  = *bufdata++;
+
+            spos        = xfl-1;
+            epos        = 0;
+        }
+        else
+        {
+            // normal behaviour
+            for ( int ch = 0; ch < nch; ++ch )
+                  out[ch][s]  = *bufdata++;
+
+            spos++;
+            // epos should be at zero
+        }
+    }
+
+    m_spos = spos;
+    m_epos = epos;
 
     return m_outputs;
 }

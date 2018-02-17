@@ -4,6 +4,7 @@
 #include "audiobackend.h"
 #include <QAudioBuffer>
 #include <QAudioDecoder>
+#include "wpnsndfile.hpp"
 
 #define ENVSIZE 16384
 
@@ -36,12 +37,12 @@ signals:
 private:
     QString             m_path;
     uint32_t            m_xfade;
-    QDataStream*        m_stream;
-    QFile*              m_file;
-    QAudioBuffer*       m_buffer;
     float               m_env[ENVSIZE];
-    quint32             m_spos;
-    quint32             m_bpos;
+    quint64             m_epos;
+    quint64             m_spos;
+    quint64             m_xfade_point;
+    float               m_env_incr;
+    sndbuf*             m_buf;
 };
 
 #endif // FIELDS_H

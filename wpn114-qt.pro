@@ -1,7 +1,9 @@
 QT += quickwidgets multimedia widgets
 CONFIG += c++14
 
-LIBS += -framework CoreFoundation
+
+INCLUDEPATH += /usr/local/opt/libsndfile/include
+LIBS += -framework CoreFoundation -L/usr/local/opt/libsndfile/lib -lsndfile
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -24,7 +26,8 @@ SOURCES += main.cpp \
     oneshots.cpp \
     bursts.cpp \
     send.cpp \
-    vumeter.cpp
+    vumeter.cpp \
+    wpnsndfile.cpp
 
 RESOURCES += qml.qrc
 
@@ -49,4 +52,5 @@ HEADERS += \
     oneshots.h \
     bursts.h \
     send.h \
-    vumeter.h
+    vumeter.h \
+    wpnsndfile.hpp
