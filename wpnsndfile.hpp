@@ -10,7 +10,7 @@ struct sndbuf
 {
     sndbuf ( std::string const& filepath, quint64 frames = 0 );
 
-    int     update      ( quint64 start, quint64 len );
+    void    update      ( float*&rptr, quint64 start, quint64 len );
     void    suspend     ( );
     void    resume      ( );
 

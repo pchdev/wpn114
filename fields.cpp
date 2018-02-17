@@ -9,7 +9,10 @@ Fields::Fields() : m_path(""), m_xfade(65536),
     SETN_IN ( 0 );
 }
 
-Fields::~Fields() {}
+Fields::~Fields()
+{
+    if ( m_buf ) delete m_buf;
+}
 
 void Fields::setNumInputs(const quint16) {}
 void Fields::classBegin() {}
@@ -17,13 +20,13 @@ void Fields::componentComplete()
 {
     // build sin xfade envelope
     for ( int i = 0; i < ENVSIZE; ++ i )
-        m_env = sin ( (float) i/ENVSIZE*M_PI_2 );
+        m_env[i] = sin ( (float) i/ENVSIZE*M_PI_2 );
 
     // full memory buffering is convenient for the crossfade
     // but implementing both streaming & fullmem would be a good choice, for longer files
     // DiskFields audio object to implement then...
 
-    m_buf = new sndbuf( m_path.toStdString(), 0);
+    m_buf = new sndbuf ( m_path.toStdString(), 0);
 
     m_xfade_point   = m_buf->nsamples - m_xfade;
     m_env_incr      = (float) ENVSIZE / m_xfade;
@@ -44,46 +47,53 @@ float** Fields::process(const quint16 nsamples)
     auto spos           = m_spos;
     auto epos           = m_epos;
     auto env            = m_env;
-    auto env_incr       = m_env_incr;
-    auto nsamples       = m_buf->nsamples;
+    auto eicr           = m_env_incr;
+    auto bufnsamples    = m_buf->nsamples;
     auto nch            = m_buf->nchannels;
     auto bufdata        = m_buf->data;
     auto xfp            = m_xfade_point;
     auto xfl            = m_xfade;
     auto out            = OUT;
 
+    // get buffer back in position
+    bufdata += spos*nch;
+
     for ( int s = 0; s < nsamples; ++s )
     {
         if ( spos >= xfp && spos < nsamples )
         {
             //              if phase is in the crossfade zone
-            //              get data from envelope first (linearly interpolated)
-            int y           = floor(epos);
-            float x         = epos - y;
+            //              get interpolated data from envelope
+            int y           = floor( epos );
+            float x         = (float) epos - y;
             float xfu       = lininterp( x, env[y], env[y+1] );
-            float xfd       = 1-xfu;
+            float xfd       = 1.f-xfu;
 
             for ( int ch = 0; ch < nch; ++ ch )
             {
-                out[ch][s] =    *bufdata++ * xfd +
-                                *bufdata - xfp * nch * xfu;
+                //  normal phase * xfade 'down' mixed w/
+                // 'reset' phase * xfade 'up
+                float* rphs     = bufdata-xfp*nch;
+                out[ch][s]      = *bufdata * xfd + *rphs * xfu;
+
+                bufdata++;
             }
 
             spos++;
-            epos += env_incr;
+            epos += eicr;
         }
-        else if ( spos  == nsamples )
+        else if ( spos  == bufnsamples )
         {
             // if phase reaches end of crossfade
             // main phase continues from end of 'up' crossfade
             // reset envelope phase
-            bufdata = bufdata + xfl * nch -1;
+            bufdata     = &m_buf->data[xfl*nch];
+            epos        = 0;
 
             for ( int ch = 0; ch < nch; ++ch )
                   out[ch][s]  = *bufdata++;
 
-            spos        = xfl-1;
-            epos        = 0;
+            spos        = xfl+1;
         }
         else
         {
@@ -92,7 +102,6 @@ float** Fields::process(const quint16 nsamples)
                   out[ch][s]  = *bufdata++;
 
             spos++;
-            // epos should be at zero
         }
     }
 

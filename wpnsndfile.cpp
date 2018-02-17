@@ -26,6 +26,12 @@ sndbuf::sndbuf(std::string const& filepath, quint64 frames ) : sndfile(0), path(
     sample_rate      = sfinfo.samplerate;
 }
 
+sndbuf::~sndbuf()
+{
+    if ( data ) delete data;
+    sf_close ( sndfile );
+}
+
 void sndbuf::update(float* &rptr, quint64 sndf_start, quint64 len)
 {
     sf_seek         ( sndfile, len, sndf_start );
@@ -39,5 +45,5 @@ void sndbuf::suspend()
 
 void sndbuf::resume()
 {
-    sf_open ( path, SFM_READ, &sfinfo )
+    sf_open ( path.c_str(), SFM_READ, &sfinfo );
 }
