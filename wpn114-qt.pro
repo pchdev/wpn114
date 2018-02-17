@@ -27,7 +27,8 @@ SOURCES += main.cpp \
     bursts.cpp \
     send.cpp \
     vumeter.cpp \
-    wpnsndfile.cpp
+    wpnsndfile.cpp \
+    soundtracks.cpp
 
 RESOURCES += qml.qrc
 
@@ -53,4 +54,5 @@ HEADERS += \
     bursts.h \
     send.h \
     vumeter.h \
-    wpnsndfile.hpp
+    wpnsndfile.hpp \
+    soundtracks.h

@@ -6,6 +6,7 @@
 #include "audioplugin.h"
 #include "rooms.h"
 #include "fields.h"
+#include "oneshots.h"
 
 #include <QApplication>
 #include <QQuickWidget>
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<RoomsSetup, 1>      ( "WPN114", 1, 0, "RoomsSetup" );
     qmlRegisterType<Rooms, 1>           ( "WPN114", 1, 0, "Rooms" );
     qmlRegisterType<Fields, 1>          ( "WPN114", 1, 0, "Fields" );
+    qmlRegisterType<Oneshots, 1>        ( "WPN114", 1, 0, "Oneshots" );
 
     QApplication app(argc, argv);
 

@@ -6,7 +6,8 @@
 Fields::Fields() : m_path(""), m_xfade(65536),
     m_spos(0), m_epos(0)
 {
-    SETN_IN ( 0 );
+    SETN_IN     ( 0 );
+    SET_OFFSET  ( 0 );
 }
 
 Fields::~Fields()
