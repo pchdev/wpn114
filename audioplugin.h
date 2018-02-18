@@ -84,7 +84,7 @@ class vst2x_plugin : public plugin_hdl
 
 // QT INSTANCE --------------------------------------------------------------------
 
-class AudioPlugin : public AudioObject, public QQmlParserStatus
+class AudioPlugin : public AudioEffectObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES ( QQmlParserStatus )

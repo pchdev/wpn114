@@ -174,6 +174,38 @@ void AudioEffectObject::addReceive(const AudioSend &receive)
     m_receives.push_back(&receive);
 }
 
+float**& AudioEffectObject::get_inputs(const quint64 nsamples)
+{
+    auto inputs     = m_inputs;
+    auto nin        = m_num_inputs;
+    float** in      = IN;
+
+    for ( const auto& input : inputs )
+    {
+        if ( input->active() )
+        {
+            uint16_t unout  = input->numOutputs();
+            uint16_t uoff   = input->offset();
+            float** buf     = input->process(nsamples);
+            inbufmerge      ( in, buf, nin, unout, uoff, nsamples, 1.f );
+        }
+    }
+
+    for ( const auto& rcv : m_receives )
+    {
+        auto sender = dynamic_cast<AudioObject*>(rcv->parent());
+        if ( sender->active() && rcv->active() )
+        {
+            uint16_t unout  = sender->numOutputs();
+            uint16_t uoff   = sender->offset();
+            float** buf     = sender->process(nsamples);
+            inbufmerge      ( in, buf, nin, unout, uoff, nsamples, rcv->level() );
+        }
+    }
+
+    return IN;
+}
+
 // AUDIO_BACKEND --------------------------------------------------------------
 
 AudioBackend::AudioBackend() :

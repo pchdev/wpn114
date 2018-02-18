@@ -66,7 +66,9 @@ float** AudioPlugin::process(const quint16 nsamples)
 {
     if  ( m_num_inputs )
     {
-        ZEROBUF(IN, m_num_inputs) GET_INPUTS;
+        ZEROBUF(IN, m_num_inputs);
+        auto in = get_inputs( nsamples );
+
         m_plugin_hdl->process_audio(in, m_outputs, nsamples);
     }
 

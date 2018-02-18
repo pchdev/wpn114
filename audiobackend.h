@@ -21,22 +21,22 @@ public:
     AudioSend();
     ~AudioSend();
 
-    void componentComplete() override;
-    void classBegin() override;
+    void componentComplete          () override;
+    void classBegin                 () override;
 
-    AudioEffectObject* target() const;
-    float level() const;
-    bool prefader() const;
-    int offset() const;
-    bool active() const;
-    bool muted() const;
+    int offset                      () const;
+    bool active                     () const;
+    bool muted                      () const;
+    bool prefader                   () const;
+    float level                     () const;
+    AudioEffectObject* target       () const;
 
-    void setTarget(const AudioEffectObject*);
-    void setLevel(const float);
-    void setPrefader(const bool);
-    void setOffset(const int);
-    void setActive(const bool);
-    void setMuted(const bool);
+    void setTarget                  ( const AudioEffectObject* );
+    void setLevel                   ( const float );
+    void setPrefader                ( const bool );
+    void setOffset                  ( const int );
+    void setActive                  ( const bool );
+    void setMuted                   ( const bool );
 
 private:
 
@@ -118,12 +118,12 @@ protected:
 
 inline void inbufmerge(
     float** b1, float** b2, uint16_t nin,
-    uint16_t unout, uint16_t uoff, uint16_t nsamples )
+    uint16_t unout, uint16_t uoff, uint16_t nsamples, float b2level)
     {
         for(int ch = 0; ch < nin; ++ch)
             if ( ch >= uoff && ch < uoff+unout )
                 for(int s = 0; s < nsamples; ++s)
-                    b1[ch][s] += b2[ch-uoff][s];
+                    b1[ch][s] += b2[ch-uoff][s] * b2level;
     }
 };
 
@@ -137,37 +137,27 @@ class AudioEffectObject : public AudioObject
 
 public:
     ~AudioEffectObject();
-    quint16 numInputs() const;
-    void setNumInputs(const quint16);
+
+    quint16 numInputs   ( ) const;
+    void setNumInputs   ( const quint16 );
 
     QQmlListProperty<AudioObject>   inputs();
     QQmlListProperty<AudioSend>     receives();
 
-    void addReceive(const AudioSend& receive);
+    void addReceive( const AudioSend& receive );
 
 signals:
     void numInputsChanged();
 
 protected:
+    float**& get_inputs ( const quint64 nsamples );
+
 #define IN              m_inbuf
 #define SETN_IN(n)      m_num_inputs = n;
 
 #define INITIALIZE_AUDIO_IO \
         INITIALIZE_AUDIO_OUTPUTS \
         IOALLOC ( m_inbuf, m_num_inputs );
-
-#define GET_INPUTS                                                  \
-    auto inputs     = m_inputs;                                     \
-    auto nin        = m_num_inputs;                                 \
-    float** in      = IN;                                           \
-    for( const auto& input : inputs ) {                             \
-        uint16_t unout  = input->numOutputs();                      \
-        uint16_t uoff   = input->offset();                          \
-        float** buf     = input->process(nsamples);                 \
-        inbufmerge(in, buf, nin, unout, uoff, nsamples); }
-
-#define GET_RECEIVES                                                  \
-    auto sends      = m_sends;
 
 protected:
     float**                 m_inbuf;
@@ -187,20 +177,21 @@ class AudioBackend : public QObject, public QQmlParserStatus
     Q_INTERFACES ( QQmlParserStatus )
     Q_CLASSINFO  ( "DefaultProperty", "masters")
 
-    Q_PROPERTY( QString device READ device WRITE setDevice )
-    Q_PROPERTY( int numInputs READ numInputs WRITE setNumInputs )
-    Q_PROPERTY( int numOutputs READ numOutputs WRITE setNumOutputs )
-    Q_PROPERTY( int sampleRate READ sampleRate WRITE setSampleRate )
-    Q_PROPERTY( int blockSize READ blockSize WRITE setBlockSize)
-    Q_PROPERTY( bool active READ active WRITE setActive NOTIFY activeChanged )
-    Q_PROPERTY( bool muted READ muted WRITE setMuted NOTIFY mutedChanged )
-    Q_PROPERTY( QQmlListProperty<AudioMaster> masters READ masters )
+    Q_PROPERTY  ( QString device READ device WRITE setDevice )
+    Q_PROPERTY  ( int numInputs READ numInputs WRITE setNumInputs )
+    Q_PROPERTY  ( int numOutputs READ numOutputs WRITE setNumOutputs )
+    Q_PROPERTY  ( int sampleRate READ sampleRate WRITE setSampleRate )
+    Q_PROPERTY  ( int blockSize READ blockSize WRITE setBlockSize)
+    Q_PROPERTY  ( bool active READ active WRITE setActive NOTIFY activeChanged )
+    Q_PROPERTY  ( bool muted READ muted WRITE setMuted NOTIFY mutedChanged )
+    Q_PROPERTY  ( QQmlListProperty<AudioMaster> masters READ masters )
 
 public:
     AudioBackend();
 
-    virtual void classBegin();
-    virtual void componentComplete();
+    virtual void classBegin() override;
+    virtual void componentComplete() override;
+
     QQmlListProperty<AudioMaster> masters();
 
     Q_INVOKABLE void configure  ();

@@ -38,20 +38,17 @@ Rectangle {
         }
     }
 
-    /*RoomsSetup {
+    // AUDIO ---------------------------------------------------------------------------
+
+    RoomsSetup {
         id: rooms_setup
-        numOutputs: 8
-        positions: [
-            0.0, 0.0,
-            0.0, 0.0,
-            0.0, 0.0,
-            0.0, 0.0,
-            0.0, 0.0,
-            0.0, 0.0,
-            0.0, 0.0,
-            0.0, 0.0 ]
-        // + gui
-    }*/
+
+        Speaker {
+            position: [0.8, 1.0]
+            influence: 1.0
+
+        }
+    }
 
     AudioOut {
         id: audio_backend
@@ -66,40 +63,42 @@ Rectangle {
             level: 1
             muted: false
 
-            /*Rooms {
-                // inputs are automatically defined by the children AudioObjects
-                // outputs are defned by the room setup object
+            Rooms {
                 id: rooms_test
                 setup: rooms_setup
 
-                SinOsc {
-                    id: sinosc_test
-                    frequency: 440
-                    level: 0.25
-                    active: false
-                }
-            }*/
-
-            Fields {
-                id: fields
-                path: "/Users/pchd/Desktop/tester.wav"
-                xfade: 65536
-
-                Send {
-                    target: vsteffect
+                Source {
+                    lposition: [0.0, 0.0]
+                    rposition: [0.0, 0.0]
+                    influence: 0.5
                     level: 1.0
-                    prefader: false
-                    offset: 0
-                    active: false
-                    muted: false
+
+                    Fields {
+                        id: fields
+                        path: "/Users/pchd/Desktop/tester.wav"
+                        xfade: 65536
+
+                        Send {
+                            target: altiverb
+                            level: 1.0
+                        }
+                    }
+                }
+
+                Source {
+
+                    lposition: [0.25, 0.5]
+                    rposition: [0.75, 0.5]
+                    influence: 1.0
+                    level: 1.0
+
+                    AudioPlugin {
+                        id: altiverb
+                        path: "/Library/Audio/Plug-Ins/VST/Audio Ease/Altiverb 7.vst"
+                        Component.onCompleted: {}
+                    }
                 }
             }
-
-            /*AudioPlugin {
-                id: vsttest
-                path: "/Library/Audio/Plug-Ins/VST/Kaivo.vst"
-                Component.onCompleted: {}
-            }*/
         }
 
         Component.onCompleted: {
