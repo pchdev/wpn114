@@ -19,6 +19,8 @@ int main(int argc, char *argv[])
 #endif
 
     qmlRegisterType<AudioObject>        ( );
+    qmlRegisterType<AudioEffectObject>  ( );
+    qmlRegisterType<AudioSend>          ( "WPN114", 1, 0, "Send" );
     qmlRegisterType<AudioBackend, 1>    ( "WPN114", 1, 0, "AudioOut" );
     qmlRegisterType<AudioMaster, 1>     ( "WPN114", 1, 0, "Master" );
     qmlRegisterType<SinOsc, 1>          ( "WPN114", 1, 0, "SinOsc" );

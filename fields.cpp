@@ -6,7 +6,6 @@
 Fields::Fields() : m_path(""), m_xfade(65536),
     m_spos(0), m_epos(0)
 {
-    SETN_IN     ( 0 );
     SET_OFFSET  ( 0 );
 }
 
@@ -33,7 +32,7 @@ void Fields::componentComplete()
     m_env_incr      = (float) ENVSIZE / m_xfade;
 
     SETN_OUT ( m_buf->nchannels );
-    INITIALIZE_AUDIO_IO;
+    INITIALIZE_AUDIO_OUTPUTS;
 
     emit bufferReady( );
 }

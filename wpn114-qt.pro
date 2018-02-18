@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     send.cpp \
     vumeter.cpp \
     wpnsndfile.cpp \
-    soundtracks.cpp
+    soundtracks.cpp \
+    ashes.cpp
 
 RESOURCES += qml.qrc
 
@@ -55,4 +56,5 @@ HEADERS += \
     send.h \
     vumeter.h \
     wpnsndfile.hpp \
-    soundtracks.h
+    soundtracks.h \
+    ashes.h

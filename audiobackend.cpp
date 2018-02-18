@@ -5,15 +5,87 @@ quint16  AudioBackend::m_block_size;
 quint16  AudioBackend::m_num_inputs;
 quint16  AudioBackend::m_num_outputs;
 
+// AUDIO_SEND ----------------------------------------------------------------------------
+
+AudioSend::AudioSend() {}
+AudioSend::~AudioSend() {}
+
+AudioSend::classBegin() {}
+AudioSend::componentComplete()
+{
+    if( m_target ) m_target->addReceive(*this);
+}
+
+AudioEffectObject* AudioSend::target()
+{
+    return m_target;
+}
+
+float AudioSend::level() const
+{
+    return m_level;
+}
+
+bool AudioSend::prefader() const
+{
+    return m_prefader;
+}
+
+int AudioSend::offset() const
+{
+    return m_offset;
+}
+
+bool AudioSend::active() const
+{
+    return m_active;
+}
+
+bool AudioSend::muted() const
+{
+    return m_muted;
+}
+
+void AudioSend::setTarget(const AudioEffectObject *obj)
+{
+    m_target = obj;
+}
+
+void AudioSend::setLevel(const float level)
+{
+    m_level = level;
+}
+
+void AudioSend::setPrefader(const bool prefader)
+{
+    m_prefader = prefader;
+}
+
+void AudioSend::setOffset(const int offset)
+{
+    m_offset = offset;
+}
+
+void AudioSend::setActive(const bool active)
+{
+    m_active = active;
+}
+
+void AudioSend::setMuted(const bool muted)
+{
+    m_muted = muted;
+}
+
+// AUDIO_OBJECT --------------------------------------------------------------------------
+
 AudioObject::~AudioObject()
 {
     IODEALLOC( m_outputs, m_num_outputs );
-    IODEALLOC( m_inputs, m_num_inputs );
 }
 
-QQmlListProperty<AudioObject> AudioObject::units()
+QQmlListProperty<AudioSend> AudioObject::sends()
 {
-    return QQmlListProperty<AudioObject>(this, m_units);
+    return QQmlListProperty<AudioObject>(this, m_sends);
 }
 
 float AudioObject::level() const
@@ -24,11 +96,6 @@ float AudioObject::level() const
 quint16 AudioObject::offset() const
 {
     return m_offset;
-}
-
-quint16 AudioObject::numInputs() const
-{
-    return m_num_inputs;
 }
 
 quint16 AudioObject::numOutputs() const
@@ -68,19 +135,46 @@ void AudioObject::setOffset(const quint16 offset)
     m_offset = offset;
 }
 
-void AudioObject::setNumInputs(const quint16 num_inputs)
-{
-    m_num_inputs = num_inputs;
-    emit numInputsChanged();
-}
-
 void AudioObject::setNumOutputs(const quint16 num_outputs)
 {
     m_num_outputs = num_outputs;
     emit numOutputsChanged();
 }
 
-// -----------------------------------------------------------------------------------------
+// AUDIO_EFFECT_OBJECT --------------------------------------------------------
+
+AudioEffectObject::~AudioEffectObject()
+{
+    IODEALLOC( m_inbuf, m_num_inputs );
+}
+
+QQmlListProperty<AudioObject> AudioEffectObject::inputs()
+{
+    return QQmlListProperty<AudioObject>(this, m_inputs);
+}
+
+QQmlListProperty<AudioSend> AudioEffectObject::receives()
+{
+    return QQmlListProperty<AudioSend>(this, m_receives);
+}
+
+quint16 AudioEffectObject::numInputs() const
+{
+    return m_num_inputs;
+}
+
+void AudioEffectObject::setNumInputs(const quint16 num_inputs)
+{
+    m_num_inputs = num_inputs;
+    emit numInputsChanged();
+}
+
+void AudioEffectObject::addReceive(const AudioSend &receive)
+{
+    m_receives.push_back(&receive);
+}
+
+// AUDIO_BACKEND --------------------------------------------------------------
 
 AudioBackend::AudioBackend() :
 
@@ -95,11 +189,7 @@ AudioBackend::AudioBackend() :
     m_block_size    = 512;
 }
 
-void AudioBackend::classBegin()
-{
-
-}
-
+void AudioBackend::classBegin() {}
 void AudioBackend::componentComplete()
 {
     configure();

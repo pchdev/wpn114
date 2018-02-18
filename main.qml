@@ -84,6 +84,15 @@ Rectangle {
                 id: fields
                 path: "/Users/pchd/Desktop/tester.wav"
                 xfade: 65536
+
+                Send {
+                    target: vsteffect
+                    level: 1.0
+                    prefader: false
+                    offset: 0
+                    active: false
+                    muted: false
+                }
             }
 
             /*AudioPlugin {

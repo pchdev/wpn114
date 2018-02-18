@@ -1,11 +1,11 @@
 #include "oneshots.h"
 
-Oneshots::Oneshots() : m_pos(0), m_buf(0)
+Oneshots::Oneshots() : m_pos(0), m_buf(0) {}
+
+Oneshots::~Oneshots()
 {
-
+    if ( m_buf ) delete m_buf;
 }
-
-Oneshots::~Oneshots() {}
 
 void Oneshots::classBegin() {}
 void Oneshots::componentComplete()
@@ -13,10 +13,9 @@ void Oneshots::componentComplete()
     m_buf = new sndbuf ( m_path.toStdString(), 0 );
 
     SET_OFFSET  ( 0 );
-    SETN_IN     ( 0 );
     SETN_OUT    ( m_buf->nchannels );
 
-    INITIALIZE_AUDIO_IO;
+    INITIALIZE_AUDIO_OUTPUTS;
     emit bufferLoaded();
 }
 

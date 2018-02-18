@@ -5,41 +5,80 @@
 #include <QAudioOutput>
 #include "audiomaster.h"
 
+class AudioObject;
+
+class AudioSend : public QObject, QQmlParserStatus
+{
+    Q_OBJECT
+    Q_PROPERTY  ( AudioEffectObject* target READ target WRITE setTarget NOTIFY targetChanged )
+    Q_PROPERTY  ( float level READ level WRITE setLevel )
+    Q_PROPERTY  ( bool prefader READ prefader WRITE setPrefader )
+    Q_PROPERTY  ( int offset READ offset WRITE setOffset )
+    Q_PROPERTY  ( bool active READ active WRITE setActive )
+    Q_PROPERTY  ( bool muted READ muted WRITE setMuted )
+
+public:
+    AudioSend();
+    ~AudioSend();
+
+    void componentComplete() override;
+    void classBegin() override;
+
+    AudioEffectObject* target() const;
+    float level() const;
+    bool prefader() const;
+    int offset() const;
+    bool active() const;
+    bool muted() const;
+
+    void setTarget(const AudioEffectObject*);
+    void setLevel(const float);
+    void setPrefader(const bool);
+    void setOffset(const int);
+    void setActive(const bool);
+    void setMuted(const bool);
+
+private:
+
+    float                   m_level;
+    bool                    m_prefader;
+    int                     m_offset;
+    bool                    m_active;
+    bool                    m_muted;
+    AudioEffectObject*      m_target;
+
+};
+
 class AudioObject : public QObject
 {
     Q_OBJECT
     Q_PROPERTY  ( int offset READ offset WRITE setOffset )
     Q_PROPERTY  ( float level READ level WRITE setLevel )
-    Q_PROPERTY  ( int numInputs READ numInputs WRITE setNumInputs NOTIFY numInputsChanged )
     Q_PROPERTY  ( int numOutputs READ numOutputs WRITE setNumOutputs NOTIFY numOutputsChanged )
     Q_PROPERTY  ( bool active READ active WRITE setActive NOTIFY activeChanged )
     Q_PROPERTY  ( bool muted READ active WRITE setMuted NOTIFY mutedChanged )
-    Q_PROPERTY  ( QQmlListProperty<AudioObject> units READ units )
-    Q_CLASSINFO ( "DefaultProperty", "units")
+    Q_PROPERTY  ( QQmlListProperty<AudioSend> sends READ sends )
+    Q_CLASSINFO ( "DefaultProperty", "sends")
 
 public:
-
     ~AudioObject();
 
     virtual float** process(const quint16 nsamples) = 0;
-    QQmlListProperty<AudioObject> units();
+    QQmlListProperty<AudioSend> sends();
 
     float       level           () const;
     quint16     offset          () const;
-    quint16     numInputs       () const;
     quint16     numOutputs      () const;
     bool        active          () const;
     bool        muted           () const;
 
-    void setLevel               (const float);
-    void setOffset              (const quint16);
-    void setNumInputs           (const quint16);
-    void setNumOutputs          (const quint16);
-    void setActive              (const bool);
-    void setMuted               (const bool);
+    void setLevel               ( const float );
+    void setOffset              ( const quint16 );
+    void setNumOutputs          ( const quint16 );
+    void setActive              ( const bool );
+    void setMuted               ( const bool );
 
 signals:
-    void numInputsChanged       ();
     void numOutputsChanged      ();
     void activeChanged          ();
     void mutedChanged           ();
@@ -48,20 +87,16 @@ protected:
     bool                    m_active;
     bool                    m_muted;
     float                   m_level;
-    float**                 m_inputs;
     float**                 m_outputs;
     quint16                 m_offset;
-    quint16                 m_num_inputs;
     quint16                 m_num_outputs;
-    QList<AudioObject*>     m_units;
+    QList<AudioSend*>       m_sends;
 
 #define SAMPLERATE      AudioBackend::sampleRate()
 #define SR              AudioBackend::sampleRate()
 #define BLOCKSIZE       AudioBackend::blockSize()
-#define SETN_IN(n)      m_num_inputs = n;
 #define SETN_OUT(n)     m_num_outputs = n;
 #define SET_OFFSET(o)   m_offset = o;
-#define IN              m_inputs
 #define OUT             m_outputs
 
 #define ZEROBUF( target, sz ) \
@@ -78,29 +113,67 @@ protected:
     delete target[i];                                       \
     delete target;
 
-#define INITIALIZE_AUDIO_IO                                 \
+#define INITIALIZE_AUDIO_OUTPUTS                            \
     IOALLOC ( m_outputs, m_num_outputs );                   \
-    IOALLOC ( m_inputs, m_num_inputs );
 
 inline void inbufmerge(
     float** b1, float** b2, uint16_t nin,
-uint16_t unout, uint16_t uoff, uint16_t nsamples)
+    uint16_t unout, uint16_t uoff, uint16_t nsamples )
     {
         for(int ch = 0; ch < nin; ++ch)
             if ( ch >= uoff && ch < uoff+unout )
                 for(int s = 0; s < nsamples; ++s)
                     b1[ch][s] += b2[ch-uoff][s];
     }
+};
+
+class AudioEffectObject : public AudioObject
+{
+    Q_OBJECT
+    Q_PROPERTY  ( int numInputs READ numInputs WRITE setNumInputs NOTIFY numInputsChanged )
+    Q_PROPERTY  ( QQmlListProperty<AudioObject> inputs READ inputs )
+    Q_PROPERTY  ( QQmlListProperty<AudioSend> receives READ receives )
+    Q_CLASSINFO ( "DefaultProperty", "inputs")
+
+public:
+    ~AudioEffectObject();
+    quint16 numInputs() const;
+    void setNumInputs(const quint16);
+
+    QQmlListProperty<AudioObject>   inputs();
+    QQmlListProperty<AudioSend>     receives();
+
+    void addReceive(const AudioSend& receive);
+
+signals:
+    void numInputsChanged();
+
+protected:
+#define IN              m_inbuf
+#define SETN_IN(n)      m_num_inputs = n;
+
+#define INITIALIZE_AUDIO_IO \
+        INITIALIZE_AUDIO_OUTPUTS \
+        IOALLOC ( m_inbuf, m_num_inputs );
 
 #define GET_INPUTS                                                  \
-    auto units      = m_units;                                      \
+    auto inputs     = m_inputs;                                     \
     auto nin        = m_num_inputs;                                 \
     float** in      = IN;                                           \
-    for(const auto& unit : units) {                                 \
-        uint16_t unout = unit->numOutputs();                        \
-        uint16_t uoff = unit->offset();                             \
-        float** buf = unit->process(nsamples);                      \
+    for( const auto& input : inputs ) {                             \
+        uint16_t unout  = input->numOutputs();                      \
+        uint16_t uoff   = input->offset();                          \
+        float** buf     = input->process(nsamples);                 \
         inbufmerge(in, buf, nin, unout, uoff, nsamples); }
+
+#define GET_RECEIVES                                                  \
+    auto sends      = m_sends;
+
+protected:
+    float**                 m_inbuf;
+    quint16                 m_num_inputs;
+    QList<AudioObject*>     m_inputs;
+    QList<AudioSend*>       m_receives;
 
 };
 
