@@ -86,6 +86,17 @@ void AudioPlugin::setPath(const QString path)
     m_path = path;
 }
 
+quint16 AudioPlugin::program() const
+{
+    return m_program;
+}
+
+void AudioPlugin::setProgram(const quint16 program)
+{
+    m_program = program;
+    m_plugin_hdl->set_program(program);
+}
+
 QStringList AudioPlugin::programs() const
 {
     QStringList res;

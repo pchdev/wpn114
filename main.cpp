@@ -26,9 +26,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<SinOsc, 1>          ( "WPN114", 1, 0, "SinOsc" );
     qmlRegisterType<AudioPlugin, 1>     ( "WPN114", 1, 0, "AudioPlugin" );
     qmlRegisterType<RoomsSetup, 1>      ( "WPN114", 1, 0, "RoomsSetup" );
-    qmlRegisterType<Source, 1>          ( "WPN114", 1, 0, "Source" );
-    qmlRegisterType<Speaker, 1>         ( "WPN114", 1, 0, "Speaker" );
-    qmlRegisterType<Rooms, 1>           ( "WPN114", 1, 0, "Rooms" );
+    qmlRegisterType<Source, 1>          ( "WPN114", 1, 0, "Source2D" );
+    qmlRegisterType<Speaker, 1>         ( "WPN114", 1, 0, "Speaker2D" );
+    qmlRegisterType<Rooms, 1>           ( "WPN114", 1, 0, "Rooms2D" );
     qmlRegisterType<Fields, 1>          ( "WPN114", 1, 0, "Fields" );
     qmlRegisterType<Oneshots, 1>        ( "WPN114", 1, 0, "Oneshots" );
 

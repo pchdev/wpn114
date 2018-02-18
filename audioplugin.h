@@ -87,8 +87,9 @@ class vst2x_plugin : public plugin_hdl
 class AudioPlugin : public AudioEffectObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_INTERFACES ( QQmlParserStatus )
-    Q_PROPERTY   ( QString path READ path WRITE setPath NOTIFY pathChanged )
+    Q_INTERFACES    ( QQmlParserStatus )
+    Q_PROPERTY      ( QString path READ path WRITE setPath NOTIFY pathChanged )
+    Q_PROPERTY      ( int program READ program WRITE setProgram NOTIFY programChanged )
 
 public:
     AudioPlugin();
@@ -99,8 +100,12 @@ public:
     virtual void classBegin();
     virtual void componentComplete();
 
+    quint16 program() const;
     QString path() const;
+
     void setPath(const QString);
+    void setProgram(const quint16);
+
     Q_INVOKABLE void showEditorWindow();
 
     Q_INVOKABLE QStringList programs() const;
@@ -122,8 +127,10 @@ public:
 signals:
     void pathChanged();
     void pluginLoaded();
+    void programChanged();
 
 private:
+    quint16        m_program;
     QString        m_path;
     plugin_hdl*    m_plugin_hdl;
 

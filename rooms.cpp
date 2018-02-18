@@ -36,6 +36,18 @@ void RoomsElement::setPosition(const QVector2D position)
     m_position = position;
 }
 
+// ROOMS_SPEAKER -----------------------------------------------------------------
+
+int Speaker::output() const
+{
+    return m_output;
+}
+
+void Speaker::setOutput(const int output)
+{
+    m_output = output;
+}
+
 // ROOMS_SOURCE ------------------------------------------------------------------
 
 QQmlListProperty<AudioObject> Source::inputs()
@@ -116,21 +128,31 @@ void Rooms::componentComplete()
         {
             maxchannels = qMax<uint16_t>( maxchannels, subsrc->numOutputs() );
 
-            // add independent channel positions to pointer vector
+            // add pointers to input sources' independent channels properties
             if ( subsrc->numOutputs() == 1 )
             {
-                float* data_ptrs[4]  = { &src->position().x(), &src->position().y()
-                                         &src->influence(), &src->level() };
+                float* data_ptrs[4]  =
+                {
+                    &src->position().x(), &src->position().y(),
+                    &src->influence(), &src->level()
+                };
 
                 m_src_data.push_back(data_ptrs);
             }
 
             else if ( subsrc->numOutputs() == 2 )
             {
-                float* data_ptrs_l[4]  = { &src->lposition().x(), &src->lposition().y()
-                                         &src->influence(), &src->level() };
-                float* data_ptrs_r[4]  = { &src->rposition().x(), &src->rposition().y()
-                                           &src->influence(), &src->level() };
+                float* data_ptrs_l[4]  =
+                {
+                    &src->lposition().x(), &src->lposition().y(),
+                    &src->influence(), &src->level()
+                };
+
+                float* data_ptrs_r[4]  =
+                {
+                    &src->rposition().x(), &src->rposition().y(),
+                    &src->influence(), &src->level()
+                };
 
                 m_src_data.push_back(data_ptrs_l);
                 m_src_data.push_back(data_ptrs_r);
@@ -171,13 +193,11 @@ QQmlListProperty<Source> Rooms::sources()
     return QQmlListProperty<Source>(this, m_sources);
 }
 
-float**& Rooms::get_inputs(const quint64 nsamples)
+inline float**& Rooms::get_inputs(const quint64 nsamples)
 {
     // sends are not allowed here
     for(const auto& source : m_sources )
-    {
         for(const auto& input: source->get_inputs())
-        {
             if ( input->active() )
             {
                 uint16_t unout = input->numOutputs();
@@ -185,8 +205,6 @@ float**& Rooms::get_inputs(const quint64 nsamples)
                 float** buf = input->process(nsamples);
                 inbufmerge(IN, buf, m_num_inputs, unout, uoff, nsamples, source->level());
             }
-        }
-    }
 }
 
 #define SRCX spos[i][0]

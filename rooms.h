@@ -29,7 +29,17 @@ protected:
 
 };
 
-class Speaker : public RoomsElement {};
+class Speaker : public RoomsElement
+{
+    Q_PROPERTY      ( int output READ output WRITE setOutput )
+
+public:
+    int output() const;
+    void setOutput(const int);
+
+private:
+    quint16 m_output;
+};
 
 class Source : public RoomsElement
 {
@@ -54,7 +64,6 @@ private:
     QList<AudioObject*> m_inputs;
     QVector2D m_lposition;
     QVector2D m_rposition;
-
 };
 
 

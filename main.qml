@@ -86,7 +86,6 @@ Rectangle {
                 }
 
                 Source {
-
                     lposition: [0.25, 0.5]
                     rposition: [0.75, 0.5]
                     influence: 1.0
@@ -95,6 +94,7 @@ Rectangle {
                     AudioPlugin {
                         id: altiverb
                         path: "/Library/Audio/Plug-Ins/VST/Audio Ease/Altiverb 7.vst"
+                        active: false
                         Component.onCompleted: {}
                     }
                 }
