@@ -28,12 +28,15 @@ void AudioPlugin::componentComplete()
 
     else if     ( m_path.endsWith(".vst"))
                 m_plugin_hdl = new vst2x_plugin(m_path.toStdString());
-
     else        return;
 
-    if          ( m_plugin_hdl )
-    emit        pluginLoaded();
-    else        return;
+    if          ( !m_plugin_hdl ) return;
+
+    for ( int i = 0; i < m_plugin_hdl->get_nparameters(); ++i )
+        m_parameters << QString::fromStdString(m_plugin_hdl->get_parameter_name(i));
+
+    for(int i = 0; i < m_plugin_hdl->get_nprograms(); ++i )
+        m_programs << QString::fromStdString(m_plugin_hdl->get_program_name(i));
 
     SET_OFFSET      ( 0 );
     SETN_IN         ( m_plugin_hdl->get_ninputs()  );
@@ -51,6 +54,8 @@ void AudioPlugin::componentComplete()
     m_view              ->update();
     m_view_container    ->setFixedSize(size[0], size[1]);
     m_view_container    ->update();
+
+    emit pluginLoaded();
 }
 
 void AudioPlugin::showEditorWindow()
@@ -97,24 +102,14 @@ void AudioPlugin::setProgram(const quint16 program)
     m_plugin_hdl->set_program(program);
 }
 
-QStringList AudioPlugin::programs() const
+QQmlListProperty<QString> AudioPlugin::programs() const
 {
-    QStringList res;
-
-    for(int i = 0; i < m_plugin_hdl->get_nprograms(); ++i )
-        res << QString::fromStdString(m_plugin_hdl->get_program_name(i));
-
-    return res;
+    return QQmlListProperty<QString>(this, m_programs);
 }
 
-QStringList AudioPlugin::parameters() const
+QQmlListProperty<QString> AudioPlugin::parameters() const
 {
-    QStringList res;
-
-    for ( int i = 0; i < m_plugin_hdl->get_nparameters(); ++i )
-        res << QString::fromStdString(m_plugin_hdl->get_parameter_name(i));
-
-    return res;
+    return QQmlListProperty<QString>(this, m_parameters);
 }
 
 float AudioPlugin::get(int index) const

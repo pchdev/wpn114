@@ -24,7 +24,8 @@ Item {
         "orage2.wav",
         "orage3.wav",
         "orage4.wav",
-        "paroral-gran.wav"];
+        "paroral-gran.wav"
+    ];
 
     // ------------------------------------------------------------------- SPEAKER_SETUP
 
@@ -42,9 +43,22 @@ Item {
         sampleRate: 44100
         blockSize: 512
 
+        Ossia.Property on active {
+            node: "/backend/active"
+        }
+
         WPN114.Master //---------------------------------------------------  AUDIO_MASTER
         {
             id: audio_master
+            level: 1.0
+
+            Ossia.Property on level {
+                node: "/master/level"
+            }
+
+            Ossia.Property on muted {
+                node: "/master/muted"
+            }
 
             WPN114.Rooms2D // ---------------------------------------------  ROOMS_SPATIALIZER
             {
@@ -63,10 +77,20 @@ Item {
                     influence: 1.0
                     level: 1.0
 
-                    Ossia.Property on lposition {}
-                    Ossia.Property on rposition {}
-                    Ossia.Property on influence {}
-                    Ossia.Property on level {}
+                    Ossia.Property on lposition
+                    {
+                        node: "/aux/positions/left-channel"
+                        bounding: Ossia.bounding.clip
+                    }
+
+                    Ossia.Property on rposition
+                    {
+                        node: "/aux/positions/right-channel"
+                        bounding: Ossia.bounding.clip
+                    }
+
+                    Ossia.Property on influence { node: "/aux/influence" }
+                    Ossia.Property on level { node: "/aux/level" }
 
                     WPN114.AudioPlugin // ---------------------------------  ALTIVERB
                     {
@@ -74,8 +98,8 @@ Item {
                         path: "/Library/Audio/Plug-Ins/VST/Audio Ease/Altiverb 7.vst"
                         program: 0
 
-                        Ossia.Property on level {}
-                        Ossia.Property on program {}
+                        Ossia.Property on level { node: "/aux/altiverb/level" }
+                        Ossia.Property on program { node: "/aux/altiverb/program" }
                     }
 
                     WPN114.AudioPlugin // --------------------------------- AMPLITUBE
@@ -84,8 +108,9 @@ Item {
                         path: "/Library/Audio/Plug-Ins/VST/Amplitube 4.vst"
                         program: 0
 
-                        Ossia.Property on level {}
-                        Ossia.Property on program {}
+                        Ossia.Property on level { node: "/aux/amplitube/level" }
+                        Ossia.Property on program { node: "/aux/amplitube/program" }
+                        Ossia.Property on active { node: "/aux/amplitube/active" }
                     }
                 }
 
@@ -99,10 +124,9 @@ Item {
                     influence: 0.5
                     level: 1.0
 
-                    Ossia.Property on lposition {}
-                    Ossia.Property on rposition {}
-                    Ossia.Property on influence {}
-                    Ossia.Property on level {}
+                    Ossia.Property on lposition { node: "/synths/kaivo_1/position/left-channel" }
+                    Ossia.Property on rposition { node: "/synths/kaivo_1/position/right-channel" }
+                    Ossia.Property on influence { node: "/synths/kaivo_1/influence" }
 
                     WPN114.AudioPlugin // ---------------------------------
                     {
@@ -110,8 +134,8 @@ Item {
                         path: "/Library/Audio/Plug-Ins/VST/Kaivo.vst"
                         program: 0
 
-                        Ossia.Property on level {}
-                        Ossia.Property on program {}
+                        Ossia.Property on level { node: "/synths/kaivo_1/level" }
+                        Ossia.Property on program { node: "/synths/kaivo_1/program" }
 
                         sends: [
 
@@ -120,8 +144,8 @@ Item {
                                 target: altiverb
                                 level: 0.75
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/synths/kaivo_1/sends/altiverb/active" }
+                                Ossia.Property on level { node: "/synths/kaivo_1/sends/altiverb/level" }
                             },
 
                             WPN114.Send
@@ -130,8 +154,8 @@ Item {
                                 level: 0.5
                                 active: false
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/synths/kaivo_1/sends/amplitube/active" }
+                                Ossia.Property on level { node: "/synths/kaivo_1/sends/amplitube/level" }
                             }
                         ]
                     }
@@ -147,10 +171,10 @@ Item {
                     influence: 0.5
                     level: 1.0
 
-                    Ossia.Property on lposition {}
-                    Ossia.Property on rposition {}
-                    Ossia.Property on influence {}
-                    Ossia.Property on level {}
+                    Ossia.Property on lposition { node: "/synths/kaivo_2/position/left-channel" }
+                    Ossia.Property on rposition { node: "/synths/kaivo_2/position/right-channel" }
+                    Ossia.Property on influence { node: "/synths/kaivo_2/influence" }
+                    Ossia.Property on level { node: "/synths/kaivo_2/level" }
 
                     WPN114.AudioPlugin
                     {
@@ -158,8 +182,8 @@ Item {
                         path: "/Library/Audio/Plug-Ins/VST/Kaivo.vst"
                         program: 1
 
-                        Ossia.Property on level {}
-                        Ossia.Property on program {}
+                        Ossia.Property on level { node: "/synths/kaivo_2/level" }
+                        Ossia.Property on program { node: "/synths/kaivo_2/program" }
 
                         sends: [
 
@@ -167,8 +191,8 @@ Item {
                                 target: altiverb
                                 level: 0.75
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/synths/kaivo_2/sends/altiverb/active" }
+                                Ossia.Property on level { node: "/synths/kaivo_2/sends/altiverb/level" }
                             },
 
                             WPN114.Send {
@@ -176,8 +200,8 @@ Item {
                                 level: 0.5
                                 active: false
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/synths/kaivo_2/sends/amplitube/active" }
+                                Ossia.Property on level { node: "/synths/kaivo_2/sends/amplitube/level" }
                             }
                         ]
                     }
@@ -192,10 +216,9 @@ Item {
                     influence: 0.5
                     level: 1.0
 
-                    Ossia.Property on lposition {}
-                    Ossia.Property on rposition {}
-                    Ossia.Property on influence {}
-                    Ossia.Property on level {}
+                    Ossia.Property on lposition { node: "/synths/absynth/position/left-channel" }
+                    Ossia.Property on rposition { node: "/synths/absynth/position/right-channel" }
+                    Ossia.Property on influence { node: "/synths/absynth/influence" }
 
                     WPN114.AudioPlugin
                     {
@@ -203,8 +226,8 @@ Item {
                         path: "/Library/Audio/Plug-Ins/VST/Absynth 5 Stereo.vst"
                         program: 0
 
-                        Ossia.Property on level {}
-                        Ossia.Property on program {}
+                        Ossia.Property on level { node: "/synths/absynth/level" }
+                        Ossia.Property on program { node: "/synths/absynth/program" }
 
                         sends: [
 
@@ -212,8 +235,8 @@ Item {
                                 target: altiverb
                                 level: 0.75
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/synths/absynth/sends/altiverb/active" }
+                                Ossia.Property on level { node: "/synths/absynth/sends/altiverb/level" }
                             },
 
                             WPN114.Send {
@@ -221,8 +244,8 @@ Item {
                                 level: 0.5
                                 active: false
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/synths/absynth/sends/amplitube/active" }
+                                Ossia.Property on level { node: "/synths/absynth/sends/amplitube/level" }
                             }
                         ]
                     }
@@ -237,19 +260,41 @@ Item {
                     influence: 0.5
                     level: 1.0
 
-                    Ossia.Property on lposition {}
-                    Ossia.Property on rposition {}
-                    Ossia.Property on influence {}
-                    Ossia.Property on level {}
+                    Ossia.Property on lposition { node: "/synths/falcon/position/left-channel" }
+                    Ossia.Property on rposition { node: "/synths/falcon/position/right-channel" }
+                    Ossia.Property on influence { node: "/synths/falcon/influence" }
 
                     WPN114.AudioPlugin
                     {
                         id: falcon
-                        path: "/Library/Audio/Plug-Ins/VST/Falcon.vst"
-                        program: 0
+                        path: "/Library/Audio/Plug-Ins/VST/Falcon.vst"                        
 
-                        Ossia.Property on level {}
-                        Ossia.Property on program {}
+                        Ossia.Property on level { node: "/synths/falcon/level" }
+                        Ossia.Property on program { node: "/synths/falcon/program" }
+
+                        Repeater
+                        {
+                            model: falcon.parameters
+
+                            Ossia.Parameter
+                            {
+                                node: "/synths/falcon/parameters/" + modelData
+                                valueType: Ossia.Type.Float
+                                min: 0; max: 1;
+                                bounding: Ossia.Bounding.Clip;
+                            }
+                        }
+
+                        Repeater
+                        {
+                            model: falcon.programs
+
+                            Ossia.Parameter
+                            {
+                                node: "/synths/falcon/programs/" + modelData
+                                valueType: Ossia.Type.Impulse
+                            }
+                        }
 
                         sends: [
 
@@ -258,8 +303,8 @@ Item {
                                 target: altiverb
                                 level: 0.75
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/synths/falcon/sends/altiverb/active" }
+                                Ossia.Property on level { node: "/synths/falcon/sends/altiverb/level" }
                             },
 
                             WPN114.Send
@@ -268,8 +313,8 @@ Item {
                                 level: 0.5
                                 active: false
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/synths/falcon/sends/amplitube/active" }
+                                Ossia.Property on level { node: "/synths/falcon/sends/amplitube/level" }
                             }
                         ]
                     }
@@ -286,8 +331,8 @@ Item {
                                 path: sndpath+modelData
                                 xfade: 131072
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/fields/" + modelData + "/active" }
+                                Ossia.Property on level { node: "/fields/" + modelData + "/level" }
 
                                 sends: [
 
@@ -297,8 +342,8 @@ Item {
                                         active: false
                                         level: 1.0
 
-                                        Ossia.Property on active {}
-                                        Ossia.Property on level {}
+                                        Ossia.Property on active { node: "/fields/" + modelData + "/sends/altiverb/active" }
+                                        Ossia.Property on level { node: "/fields/" + modelData + "/sends/altiverb/level" }
                                     }
                                 ]
                             }
@@ -316,8 +361,8 @@ Item {
                             {
                                 path: sndpath+modelData
 
-                                Ossia.Property on active {}
-                                Ossia.Property on level {}
+                                Ossia.Property on active { node: "/oneshots/" + modelData + "/active" }
+                                Ossia.Property on level { node: "/oneshots/" + modelData + "/level" }
 
                                 sends: [
 
@@ -325,8 +370,8 @@ Item {
                                     {
                                         target: altiverb
                                         active: false
-                                        Ossia.Property on active {}
-                                        Ossia.Property on level {}
+                                        Ossia.Property on active { node: "/oneshots/" + modelData + "/sends/altiverb/active" }
+                                        Ossia.Property on level { node: "/oneshots/" + modelData + "/sends/altiverb/level" }
                                     }
                                 ]
                             }
