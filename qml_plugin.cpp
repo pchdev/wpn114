@@ -1,23 +1,15 @@
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include "audiobackend.h"
-#include "audiomaster.h"
-#include "qsine.h"
-#include "audioplugin.h"
-#include "rooms.h"
-#include "fields.h"
-#include "oneshots.h"
+#include "qml_plugin.hpp"
+#include <audio_objects/audioplugin/audioplugin.hpp>
+#include <audio_objects/fields/fields.hpp>
+#include <audio_objects/oneshots/oneshots.hpp>
+#include <audio_objects/rooms/rooms.hpp>
+#include <audio_objects/sine/sine.hpp>
 
-#include <QApplication>
-#include <QQuickWidget>
+#include <QQmlEngine>
+#include <qqml.h>
 
-int main(int argc, char *argv[])
+void qml_plugin::registerTypes(const char *uri)
 {
-
-#if defined(Q_OS_WIN)
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
-
     qmlRegisterType<AudioObject>        ( );
     qmlRegisterType<AudioEffectObject>  ( );
     qmlRegisterType<AudioSend>          ( "WPN114", 1, 0, "Send" );
@@ -32,11 +24,4 @@ int main(int argc, char *argv[])
     qmlRegisterType<Fields, 1>          ( "WPN114", 1, 0, "Fields" );
     qmlRegisterType<Oneshots, 1>        ( "WPN114", 1, 0, "Oneshots" );
 
-    QApplication app(argc, argv);
-
-    QQuickWidget* view = new QQuickWidget;
-    view->setSource(QUrl::fromLocalFile("/Users/pchd/Repositories/wpn114/main.qml"));
-    view->show();
-
-    return app.exec();
 }

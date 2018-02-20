@@ -1,9 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>main.qml</file>
-        <file>quarre.qml</file>
-        <file>HemicycliaSpeakerSetup.qml</file>
-        <file>QuarreScenario.qml</file>
-        <file>QuarreNet.qml</file>
-    </qresource>
-</RCC>

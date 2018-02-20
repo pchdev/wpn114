@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QAudioOutput>
-#include "audiobackend.h"
+#include <src/audiobackend.hpp>
 
 #define WT_SIZE 16384
 

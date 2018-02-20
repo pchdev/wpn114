@@ -1,4 +1,4 @@
-#include "audioplugin.h"
+#include "audioplugin.hpp"
 
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>

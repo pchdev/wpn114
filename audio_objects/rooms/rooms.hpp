@@ -1,7 +1,7 @@
 #ifndef ROOMS_H
 #define ROOMS_H
 
-#include "audiobackend.h"
+#include <src/audiobackend.hpp>
 #include <array>
 
 class RoomsChannel : public QObject

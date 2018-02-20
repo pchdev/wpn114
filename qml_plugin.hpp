@@ -1,0 +1,16 @@
+#ifndef QML_PLUGIN_HPP
+#define QML_PLUGIN_HPP
+
+#include <QQmlExtensionPlugin>
+
+class qml_plugin : public QQmlExtensionPlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA ( IID QQmlExtensionInterface_iid )
+
+public:
+    static void reg(const char* uri);
+    void registerTypes(const char* uri) override;
+};
+
+#endif // QML_PLUGIN_HPP

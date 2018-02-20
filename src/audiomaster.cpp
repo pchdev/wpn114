@@ -1,4 +1,4 @@
-#include "audiomaster.h"
+#include "audiomaster.hpp"
 #include <qendian.h>
 
 #define BSIZE AudioBackend::blockSize()

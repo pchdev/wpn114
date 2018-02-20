@@ -1,10 +1,10 @@
 #ifndef FIELDS_H
 #define FIELDS_H
 
-#include "audiobackend.h"
 #include <QAudioBuffer>
 #include <QAudioDecoder>
-#include "wpnsndfile.hpp"
+#include <src/wpnsndfile.hpp>
+#include <src/audiobackend.hpp>
 
 #define ENVSIZE 16384
 

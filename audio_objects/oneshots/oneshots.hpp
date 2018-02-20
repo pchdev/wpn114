@@ -1,8 +1,8 @@
 #ifndef ONESHOTS_H
 #define ONESHOTS_H
 
-#include "audiobackend.h"
-#include "wpnsndfile.hpp"
+#include <src/audiobackend.hpp>
+#include <src/wpnsndfile.hpp>
 
 class Oneshots : public AudioObject, public QQmlParserStatus
 {

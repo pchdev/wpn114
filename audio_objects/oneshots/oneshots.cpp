@@ -1,4 +1,4 @@
-#include "oneshots.h"
+#include "oneshots.hpp"
 
 Oneshots::Oneshots() : m_pos(0), m_buf(0) {}
 
