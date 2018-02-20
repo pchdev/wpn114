@@ -3,35 +3,35 @@
 
 // ROOMS_ELEMENT -------------------------------------------------------------------
 
-RoomsElement::RoomsElement() {}
-RoomsElement::~RoomsElement() {}
+RoomsChannel::RoomsChannel() {}
+RoomsChannel::~RoomsChannel() {}
 
-float RoomsElement::level() const
+float RoomsChannel::level() const
 {
     return m_level;
 }
 
-float RoomsElement::influence() const
+float RoomsChannel::influence() const
 {
     return m_influence;
 }
 
-QVector2D RoomsElement::position() const
+QVector2D RoomsChannel::position() const
 {
     return m_position;
 }
 
-void RoomsElement::setLevel(const float level)
+void RoomsChannel::setLevel(const float level)
 {
     m_level = level;
 }
 
-void RoomsElement::setInfluence(const float influence)
+void RoomsChannel::setInfluence(const float influence)
 {
     m_influence = influence;
 }
 
-void RoomsElement::setPosition(const QVector2D position)
+void RoomsChannel::setPosition(const QVector2D position)
 {
     m_position = position;
 }
@@ -50,6 +50,47 @@ void Speaker::setOutput(const int output)
 
 // ROOMS_SOURCE ------------------------------------------------------------------
 
+void Source::classBegin() {}
+void Source::componentComplete()
+{
+    quint16 maxchannels = 0;
+    for ( const auto& src : m_inputs )
+        maxchannels = qMax<quint16>(maxchannels, src->numOutputs());
+
+    m_nchannels = maxchannels;
+}
+
+
+void Source::setLevel(const qreal level)
+{
+    m_level = level;
+}
+
+void Source::setInfluence(const qreal influence )
+{
+    m_influence = influence;
+}
+
+void Source::setPositions(const QVector<qreal> positions)
+{
+    m_positions = positions;
+}
+
+qreal Source::level() const
+{
+    return m_level;
+}
+
+qreal Source::influence() const
+{
+    return m_influence;
+}
+
+QVector<qreal> Source::positions() const
+{
+    return m_positions;
+}
+
 QQmlListProperty<AudioObject> Source::inputs()
 {
     return QQmlListProperty<AudioObject>(this, m_inputs);
@@ -60,24 +101,9 @@ QList<AudioObject*> Source::get_inputs()
     return m_inputs;
 }
 
-QVector2D Source::lposition() const
+quint16 Source::nchannels() const
 {
-    return m_lposition;
-}
-
-QVector2D Source::rposition() const
-{
-    return m_rposition;
-}
-
-void Source::setLposition(const QVector2D lposition)
-{
-    m_lposition = lposition;
-}
-
-void Source::setRPosition(const QVector2D rposition)
-{
-    m_rposition = rposition;
+    return m_nchannels;
 }
 
 // ROOMS_SETUP -------------------------------------------------------------------
@@ -90,17 +116,12 @@ uint16_t RoomsSetup::numOutputs() const
     return m_noutputs;
 }
 
-void RoomsSetup::setNumOutputs(const uint16_t noutputs)
+QQmlListProperty<RoomsChannel> RoomsSetup::speakers()
 {
-    m_noutputs = noutputs;
+    return QQmlListProperty<RoomsChannel>(this, m_speakers);
 }
 
-QQmlListProperty<RoomsElement> RoomsSetup::speakers()
-{
-    return QQmlListProperty<RoomsElement>(this, m_speakers);
-}
-
-QList<RoomsElement*> RoomsSetup::get_speakers()
+QList<RoomsChannel*>& RoomsSetup::get_speakers()
 {
     return m_speakers;
 }
@@ -121,46 +142,7 @@ void Rooms::componentComplete()
     SETN_OUT    ( m_setup->numOutputs() );
 
     for( const auto& src : m_sources )
-    {
-        uint16_t maxchannels = 0;
-
-        for ( const auto& subsrc : src->get_inputs() )
-        {
-            maxchannels = qMax<uint16_t>( maxchannels, subsrc->numOutputs() );
-
-            // add pointers to input sources' independent channels properties
-            if ( subsrc->numOutputs() == 1 )
-            {
-                float* data_ptrs[4]  =
-                {
-                    &src->position().x(), &src->position().y(),
-                    &src->influence(), &src->level()
-                };
-
-                m_src_data.push_back(data_ptrs);
-            }
-
-            else if ( subsrc->numOutputs() == 2 )
-            {
-                float* data_ptrs_l[4]  =
-                {
-                    &src->lposition().x(), &src->lposition().y(),
-                    &src->influence(), &src->level()
-                };
-
-                float* data_ptrs_r[4]  =
-                {
-                    &src->rposition().x(), &src->rposition().y(),
-                    &src->influence(), &src->level()
-                };
-
-                m_src_data.push_back(data_ptrs_l);
-                m_src_data.push_back(data_ptrs_r);
-            }
-        }
-
-        nin += maxchannels;
-    }
+        nin += src->nchannels();
 
     SETN_IN ( nin );
     INITIALIZE_AUDIO_IO;
@@ -175,7 +157,7 @@ inline float spgain(const float src_x, const float src_y,
     float dy = fabs(ls_y - src_y);
     if ( dy > ls_r) return 0.f;
 
-    return fabs((1 - (sqrt((dx*dx) + (dy*dy)) / ls_r)) * ls_l);
+    return fabs( (1 - (sqrt((dx*dx) + (dy*dy)) / ls_r)) * ls_l );
 }
 
 RoomsSetup* Rooms::setup() const
@@ -196,8 +178,8 @@ QQmlListProperty<Source> Rooms::sources()
 inline float**& Rooms::get_inputs(const quint64 nsamples)
 {
     // sends are not allowed here
-    for(const auto& source : m_sources )
-        for(const auto& input: source->get_inputs())
+    for ( const auto& source : m_sources )
+        for ( const auto& input: source->get_inputs() )
             if ( input->active() )
             {
                 uint16_t unout = input->numOutputs();
@@ -207,10 +189,10 @@ inline float**& Rooms::get_inputs(const quint64 nsamples)
             }
 }
 
-#define SRCX spos[i][0]
-#define SRCY spos[i][1]
-#define SRCR spos[i][2]
-#define SRCL spos[i][3]
+#define SRCX sources[src]->positions()[ch*1]
+#define SRCY sources[src]->positions()[ch*2]
+#define SRCR sources[src]->influence()
+#define SRCL sources[src]->level()
 
 #define LSX speakers[o]->position().x()
 #define LSY speakers[o]->position().y()
@@ -219,24 +201,30 @@ inline float**& Rooms::get_inputs(const quint64 nsamples)
 
 float** Rooms::process(const quint16 nsamples)
 {
-    uint16_t nout   = m_num_outputs;
-    uint16_t nin    = m_num_inputs;
-    auto out        = OUT;
-    auto speakers   = m_setup->get_speakers();
-    auto spos       = m_src_data;
+    uint16_t nout               = m_num_outputs;
+    uint16_t nin                = m_num_inputs;
+    auto out                    = OUT;
+    const auto& speakers        = m_setup->get_speakers();
+    auto sources                = m_sources;
 
     ZEROBUF         ( IN, m_num_inputs );
 
-    float**& in =   get_inputs(nsamples);
+    float**& in =   get_inputs( nsamples );
     float coeffs    [ nin ] [ nout ];
 
-    for (int i = 0; i < nin; ++i)
-        for(int o = 0; i < nout; ++o)
-            coeffs[i][o] = spgain ( SRCX, SRCY, LSX, LSY, LSR, LSL );
+    uint16_t channel = 0;
+
+    for ( int src = 0; src < sources.size(); ++src )
+        for ( int ch = 0; ch < sources[src]->nchannels(); ++ch )
+        {
+            for ( int o = 0; o < nout; ++ o )
+                coeffs[channel][o] = spgain ( SRCX, SRCY, LSX, LSY, LSR, LSL );
+            channel++;
+        }
 
     for ( int s = 0; s < nsamples; ++s )
         for ( int n = 0; n < nin; ++n )
             for ( int ch = 0; ch < nout; ++ch)
-                out[ch][s] += in[n][s] * coeffs[ch];
+                out[ch][s] += in[n][s] * coeffs[n][ch];
 
 }

@@ -2,8 +2,9 @@
 #define ROOMS_H
 
 #include "audiobackend.h"
+#include <array>
 
-class RoomsElement : public QObject
+class RoomsChannel : public QObject
 {
     Q_OBJECT
     Q_PROPERTY      ( float level READ level WRITE setLevel )
@@ -11,8 +12,8 @@ class RoomsElement : public QObject
     Q_PROPERTY      ( float influence READ influence WRITE setInfluence )
 
 public:
-    RoomsElement();
-    ~RoomsElement();
+    RoomsChannel();
+    ~RoomsChannel();
 
     float       level       () const;
     float       influence   () const;
@@ -23,14 +24,15 @@ public:
     void setPosition    ( const QVector2D );
 
 protected:
-    float       m_level;
-    float       m_influence;
-    QVector2D   m_position;
+    float           m_level;
+    float           m_influence;
+    QVector2D       m_position;
 
 };
 
-class Speaker : public RoomsElement
+class Speaker : public RoomsChannel
 {
+    Q_OBJECT
     Q_PROPERTY      ( int output READ output WRITE setOutput )
 
 public:
@@ -41,52 +43,66 @@ private:
     quint16 m_output;
 };
 
-class Source : public RoomsElement
+class Source : public QObject, public QQmlParserStatus
 {
+    Q_OBJECT
     Q_PROPERTY      ( QQmlListProperty<AudioObject> inputs READ inputs )
-    Q_PROPERTY      ( QVector2D lposition READ lposition WRITE setLposition )
-    Q_PROPERTY      ( QVector2D rposition READ rposition WRITE setRposition )
-    Q_PROPERTY      ( QQmlListProperty<AudioObject> inputs READ inputs )
+    Q_PROPERTY      ( int nchannels READ nchannels )
+    Q_PROPERTY      ( QVector<qreal> positions READ positions WRITE setPositions)
+    Q_PROPERTY      ( qreal influence READ influence WRITE setInfluence)
+    Q_PROPERTY      ( qreal level READ level WRITE setLevel )
+
+    Q_INTERFACES    ( QQmlParserStatus )
 
     Q_CLASSINFO     ( "DefaultProperty", "inputs" )
 
 public:
+
+    void classBegin() override;
+    void componentComplete() override;
+
+    quint16 nchannels() const;
+
+    QVector<qreal> positions() const;
+    qreal influence() const;
+    qreal level () const;
+
+    void setPositions(const QVector<qreal>);
+    void setInfluence(const qreal);
+    void setLevel(const qreal);
+
     QQmlListProperty<AudioObject> inputs();
     QList<AudioObject*> get_inputs();
 
-    QVector2D lposition() const;
-    QVector2D rposition() const;
-
-    void setLposition(const QVector2D);
-    void setRPosition(const QVector2D);
-
 private:
     QList<AudioObject*> m_inputs;
-    QVector2D m_lposition;
-    QVector2D m_rposition;
-};
+    QVector<qreal> m_positions;
+    qreal m_influence;
+    qreal m_level;
+    quint16 m_nchannels;
 
+};
 
 // qt quick gui todo
 class RoomsSetup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY      ( int numOutputs READ numOutputs )
-    Q_PROPERTY      ( QQmlListProperty<RoomsElement> speakers READ speakers )
+    Q_PROPERTY      ( QQmlListProperty<RoomsChannel> speakers READ speakers )
     Q_CLASSINFO     ( "DefaultProperty", "speakers" )
 
 public:
     RoomsSetup();
     ~RoomsSetup();
 
-    QQmlListProperty<RoomsElement> speakers();
-    QList<RoomsElement*> get_speakers();
+    QQmlListProperty<RoomsChannel> speakers();
+    QList<RoomsChannel *>& get_speakers();
 
     uint16_t numOutputs() const;
 
 private:
     quint16                 m_noutputs;
-    QList<RoomsElement*>    m_speakers;
+    QList<RoomsChannel*>    m_speakers;
 };
 
 
@@ -94,7 +110,7 @@ class Rooms : public AudioEffectObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
-    Q_PROPERTY      ( RoomsSetup setup READ setup WRITE setSetup )
+    Q_PROPERTY      ( RoomsSetup* setup READ setup WRITE setSetup )
     Q_PROPERTY      ( QQmlListProperty<Source> sources READ sources )
     Q_CLASSINFO     ( "DefaultProperty", "sources" )
 
@@ -112,13 +128,12 @@ public:
     RoomsSetup* setup   () const;
     void setSetup       (RoomsSetup*);
 
-protected:
-    float**& get_inputs(const quint64 nsamples); // override
+protected:    
+    float**& get_inputs( const quint64 nsamples ); // override
 
 private:
     RoomsSetup*             m_setup;
     QList<Source*>          m_sources;
-    QList<float*[4]>        m_src_data;
 };
 
 #endif // ROOMS_H

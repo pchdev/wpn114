@@ -90,7 +90,7 @@ class AudioPlugin : public AudioEffectObject, public QQmlParserStatus
     Q_INTERFACES    ( QQmlParserStatus )
     Q_PROPERTY      ( QString path READ path WRITE setPath NOTIFY pathChanged )
     Q_PROPERTY      ( int program READ program WRITE setProgram NOTIFY programChanged )
-    Q_PROPERTY      ( QQmlListProperty<QString> programs READ program )
+    Q_PROPERTY      ( QQmlListProperty<QString> programs READ programs )
     Q_PROPERTY      ( QQmlListProperty<QString> parameters READ parameters )
 
 public:
@@ -104,8 +104,8 @@ public:
 
     quint16 program() const;
     QString path() const;
-    QQmlListProperty<QString> programs() const;
-    QQmlListProperty<QString> parameters() const;
+    QQmlListProperty<QString> programs();
+    QQmlListProperty<QString> parameters();
 
     void setPath(const QString);
     void setProgram(const quint16);
@@ -134,8 +134,8 @@ private:
     quint16         m_program;
     QString         m_path;
     plugin_hdl*     m_plugin_hdl;
-    QList<QString>  m_programs;
-    QList<QString>  m_parameters;
+    QList<QString*>  m_programs;
+    QList<QString*>  m_parameters;
 
 #ifdef __APPLE__
     QMacNativeWidget*           m_view;

@@ -72,25 +72,9 @@ Item {
                     // the main aux effects
                     // those are mixed together and placed
                     // in the middle, with a maximum influence
-                    lposition: [ 0.25, 0.5 ];
-                    rposition: [ 0.75, 0.5 ];
+                    positions: [ 0.25, 0.5, 0.75, 0.5 ]
                     influence: 1.0
                     level: 1.0
-
-                    Ossia.Property on lposition
-                    {
-                        node: "/aux/positions/left-channel"
-                        bounding: Ossia.bounding.clip
-                    }
-
-                    Ossia.Property on rposition
-                    {
-                        node: "/aux/positions/right-channel"
-                        bounding: Ossia.bounding.clip
-                    }
-
-                    Ossia.Property on influence { node: "/aux/influence" }
-                    Ossia.Property on level { node: "/aux/level" }
 
                     WPN114.AudioPlugin // ---------------------------------  ALTIVERB
                     {

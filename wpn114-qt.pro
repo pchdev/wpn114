@@ -25,7 +25,6 @@ SOURCES += main.cpp \
     fields.cpp \
     oneshots.cpp \
     bursts.cpp \
-    send.cpp \
     vumeter.cpp \
     wpnsndfile.cpp \
     soundtracks.cpp \
@@ -53,7 +52,6 @@ HEADERS += \
     fields.h \
     oneshots.h \
     bursts.h \
-    send.h \
     vumeter.h \
     wpnsndfile.hpp \
     soundtracks.h \

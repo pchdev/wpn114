@@ -33,10 +33,16 @@ void AudioPlugin::componentComplete()
     if          ( !m_plugin_hdl ) return;
 
     for ( int i = 0; i < m_plugin_hdl->get_nparameters(); ++i )
-        m_parameters << QString::fromStdString(m_plugin_hdl->get_parameter_name(i));
+    {
+        auto str = new QString(m_plugin_hdl->get_parameter_name(i).c_str());
+        m_parameters << str;
+    }
 
     for(int i = 0; i < m_plugin_hdl->get_nprograms(); ++i )
-        m_programs << QString::fromStdString(m_plugin_hdl->get_program_name(i));
+    {
+        auto str = new QString(m_plugin_hdl->get_program_name(i).c_str());
+        m_programs << str;
+    }
 
     SET_OFFSET      ( 0 );
     SETN_IN         ( m_plugin_hdl->get_ninputs()  );
@@ -102,12 +108,12 @@ void AudioPlugin::setProgram(const quint16 program)
     m_plugin_hdl->set_program(program);
 }
 
-QQmlListProperty<QString> AudioPlugin::programs() const
+QQmlListProperty<QString> AudioPlugin::programs()
 {
     return QQmlListProperty<QString>(this, m_programs);
 }
 
-QQmlListProperty<QString> AudioPlugin::parameters() const
+QQmlListProperty<QString> AudioPlugin::parameters()
 {
     return QQmlListProperty<QString>(this, m_parameters);
 }

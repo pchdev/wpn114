@@ -10,13 +10,13 @@ quint16  AudioBackend::m_num_outputs;
 AudioSend::AudioSend() {}
 AudioSend::~AudioSend() {}
 
-AudioSend::classBegin() {}
-AudioSend::componentComplete()
+void AudioSend::classBegin() {}
+void AudioSend::componentComplete()
 {
     if( m_target ) m_target->addReceive(*this);
 }
 
-AudioEffectObject* AudioSend::target()
+AudioEffectObject* AudioSend::target() const
 {
     return m_target;
 }
@@ -46,7 +46,7 @@ bool AudioSend::muted() const
     return m_muted;
 }
 
-void AudioSend::setTarget(const AudioEffectObject *obj)
+void AudioSend::setTarget(AudioEffectObject *obj)
 {
     m_target = obj;
 }
@@ -85,7 +85,7 @@ AudioObject::~AudioObject()
 
 QQmlListProperty<AudioSend> AudioObject::sends()
 {
-    return QQmlListProperty<AudioObject>(this, m_sends);
+    return QQmlListProperty<AudioSend>(this, m_sends);
 }
 
 float AudioObject::level() const
@@ -169,7 +169,7 @@ void AudioEffectObject::setNumInputs(const quint16 num_inputs)
     emit numInputsChanged();
 }
 
-void AudioEffectObject::addReceive(const AudioSend &receive)
+void AudioEffectObject::addReceive(AudioSend &receive)
 {
     m_receives.push_back(&receive);
 }

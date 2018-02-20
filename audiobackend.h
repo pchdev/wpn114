@@ -6,8 +6,9 @@
 #include "audiomaster.h"
 
 class AudioObject;
+class AudioEffectObject;
 
-class AudioSend : public QObject, QQmlParserStatus
+class AudioSend : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY  ( AudioEffectObject* target READ target WRITE setTarget NOTIFY targetChanged )
@@ -31,15 +32,17 @@ public:
     float level                     () const;
     AudioEffectObject* target       () const;
 
-    void setTarget                  ( const AudioEffectObject* );
+    void setTarget                  (AudioEffectObject * );
     void setLevel                   ( const float );
     void setPrefader                ( const bool );
     void setOffset                  ( const int );
     void setActive                  ( const bool );
     void setMuted                   ( const bool );
 
-private:
+signals:
+    void targetChanged();
 
+private:
     float                   m_level;
     bool                    m_prefader;
     int                     m_offset;
@@ -92,6 +95,8 @@ protected:
     quint16                 m_num_outputs;
     QList<AudioSend*>       m_sends;
 
+// ----------------------------------------------------------
+
 #define SAMPLERATE      AudioBackend::sampleRate()
 #define SR              AudioBackend::sampleRate()
 #define BLOCKSIZE       AudioBackend::blockSize()
@@ -99,13 +104,13 @@ protected:
 #define SET_OFFSET(o)   m_offset = o;
 #define OUT             m_outputs
 
-#define ZEROBUF( target, sz ) \
-    for(int i = 0; i < sz; ++i ) \
+#define ZEROBUF( target, sz )                               \
+    for(int i = 0; i < sz; ++i )                            \
     std::memset(target[i], 0.f, sizeof(float)*BLOCKSIZE);
 
-#define IOALLOC(target,n) \
-    target = new float*[n]; \
-    for(int i = 0; i < n; ++i) \
+#define IOALLOC(target,n)                                   \
+    target = new float*[n];                                 \
+    for(int i = 0; i < n; ++i)                              \
     target[i] = (float*) std::calloc(n*BLOCKSIZE, sizeof(float));
 
 #define IODEALLOC(target, n)                                \
@@ -144,7 +149,7 @@ public:
     QQmlListProperty<AudioObject>   inputs();
     QQmlListProperty<AudioSend>     receives();
 
-    void addReceive( const AudioSend& receive );
+    void addReceive(AudioSend &receive );
 
 signals:
     void numInputsChanged();
@@ -155,9 +160,9 @@ protected:
 #define IN              m_inbuf
 #define SETN_IN(n)      m_num_inputs = n;
 
-#define INITIALIZE_AUDIO_IO \
-        INITIALIZE_AUDIO_OUTPUTS \
-        IOALLOC ( m_inbuf, m_num_inputs );
+#define INITIALIZE_AUDIO_IO                             \
+            INITIALIZE_AUDIO_OUTPUTS                    \
+            IOALLOC ( m_inbuf, m_num_inputs );
 
 protected:
     float**                 m_inbuf;
