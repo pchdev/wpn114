@@ -5,6 +5,10 @@ project ( WPN114 )
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    ${CMAKE_SOURCE_DIR}/cmake_modules )
+
 
 set( PROJECT_HDRS
     qml_plugin.hpp
@@ -32,13 +36,15 @@ set ( PROJECT_SRCS
     src/wpnsndfile.cpp
 )
 
-find_package( Qt5QuickWidgets )
-find_package( Qt5Multimedia )
-find_package( Qt5Widgets )
+find_package( Sndfile REQUIRED )
+find_package( Qt5QuickWidgets REQUIRED )
+find_package( Qt5Multimedia REQUIRED)
+find_package( Qt5Widgets REQUIRED )
 
 add_library(${PROJECT_NAME} SHARED ${PROJECT_HDRS} ${PROJECT_SRCS})
 
 target_link_libraries( ${PROJECT_NAME} Qt5::QuickWidgets Qt5::Multimedia Qt5::Widgets )
+target_link_libraries( ${PROJECT_NAME} Sndfile )
 
 if(APPLE)
     target_link_libraries( ${PROJECT_NAME} "-framework CoreFoundation" )

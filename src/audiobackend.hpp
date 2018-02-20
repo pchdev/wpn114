@@ -3,7 +3,7 @@
 
 #include <QQuickItem>
 #include <QAudioOutput>
-#include "audiomaster.h"
+#include <src/audiomaster.hpp>
 
 class AudioObject;
 class AudioEffectObject;

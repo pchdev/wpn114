@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QIODevice>
-#include "audiobackend.h"
+#include <src/audiobackend.hpp>
 
 class AudioObject;
 
