@@ -39,7 +39,6 @@ float** Oneshots::process(const quint16 nsamples)
                 out[ch][s] = 0.f;
 
             emit playbackEnd();
-            setActive(false);
         }
 
         else if ( pos > bufnsamples )
@@ -57,6 +56,13 @@ float** Oneshots::process(const quint16 nsamples)
         }
 
         pos++;
+    }
+
+    // buffer is filled, we can deactivate and reset pos
+    if ( pos >= bufnsamples )
+    {
+        setActive(false);
+        pos = 0;
     }
 
     m_pos = pos;

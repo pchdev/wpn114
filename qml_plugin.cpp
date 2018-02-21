@@ -12,6 +12,7 @@ void qml_plugin::registerTypes(const char *uri)
 {
     qmlRegisterType<AudioObject>        ( );
     qmlRegisterType<AudioEffectObject>  ( );
+    qmlRegisterType<RoomsChannel>       ( );
     qmlRegisterType<AudioSend>          ( "WPN114", 1, 0, "Send" );
     qmlRegisterType<AudioBackend, 1>    ( "WPN114", 1, 0, "AudioOut" );
     qmlRegisterType<AudioMaster, 1>     ( "WPN114", 1, 0, "Master" );

@@ -108,8 +108,14 @@ quint16 Source::nchannels() const
 
 // ROOMS_SETUP -------------------------------------------------------------------
 
-RoomsSetup::RoomsSetup() {}
+RoomsSetup::RoomsSetup() : m_noutputs(0) {}
 RoomsSetup::~RoomsSetup() {}
+
+void RoomsSetup::classBegin() {}
+void RoomsSetup::componentComplete()
+{
+    m_noutputs = m_speakers.size();
+}
 
 uint16_t RoomsSetup::numOutputs() const
 {
@@ -124,6 +130,17 @@ QQmlListProperty<RoomsChannel> RoomsSetup::speakers()
 QList<RoomsChannel*>& RoomsSetup::get_speakers()
 {
     return m_speakers;
+}
+
+void RoomsSetup::appendSpeaker(QQmlListProperty<RoomsChannel> *list, RoomsChannel *speaker)
+{
+    reinterpret_cast<RoomsSetup*>(list->data)->appendSpeaker(speaker);
+}
+
+void RoomsSetup::appendSpeaker(RoomsChannel *speaker)
+{
+    m_speakers.append(speaker);
+
 }
 
 // ROOMS_AUDIO -------------------------------------------------------------------
@@ -187,6 +204,8 @@ inline float**& Rooms::get_inputs(const quint64 nsamples)
                 float** buf = input->process(nsamples);
                 inbufmerge(IN, buf, m_num_inputs, unout, uoff, nsamples, source->level());
             }
+
+    return IN;
 }
 
 #define SRCX sources[src]->positions()[ch*1]

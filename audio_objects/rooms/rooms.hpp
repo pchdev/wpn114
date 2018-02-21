@@ -84,9 +84,10 @@ private:
 };
 
 // qt quick gui todo
-class RoomsSetup : public QObject
+class RoomsSetup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES    ( QQmlParserStatus )
     Q_PROPERTY      ( int numOutputs READ numOutputs )
     Q_PROPERTY      ( QQmlListProperty<RoomsChannel> speakers READ speakers )
     Q_CLASSINFO     ( "DefaultProperty", "speakers" )
@@ -95,14 +96,20 @@ public:
     RoomsSetup();
     ~RoomsSetup();
 
+    void classBegin() override;
+    void componentComplete() override;
+
     QQmlListProperty<RoomsChannel> speakers();
     QList<RoomsChannel *>& get_speakers();
+    void appendSpeaker(RoomsChannel*);
 
     uint16_t numOutputs() const;
 
 private:
     quint16                 m_noutputs;
     QList<RoomsChannel*>    m_speakers;
+    static void appendSpeaker( QQmlListProperty<RoomsChannel>*, RoomsChannel* );
+
 };
 
 
