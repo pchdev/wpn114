@@ -12,6 +12,7 @@ set(CMAKE_MODULE_PATH
 
 set( PROJECT_HDRS
     qml_plugin.hpp
+    audio_objects/ashes/ashes.hpp
     audio_objects/audioplugin/audioplugin.hpp
     audio_objects/audioplugin/aeffect.h
     audio_objects/audioplugin/aeffectx.h
@@ -26,6 +27,7 @@ set( PROJECT_HDRS
 
 set ( PROJECT_SRCS
     qml_plugin.cpp
+    audio_objects/ashes/ashes.cpp
     audio_objects/audioplugin/audioplugin.mm
     audio_objects/fields/fields.cpp
     audio_objects/oneshots/oneshots.cpp

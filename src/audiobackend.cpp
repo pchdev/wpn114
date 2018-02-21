@@ -7,7 +7,7 @@ quint16  AudioBackend::m_num_outputs;
 
 // AUDIO_SEND ----------------------------------------------------------------------------
 
-AudioSend::AudioSend() {}
+AudioSend::AudioSend() : m_target(0) {}
 AudioSend::~AudioSend() {}
 
 void AudioSend::classBegin() {}

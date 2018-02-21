@@ -59,6 +59,8 @@ float** Oneshots::process(const quint16 nsamples)
         pos++;
     }
 
+    m_pos = pos;
+
     return m_outputs;
 }
 
