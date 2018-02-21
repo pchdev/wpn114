@@ -12,7 +12,8 @@ void qml_plugin::registerTypes(const char *uri)
 {
     qmlRegisterType<AudioObject>        ( );
     qmlRegisterType<AudioEffectObject>  ( );
-    qmlRegisterType<RoomsChannel>       ( );
+    qmlRegisterType<RoomsObject>        ( );
+    qmlRegisterType<SpeakerObject>      ( );
     qmlRegisterType<AudioSend>          ( "WPN114", 1, 0, "Send" );
     qmlRegisterType<AudioBackend, 1>    ( "WPN114", 1, 0, "AudioOut" );
     qmlRegisterType<AudioMaster, 1>     ( "WPN114", 1, 0, "Master" );
@@ -21,6 +22,8 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<RoomsSetup, 1>      ( "WPN114", 1, 0, "RoomsSetup" );
     qmlRegisterType<Source, 1>          ( "WPN114", 1, 0, "Source2D" );
     qmlRegisterType<Speaker, 1>         ( "WPN114", 1, 0, "Speaker2D" );
+    qmlRegisterType<SpeakerPair, 1>     ( "WPN114", 1, 0, "SpeakerPair2D" );
+    qmlRegisterType<SpeakerRing, 1>     ( "WPN114", 1, 0, "SpeakerRing2D" );
     qmlRegisterType<Rooms, 1>           ( "WPN114", 1, 0, "Rooms2D" );
     qmlRegisterType<Fields, 1>          ( "WPN114", 1, 0, "Fields" );
     qmlRegisterType<Oneshots, 1>        ( "WPN114", 1, 0, "Oneshots" );

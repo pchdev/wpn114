@@ -3,49 +3,101 @@
 
 // ROOMS_ELEMENT -------------------------------------------------------------------
 
-RoomsChannel::RoomsChannel() {}
-RoomsChannel::~RoomsChannel() {}
+RoomsObject::RoomsObject() {}
+RoomsObject::~RoomsObject() {}
 
-float RoomsChannel::level() const
+float RoomsObject::level() const
 {
     return m_level;
 }
 
-float RoomsChannel::influence() const
+float RoomsObject::influence() const
 {
     return m_influence;
 }
 
-QVector2D RoomsChannel::position() const
+QVector2D RoomsObject::position() const
 {
     return m_position;
 }
 
-void RoomsChannel::setLevel(const float level)
+void RoomsObject::setLevel(const float level)
 {
     m_level = level;
 }
 
-void RoomsChannel::setInfluence(const float influence)
+void RoomsObject::setInfluence(const float influence)
 {
     m_influence = influence;
 }
 
-void RoomsChannel::setPosition(const QVector2D position)
+void RoomsObject::setPositions(const QVector<qreal> positions)
 {
-    m_position = position;
+    m_positions = positions;
 }
 
 // ROOMS_SPEAKER -----------------------------------------------------------------
 
-int Speaker::output() const
+Speaker::Speaker() {}
+SpeakerPair::SpeakerPair() {}
+SpeakerRing::SpeakerRing() {}
+
+
+int SpeakerObject::output() const
 {
     return m_output;
 }
 
-void Speaker::setOutput(const int output)
+void SpeakerObject::setOutput(const int output)
 {
     m_output = output;
+}
+
+void SpeakerPair::classBegin() {}
+void SpeakerRing::classBegin() {}
+
+void SpeakerPair::componentComplete()
+{
+
+}
+
+Speaker::Axis SpeakerPair::axis() const
+{
+    return m_axis;
+}
+
+qreal SpeakerPair::offset() const
+{
+    return m_offset;
+}
+
+QVector<qreal> SpeakerPair::offsets() const
+{
+    return m_offsets;
+}
+
+void SpeakerRing::componentComplete()
+{
+    for ( int i = 0; i < m_nspeakers; ++i )
+    {
+        m_positions.push_back((sin((qreal)i/m_nspeakers*M_PI*2) + 1.f) / 2.f);
+        m_positions.push_back((cos((qreal)i/m_nspeakers*M_PI*2) + 1.f) / 2.f);
+    }
+}
+
+qreal SpeakerRing::offset() const
+{
+    return m_offset;
+}
+
+Speaker::Order SpeakerRing::order() const
+{
+    return m_order;
+}
+
+quint16 SpeakerRing::nspeakers() const
+{
+    return m_nspeakers;
 }
 
 // ROOMS_SOURCE ------------------------------------------------------------------
@@ -114,7 +166,8 @@ RoomsSetup::~RoomsSetup() {}
 void RoomsSetup::classBegin() {}
 void RoomsSetup::componentComplete()
 {
-    m_noutputs = m_speakers.size();
+    for ( const auto& speakerobj : m_speakers )
+        m_noutputs += speakerobj->nspeakers();
 }
 
 uint16_t RoomsSetup::numOutputs() const
@@ -122,22 +175,22 @@ uint16_t RoomsSetup::numOutputs() const
     return m_noutputs;
 }
 
-QQmlListProperty<RoomsChannel> RoomsSetup::speakers()
+QQmlListProperty<SpeakerObject> RoomsSetup::speakers()
 {
-    return QQmlListProperty<RoomsChannel>(this, m_speakers);
+    return QQmlListProperty<SpeakerObject>(this, m_speakers);
 }
 
-QList<RoomsChannel*>& RoomsSetup::get_speakers()
+QList<SpeakerObject *> &RoomsSetup::get_speakers()
 {
     return m_speakers;
 }
 
-void RoomsSetup::appendSpeaker(QQmlListProperty<RoomsChannel> *list, RoomsChannel *speaker)
+void RoomsSetup::appendSpeaker(QQmlListProperty<SpeakerObject> *list, SpeakerObject *speaker)
 {
     reinterpret_cast<RoomsSetup*>(list->data)->appendSpeaker(speaker);
 }
 
-void RoomsSetup::appendSpeaker(RoomsChannel *speaker)
+void RoomsSetup::appendSpeaker(SpeakerObject *speaker)
 {
     m_speakers.append(speaker);
 
