@@ -16,9 +16,9 @@ float RoomsObject::influence() const
     return m_influence;
 }
 
-QVector2D RoomsObject::position() const
+QVector<qreal> RoomsObject::positions() const
 {
-    return m_position;
+    return m_positions;
 }
 
 void RoomsObject::setLevel(const float level)
@@ -76,6 +76,21 @@ QVector<qreal> SpeakerPair::offsets() const
     return m_offsets;
 }
 
+void SpeakerPair::setAxis(const Axis axis)
+{
+    m_axis = axis;
+}
+
+void SpeakerPair::setOffset(const qreal offset)
+{
+    m_offset = offset;
+}
+
+void SpeakerPair::setOffsets(const QVector<qreal> offsets )
+{
+    m_offsets = offsets;
+}
+
 void SpeakerRing::componentComplete()
 {
     for ( int i = 0; i < m_nspeakers; ++i )
@@ -95,9 +110,19 @@ Speaker::Order SpeakerRing::order() const
     return m_order;
 }
 
-quint16 SpeakerRing::nspeakers() const
+void SpeakerRing::setOffset(const qreal offset)
 {
-    return m_nspeakers;
+    m_offset = offset;
+}
+
+void SpeakerRing::setOrder(const Order order)
+{
+    m_order = order;
+}
+
+void SpeakerRing::setNspeakers(const quint16 nspeakers)
+{
+    m_nspeakers = nspeakers;
 }
 
 // ROOMS_SOURCE ------------------------------------------------------------------
@@ -110,37 +135,6 @@ void Source::componentComplete()
         maxchannels = qMax<quint16>(maxchannels, src->numOutputs());
 
     m_nchannels = maxchannels;
-}
-
-
-void Source::setLevel(const qreal level)
-{
-    m_level = level;
-}
-
-void Source::setInfluence(const qreal influence )
-{
-    m_influence = influence;
-}
-
-void Source::setPositions(const QVector<qreal> positions)
-{
-    m_positions = positions;
-}
-
-qreal Source::level() const
-{
-    return m_level;
-}
-
-qreal Source::influence() const
-{
-    return m_influence;
-}
-
-QVector<qreal> Source::positions() const
-{
-    return m_positions;
 }
 
 QQmlListProperty<AudioObject> Source::inputs()
@@ -167,7 +161,20 @@ void RoomsSetup::classBegin() {}
 void RoomsSetup::componentComplete()
 {
     for ( const auto& speakerobj : m_speakers )
-        m_noutputs += speakerobj->nspeakers();
+    {
+        quint16 nspeakers = speakerobj->nspeakers();
+        m_noutputs += nspeakers;
+
+        for (int i = 0; i < nspeakers; ++i )
+        {
+            SpeakerChannel sc;
+            sc.x = speakerobj->positions()[ i*2 ];
+            sc.y = speakerobj->positions()[ i*2+1 ];
+            sc.r = speakerobj->influence();
+            sc.l = speakerobj->level();
+            m_channels << sc;
+        }
+    }
 }
 
 uint16_t RoomsSetup::numOutputs() const
@@ -183,6 +190,11 @@ QQmlListProperty<SpeakerObject> RoomsSetup::speakers()
 QList<SpeakerObject *> &RoomsSetup::get_speakers()
 {
     return m_speakers;
+}
+
+QVector<RoomsSetup::SpeakerChannel> RoomsSetup::get_channels() const
+{
+    return m_channels;
 }
 
 void RoomsSetup::appendSpeaker(QQmlListProperty<SpeakerObject> *list, SpeakerObject *speaker)
@@ -218,6 +230,7 @@ void Rooms::componentComplete()
     INITIALIZE_AUDIO_IO;
 }
 
+// TODO! implement source influence...
 inline float spgain(const float src_x, const float src_y,
                     const float ls_x, const float ls_y,
                     const float ls_r, const float ls_l)
@@ -261,22 +274,22 @@ inline float**& Rooms::get_inputs(const quint64 nsamples)
     return IN;
 }
 
-#define SRCX sources[src]->positions()[ch*1]
-#define SRCY sources[src]->positions()[ch*2]
+#define SRCX sources[src]->positions()[ ch*2 ]
+#define SRCY sources[src]->positions()[ ch*2+1 ]
 #define SRCR sources[src]->influence()
 #define SRCL sources[src]->level()
 
-#define LSX speakers[o]->position().x()
-#define LSY speakers[o]->position().y()
-#define LSR speakers[o]->influence()
-#define LSL speakers[o]->level()
+#define LSX speakers[o].x
+#define LSY speakers[o].y
+#define LSR speakers[o].r
+#define LSL speakers[o].l
 
 float** Rooms::process(const quint16 nsamples)
 {
     uint16_t nout               = m_num_outputs;
     uint16_t nin                = m_num_inputs;
     auto out                    = OUT;
-    const auto& speakers        = m_setup->get_speakers();
+    const auto& speakers        = m_setup->get_channels();
     auto sources                = m_sources;
 
     ZEROBUF         ( IN, m_num_inputs );

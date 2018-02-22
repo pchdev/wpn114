@@ -154,6 +154,15 @@ class RoomsSetup : public QObject, public QQmlParserStatus
     Q_CLASSINFO     ( "DefaultProperty", "speakers" )
 
 public:
+
+    struct SpeakerChannel
+    {
+        qreal x;
+        qreal y;
+        qreal r;
+        qreal l;
+    };
+
     RoomsSetup();
     ~RoomsSetup();
 
@@ -161,14 +170,16 @@ public:
     virtual void componentComplete()    override;
 
     QQmlListProperty<SpeakerObject> speakers();
+    QVector<SpeakerChannel> get_channels() const;
     QList<SpeakerObject*>& get_speakers();
     void appendSpeaker(SpeakerObject*);
 
     uint16_t numOutputs() const;
 
-private:
+private:    
     quint16 m_noutputs;
     QList<SpeakerObject*> m_speakers;
+    QVector<SpeakerChannel> m_channels;
     static void appendSpeaker( QQmlListProperty<SpeakerObject>*, SpeakerObject* );
 
 };
