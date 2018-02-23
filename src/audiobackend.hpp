@@ -127,7 +127,7 @@ inline void inbufmerge(
     {
         for(int ch = 0; ch < nin; ++ch)
             if ( ch >= uoff && ch < uoff+unout )
-                for(int s = 0; s < nsamples; ++s)
+                for( int s = 0; s < nsamples; ++s )
                     b1[ch][s] += b2[ch-uoff][s] * b2level;
     }
 };

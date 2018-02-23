@@ -95,9 +95,11 @@ void SpeakerRing::componentComplete()
 {
     for ( int i = 0; i < m_nspeakers; ++i )
     {
-        m_positions.push_back((sin((qreal)i/m_nspeakers*M_PI*2) + 1.f) / 2.f);
-        m_positions.push_back((cos((qreal)i/m_nspeakers*M_PI*2) + 1.f) / 2.f);
+        m_positions.push_back((sin((float)i/m_nspeakers*M_PI*2) + 1.f) / 2.f);
+        m_positions.push_back((cos((float)i/m_nspeakers*M_PI*2) + 1.f) / 2.f);
     }
+
+    qDebug() << m_positions;
 }
 
 qreal SpeakerRing::offset() const
@@ -211,7 +213,12 @@ void RoomsSetup::appendSpeaker(SpeakerObject *speaker)
 // ROOMS_AUDIO -------------------------------------------------------------------
 
 
-Rooms::Rooms() : m_setup(0) {}
+Rooms::Rooms() : m_setup(0)
+{
+    SETN_IN     ( 0 );
+    SETN_OUT    ( 0 );
+    SET_OFFSET  ( 0 );
+}
 
 Rooms::~Rooms() {}
 void Rooms::classBegin() {}
@@ -228,19 +235,6 @@ void Rooms::componentComplete()
 
     SETN_IN ( nin );
     INITIALIZE_AUDIO_IO;
-}
-
-// TODO! implement source influence...
-inline float spgain(const float src_x, const float src_y,
-                    const float ls_x, const float ls_y,
-                    const float ls_r, const float ls_l)
-{
-    float dx = fabs(ls_x - src_x);
-    if ( dx > ls_r ) return 0.f;
-    float dy = fabs(ls_y - src_y);
-    if ( dy > ls_r) return 0.f;
-
-    return fabs( (1 - (sqrt((dx*dx) + (dy*dy)) / ls_r)) * ls_l );
 }
 
 RoomsSetup* Rooms::setup() const
@@ -274,6 +268,22 @@ inline float**& Rooms::get_inputs(const quint64 nsamples)
     return IN;
 }
 
+// TODO! implement source influence...
+inline float spgain(const float srx, const float sry,
+                    const float lsx, const float lsy,
+                    const float lsr, const float lsl)
+{
+    float dx = fabs(srx - lsx);
+    if ( dx > lsr ) return 0.f;
+    float dy = fabs(sry - lsy);
+    if ( dy > lsr ) return 0.f;
+
+    float d = sqrt((dx*dx)+(dy*dy));
+
+    if ( d/lsr > 1.f ) return 0.f;
+    else return ( 1.f - d/lsr ) * lsl;
+}
+
 #define SRCX sources[src]->positions()[ ch*2 ]
 #define SRCY sources[src]->positions()[ ch*2+1 ]
 #define SRCR sources[src]->influence()
@@ -292,9 +302,10 @@ float** Rooms::process(const quint16 nsamples)
     const auto& speakers        = m_setup->get_channels();
     auto sources                = m_sources;
 
-    ZEROBUF         ( IN, m_num_inputs );
+    ZEROBUF   ( IN, nin );
+    ZEROBUF   ( OUT, nout );
 
-    float**& in =   get_inputs( nsamples );
+    auto in         = get_inputs( nsamples );
     float coeffs    [ nin ] [ nout ];
 
     uint16_t channel = 0;
@@ -307,9 +318,10 @@ float** Rooms::process(const quint16 nsamples)
             channel++;
         }
 
-    for ( int s = 0; s < nsamples; ++s )
+    for ( int ch = 0; ch < nout; ++ch )
         for ( int n = 0; n < nin; ++n )
-            for ( int ch = 0; ch < nout; ++ch)
+            for ( int s = 0; s <nsamples; ++ s )
                 out[ch][s] += in[n][s] * coeffs[n][ch];
 
+    return out;
 }

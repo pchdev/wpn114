@@ -1,6 +1,10 @@
 #include "oneshots.hpp"
 
-Oneshots::Oneshots() : m_pos(0), m_buf(0) {}
+Oneshots::Oneshots() : m_pos(0), m_buf(0)
+{
+    SETN_OUT    ( 0 );
+    SET_OFFSET  ( 0 );
+}
 
 Oneshots::~Oneshots()
 {
@@ -11,8 +15,6 @@ void Oneshots::classBegin() {}
 void Oneshots::componentComplete()
 {
     m_buf = new sndbuf ( m_path.toStdString(), 0 );
-
-    SET_OFFSET  ( 0 );
     SETN_OUT    ( m_buf->nchannels );
 
     INITIALIZE_AUDIO_OUTPUTS;

@@ -6,6 +6,7 @@
 Fields::Fields() : m_path(""), m_xfade(65536),
     m_spos(0), m_epos(0)
 {
+    SETN_OUT    ( 0 );
     SET_OFFSET  ( 0 );
 }
 
@@ -60,7 +61,7 @@ float** Fields::process(const quint16 nsamples)
 
     for ( int s = 0; s < nsamples; ++s )
     {
-        if ( spos >= xfp && spos < nsamples )
+        if ( spos >= xfp && spos < bufnsamples )
         {
             //              if phase is in the crossfade zone
             //              get interpolated data from envelope

@@ -8,9 +8,9 @@ class Ashes : public AudioObject, public QQmlParserStatus
 
 public:
     Ashes();
-    void classBegin() override;
-    void componentComplete() override;
-    float** process(const quint16 nsamples) override;
+    virtual void classBegin()           override;
+    virtual void componentComplete()    override;
+    virtual float** process(const quint16 nsamples) override;
 
 };
 

@@ -4,11 +4,10 @@
 #define PINK_RANDOM_BITS        ( 24 )
 #define PINK_RANDOM_SHIFT       ( (sizeof(long)*8)-PINK_RANDOM_BITS )
 
-
-
 Ashes::Ashes()
 {
-
+    SETN_OUT    ( 1 );
+    SET_OFFSET  ( 0 );
 }
 
 void Ashes::classBegin() {}

@@ -108,7 +108,7 @@ qint64 AudioMaster::readData(char *data, qint64 maxlen)
     //  little endian 16bits signed integer byte cast for QAudioOutput
     for (quint16 i = 0; i < bsize*nout; ++i)
     {
-        qint16 sdata = static_cast<qint16>(bufdata[i] * level * 32767);
+        qint16 sdata = static_cast<qint16>( bufdata[i] * 32767 );
         qToLittleEndian<qint16>(sdata, data);
         data += 2;
     }
