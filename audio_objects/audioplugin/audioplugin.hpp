@@ -90,8 +90,8 @@ class AudioPlugin : public AudioEffectObject, public QQmlParserStatus
     Q_INTERFACES    ( QQmlParserStatus )
     Q_PROPERTY      ( QString path READ path WRITE setPath NOTIFY pathChanged )
     Q_PROPERTY      ( int program READ program WRITE setProgram NOTIFY programChanged )
-    Q_PROPERTY      ( QQmlListProperty<QString> programs READ programs )
-    Q_PROPERTY      ( QQmlListProperty<QString> parameters READ parameters )
+    Q_PROPERTY      ( QStringList programs READ programs )
+    Q_PROPERTY      ( QStringList parameters READ parameters )
 
 public:
     AudioPlugin();
@@ -104,8 +104,8 @@ public:
 
     quint16 program() const;
     QString path() const;
-    QQmlListProperty<QString> programs();
-    QQmlListProperty<QString> parameters();
+    QStringList programs();
+    QStringList parameters();
 
     void setPath(const QString);
     void setProgram(const quint16);
@@ -119,7 +119,7 @@ public:
     Q_INVOKABLE void noteOn(int channel, int index, int value);
     Q_INVOKABLE void noteOff(int channel, int index, int value);
     Q_INVOKABLE void control(int channel, int index, int value);
-    Q_INVOKABLE void program(int channel, int value);
+    Q_INVOKABLE void programChange(int channel, int value);
     Q_INVOKABLE void bend(int channel, int value);
     Q_INVOKABLE void aftertouch(int channel, int value);
     Q_INVOKABLE void aftertouch(int channel, int index, int value);
@@ -129,13 +129,14 @@ signals:
     void pathChanged();
     void pluginLoaded();
     void programChanged();
+    void parameterChanged();
 
 private:
-    quint16         m_program;
-    QString         m_path;
-    plugin_hdl*     m_plugin_hdl;
-    QList<QString*>  m_programs;
-    QList<QString*>  m_parameters;
+    quint16             m_program;
+    QString             m_path;
+    plugin_hdl*         m_plugin_hdl;
+    QStringList         m_programs;
+    QStringList         m_parameters;
 
 #ifdef __APPLE__
     QMacNativeWidget*           m_view;

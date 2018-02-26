@@ -34,13 +34,13 @@ void AudioPlugin::componentComplete()
 
     for ( int i = 0; i < m_plugin_hdl->get_nparameters(); ++i )
     {
-        auto str = new QString(m_plugin_hdl->get_parameter_name(i).c_str());
+        auto str = QString(m_plugin_hdl->get_parameter_name(i).c_str());
         m_parameters << str;
     }
 
     for(int i = 0; i < m_plugin_hdl->get_nprograms(); ++i )
     {
-        auto str = new QString(m_plugin_hdl->get_program_name(i).c_str());
+        auto str = QString(m_plugin_hdl->get_program_name(i).c_str());
         m_programs << str;
     }
 
@@ -112,14 +112,14 @@ void AudioPlugin::setProgram(const quint16 program)
     m_plugin_hdl->set_program(program);
 }
 
-QQmlListProperty<QString> AudioPlugin::programs()
+QStringList AudioPlugin::programs()
 {
-    return QQmlListProperty<QString>(this, m_programs);
+    return m_programs;
 }
 
-QQmlListProperty<QString> AudioPlugin::parameters()
+QStringList AudioPlugin::parameters()
 {
-    return QQmlListProperty<QString>(this, m_parameters);
+    return m_parameters;
 }
 
 float AudioPlugin::get(int index) const
@@ -163,7 +163,7 @@ void AudioPlugin::control(int channel, int index, int value)
     MIDI_AR3 ( MIDI::CONTINUOUS_CONTROL );
 }
 
-void AudioPlugin::program(int channel, int value)
+void AudioPlugin::programChange(int channel, int value)
 {
     MIDI_AR2 ( MIDI::PATCH_CHANGE );
 }
@@ -294,8 +294,8 @@ void vst2x_plugin::set_program(const uint16_t index)
 
 void vst2x_plugin::set_program_name(const std::string name)
 {
-    m_aeffect->dispatcher(m_aeffect, effSetProgramName, 0,
-                          reinterpret_cast<VstIntPtr>(name.c_str()), 0, 0);
+    char* cname = const_cast<char*>(name.c_str());
+    m_aeffect->dispatcher(m_aeffect, effSetProgramName, 0, 0, cname, 0);
 }
 
 void vst2x_plugin::process_audio(float** inputs, float **outputs, const uint16_t nsamples)
