@@ -10,12 +10,7 @@ Ashes::Ashes()
     SET_OFFSET  ( 0 );
 }
 
-void Ashes::classBegin() {}
-
-void Ashes::componentComplete()
-{
-    INITIALIZE_AUDIO_OUTPUTS;
-}
+ON_COMPONENT_COMPLETED ( Ashes ) { INITIALIZE_AUDIO_OUTPUTS; }
 
 float** Ashes::process(const quint16 nsamples)
 {

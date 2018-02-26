@@ -5,6 +5,7 @@
 
 class Ashes : public AudioObject, public QQmlParserStatus
 {
+    Q_OBJECT
 
 public:
     Ashes();

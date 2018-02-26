@@ -72,6 +72,12 @@ float** Oneshots::process(const quint16 nsamples)
     return m_outputs;
 }
 
+void Oneshots::setActive(const bool active)
+{
+    if      ( active && m_active ) m_pos = 0;
+    else    m_active = active;
+}
+
 void Oneshots::setPath(const QString path)
 {
     m_path = path;

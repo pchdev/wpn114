@@ -16,8 +16,8 @@ Fields::~Fields()
 }
 
 void Fields::setNumInputs(const quint16) {}
-void Fields::classBegin() {}
-void Fields::componentComplete()
+
+ON_COMPONENT_COMPLETED ( Fields )
 {
     // build sin xfade envelope
     for ( int i = 0; i < ENVSIZE; ++ i )

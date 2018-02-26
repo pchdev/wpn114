@@ -174,11 +174,11 @@ void AudioEffectObject::addReceive(AudioSend &receive)
     m_receives.push_back(&receive);
 }
 
-float**& AudioEffectObject::get_inputs(const quint64 nsamples)
+float** AudioEffectObject::get_inputs(const quint64 nsamples)
 {
     auto inputs     = m_inputs;
     auto nin        = m_num_inputs;
-    float** in      = IN;
+    auto in         = IN;
 
     for ( const auto& input : inputs )
     {

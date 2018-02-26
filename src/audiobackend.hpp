@@ -75,11 +75,11 @@ public:
     bool        active          () const;
     bool        muted           () const;
 
-    void setLevel               ( const float );
-    void setOffset              ( const quint16 );
-    void setNumOutputs          ( const quint16 );
-    void setActive              ( const bool );
-    void setMuted               ( const bool );
+    virtual void setLevel       ( const float );
+    virtual void setOffset      ( const quint16 );
+    virtual void setNumOutputs  ( const quint16 );
+    virtual void setActive      ( const bool );
+    virtual void setMuted       ( const bool );
 
 signals:
     void numOutputsChanged      ();
@@ -121,6 +121,10 @@ protected:
 #define INITIALIZE_AUDIO_OUTPUTS                            \
     IOALLOC ( m_outputs, m_num_outputs );                   \
 
+#define ON_COMPONENT_COMPLETED(obj)                         \
+    void obj::classBegin() {}                               \
+    void obj::componentComplete()
+
 inline void inbufmerge(
     float** b1, float** b2, uint16_t nin,
     uint16_t unout, uint16_t uoff, uint16_t nsamples, float b2level)
@@ -155,7 +159,7 @@ signals:
     void numInputsChanged();
 
 protected:
-    float**& get_inputs ( const quint64 nsamples );
+    float **get_inputs( const quint64 nsamples );
 
 #define IN              m_inbuf
 #define SETN_IN(n)      m_num_inputs = n;

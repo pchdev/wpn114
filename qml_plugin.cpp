@@ -4,6 +4,8 @@
 #include <audio_objects/oneshots/oneshots.hpp>
 #include <audio_objects/rooms/rooms.hpp>
 #include <audio_objects/sine/sine.hpp>
+#include <audio_objects/ashes/ashes.hpp>
+#include <audio_objects/sharpen/sharpen.hpp>
 
 #include <QQmlEngine>
 #include <qqml.h>
@@ -14,6 +16,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<AudioEffectObject>  ( );
     qmlRegisterType<RoomsObject>        ( );
     qmlRegisterType<SpeakerObject>      ( );
+
     qmlRegisterType<AudioSend>          ( "WPN114", 1, 0, "Send" );
     qmlRegisterType<AudioBackend, 1>    ( "WPN114", 1, 0, "AudioOut" );
     qmlRegisterType<AudioMaster, 1>     ( "WPN114", 1, 0, "Master" );
@@ -27,5 +30,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<Rooms, 1>           ( "WPN114", 1, 0, "Rooms2D" );
     qmlRegisterType<Fields, 1>          ( "WPN114", 1, 0, "Fields" );
     qmlRegisterType<Oneshots, 1>        ( "WPN114", 1, 0, "Oneshots" );
+    qmlRegisterType<Sharpen, 1>         ( "WPN114", 1, 0, "Sharpen" );
+    qmlRegisterType<Ashes, 1>           ( "WPN114", 1, 0, "Ashes" );
 
 }

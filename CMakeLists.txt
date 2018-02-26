@@ -19,7 +19,8 @@ set( PROJECT_HDRS
     audio_objects/fields/fields.hpp
     audio_objects/oneshots/oneshots.hpp
     audio_objects/rooms/rooms.hpp
-    audio_objectS/sine/sine.hpp
+    audio_objects/sine/sine.hpp
+    audio_objects/sharpen/sharpen.hpp
     src/audiobackend.hpp
     src/audiomaster.hpp
     src/wpnsndfile.hpp
@@ -33,6 +34,7 @@ set ( PROJECT_SRCS
     audio_objects/oneshots/oneshots.cpp
     audio_objects/rooms/rooms.cpp
     audio_objects/sine/sine.cpp
+    audio_objects/sharpen/sharpen.cpp
     src/audiobackend.cpp
     src/audiomaster.cpp
     src/wpnsndfile.cpp

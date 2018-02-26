@@ -48,6 +48,8 @@ void AudioPlugin::componentComplete()
     SETN_IN         ( m_plugin_hdl->get_ninputs()  );
     SETN_OUT        ( m_plugin_hdl->get_noutputs() );
 
+    m_plugin_hdl->configure ( SAMPLERATE, BLOCKSIZE );
+
     INITIALIZE_AUDIO_IO;
 
 #ifdef __APPLE__ //----------------------------------------------------------
@@ -62,6 +64,7 @@ void AudioPlugin::componentComplete()
     m_view_container    ->update();
 
     emit pluginLoaded();
+
 }
 
 void AudioPlugin::showEditorWindow()
@@ -74,17 +77,18 @@ void AudioPlugin::showEditorWindow()
 }
 
 float** AudioPlugin::process(const quint16 nsamples)
-{
+{    
     if  ( m_num_inputs )
     {
         ZEROBUF(IN, m_num_inputs);
-        auto in = get_inputs( nsamples );
+        get_inputs( nsamples );
 
-        m_plugin_hdl->process_audio(in, m_outputs, nsamples);
+        m_plugin_hdl->process_audio(IN, OUT, nsamples);
     }
 
-    else    m_plugin_hdl->process_audio(m_outputs, nsamples);
-    return  m_outputs;
+    else    m_plugin_hdl->process_audio(OUT, nsamples);
+
+    return  OUT;
 }
 
 QString AudioPlugin::path() const
@@ -188,7 +192,7 @@ void AudioPlugin::sysex(QVariantList bytes)
 
 #define GET_2X_PNAME_STR(command) \
     char name [ PARAMNAME_MAXLE ]; \
-    m_aeffect->dispatcher(m_aeffect, command, index, reinterpret_cast<VstIntPtr>(&name), 0, 0); \
+    m_aeffect->dispatcher(m_aeffect, command, index, 0, &name, 0); \
     return (std::string) name;
 
 vst2x_plugin::vst2x_plugin(std::string path)
@@ -239,7 +243,7 @@ vst2x_plugin::~vst2x_plugin()
 void vst2x_plugin::configure(const uint32_t srate, const uint16_t bsize)
 {
     m_aeffect->dispatcher(m_aeffect, effSetSampleRate, 0, 0, nullptr, srate);
-    m_aeffect->dispatcher(m_aeffect, effSetBlockSize, 0, 0, nullptr, bsize);
+    m_aeffect->dispatcher(m_aeffect, effSetBlockSize, 0, bsize, nullptr, 0.f);
     m_aeffect->dispatcher(m_aeffect, effMainsChanged, 0, 1, nullptr, 0.f);
 }
 
@@ -294,12 +298,12 @@ void vst2x_plugin::set_program_name(const std::string name)
                           reinterpret_cast<VstIntPtr>(name.c_str()), 0, 0);
 }
 
-void vst2x_plugin::process_audio(float **inputs, float **outputs, const uint16_t nsamples)
+void vst2x_plugin::process_audio(float** inputs, float **outputs, const uint16_t nsamples)
 {
     m_aeffect->processReplacing(m_aeffect, inputs, outputs, nsamples);
 }
 
-void vst2x_plugin::process_audio(float **outputs, const uint16_t nsamples)
+void vst2x_plugin::process_audio(float **&outputs, const uint16_t nsamples)
 {
     m_aeffect->processReplacing(m_aeffect, nullptr, outputs, nsamples);
 }
@@ -470,7 +474,7 @@ void vst3x_plugin::process_audio(float **inputs, float **outputs, const uint16_t
 
 }
 
-void vst3x_plugin::process_audio(float **outputs, const uint16_t nsamples)
+void vst3x_plugin::process_audio(float **&outputs, const uint16_t nsamples)
 {
 
 }

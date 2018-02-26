@@ -47,7 +47,7 @@ enum class MIDI
     virtual void                        set_program_name(const std::string name) pure; \
     virtual void                        process_midi(const uint8_t data[4]) pure; \
     virtual void                        process_audio(float** inputs, float** outputs, const uint16_t nsamples) pure; \
-    virtual void                        process_audio(float** outputs, const uint16_t nsamples) pure; \
+    virtual void                        process_audio(float**& outputs, const uint16_t nsamples) pure; \
     virtual void                        open_editor(void* view) pure; \
     virtual version                     get_version() const pure; \
     virtual std::array<uint16_t,2>      get_editor_size() const pure;
@@ -97,10 +97,10 @@ public:
     AudioPlugin();
     ~AudioPlugin();
 
-    virtual float** process(const quint16 nsamples);
+    virtual float** process(const quint16 nsamples) override;
 
-    virtual void classBegin();
-    virtual void componentComplete();
+    virtual void classBegin()           override;
+    virtual void componentComplete()    override;
 
     quint16 program() const;
     QString path() const;

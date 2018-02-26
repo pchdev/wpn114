@@ -21,6 +21,8 @@ public:
     QString path() const;
     void setPath(const QString);
 
+    virtual void setActive(const bool) override;
+
 signals:
     void pathChanged();
     void bufferLoaded();
