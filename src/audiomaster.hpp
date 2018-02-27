@@ -23,6 +23,7 @@ public:
     ~AudioMaster();
 
     QQmlListProperty<AudioObject> units() ;
+    QList<AudioObject*> get_units();
 
     float       level           () const;
     bool        active          () const;

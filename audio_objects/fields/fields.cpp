@@ -15,6 +15,13 @@ Fields::~Fields()
     if ( m_buf ) delete m_buf;
 }
 
+#define GENERATOR_COMPONENT_CONSTRUCTOR ( obj, init )   \
+    obj::obj() : world::instance->genreg(this) {        \
+    world::instance()->genreg(this);                    \
+    init                                                \
+    }
+
+
 void Fields::setNumInputs(const quint16) {}
 
 ON_COMPONENT_COMPLETED ( Fields )

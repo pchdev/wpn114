@@ -125,15 +125,6 @@ protected:
     void obj::classBegin() {}                               \
     void obj::componentComplete()
 
-inline void inbufmerge(
-    float** b1, float** b2, uint16_t nin,
-    uint16_t unout, uint16_t uoff, uint16_t nsamples, float b2level)
-    {
-        for(int ch = 0; ch < nin; ++ch)
-            if ( ch >= uoff && ch < uoff+unout )
-                for( int s = 0; s < nsamples; ++s )
-                    b1[ch][s] += b2[ch-uoff][s] * b2level;
-    }
 };
 
 class AudioEffectObject : public AudioObject
