@@ -62,13 +62,13 @@ public:
 class SpeakerPair : public Speaker, public QQmlParserStatus
 {
     Q_OBJECT
-
     Q_INTERFACES    ( QQmlParserStatus )
-    Q_PROPERTY      ( qreal offset READ offset WRITE setOffset )
-    Q_PROPERTY      ( QVector<qreal> offsets READ offsets WRITE setOffsets )
-    Q_PROPERTY      ( Axis axis READ axis WRITE setAxis )
 
-public:
+    Q_PROPERTY  ( qreal offset READ offset WRITE setOffset )
+    Q_PROPERTY  ( QVector<qreal> offsets READ offsets WRITE setOffsets )
+    Q_PROPERTY  ( Axis axis READ axis WRITE setAxis )
+
+    public: //------------------------------------------------------------
     SpeakerPair();
 
     virtual quint16 nspeakers() const { return 2; }
@@ -84,7 +84,7 @@ public:
     void setOffsets     ( const QVector<qreal> );
     void setAxis        ( const Axis );
 
-private:
+    private: //-----------------------------------------------------------
     Axis            m_axis;
     qreal           m_offset;
     QVector<qreal>  m_offsets;
@@ -95,11 +95,12 @@ class SpeakerRing : public Speaker, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
+
     Q_PROPERTY      ( qreal offset READ offset WRITE setOffset )
     Q_PROPERTY      ( Order order READ order WRITE setOrder )
     Q_PROPERTY      ( int nspeakers READ nspeakers WRITE setNspeakers )
 
-public:
+    public:
     SpeakerRing();
 
     virtual quint16 nspeakers() const { return m_nspeakers; }
@@ -114,7 +115,7 @@ public:
     void setOrder       ( const Order );
     void setNspeakers   ( const quint16 );
 
-private:
+    private:
     qreal       m_offset;
     Order       m_order;
     quint16     m_nspeakers;
@@ -123,12 +124,13 @@ private:
 class Source : public RoomsObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_PROPERTY      ( QQmlListProperty<AudioObject> inputs READ inputs )
-    Q_PROPERTY      ( int nchannels READ nchannels )
     Q_INTERFACES    ( QQmlParserStatus )
     Q_CLASSINFO     ( "DefaultProperty", "inputs" )
 
-public:
+    Q_PROPERTY      ( QQmlListProperty<AudioObject> inputs READ inputs )
+    Q_PROPERTY      ( int nchannels READ nchannels )
+
+    public:
 
     virtual void classBegin()           override;
     virtual void componentComplete()    override;
@@ -138,7 +140,7 @@ public:
     QQmlListProperty<AudioObject> inputs();
     QList<AudioObject*> get_inputs();
 
-private:
+    private:
     QList<AudioObject*> m_inputs;
     quint16 m_nchannels;
 
@@ -149,11 +151,12 @@ class RoomsSetup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
-    Q_PROPERTY      ( int numOutputs READ numOutputs )
-    Q_PROPERTY      ( QQmlListProperty<SpeakerObject> speakers READ speakers )
     Q_CLASSINFO     ( "DefaultProperty", "speakers" )
 
-public:
+    Q_PROPERTY      ( int numOutputs READ numOutputs )
+    Q_PROPERTY      ( QQmlListProperty<SpeakerObject> speakers READ speakers )    
+
+    public:
 
     struct SpeakerChannel
     {
@@ -188,11 +191,12 @@ class Rooms : public AudioEffectObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
-    Q_PROPERTY      ( RoomsSetup* setup READ setup WRITE setSetup )
-    Q_PROPERTY      ( QQmlListProperty<Source> sources READ sources )
     Q_CLASSINFO     ( "DefaultProperty", "sources" )
 
-public:
+    Q_PROPERTY      ( RoomsSetup* setup READ setup WRITE setSetup )
+    Q_PROPERTY      ( QQmlListProperty<Source> sources READ sources )
+
+    public:
     Rooms();
     ~Rooms();
 
@@ -206,10 +210,10 @@ public:
     RoomsSetup* setup   () const;
     void setSetup       (RoomsSetup*);
 
-protected:    
+    protected:
     float**& get_inputs( const quint64 nsamples ); // override
 
-private:
+    private:
     RoomsSetup*     m_setup;
     QList<Source*>  m_sources;
 };

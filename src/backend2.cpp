@@ -59,6 +59,11 @@ QQmlListProperty<ASendElement> AElement::sends()
     return QQmlListProperty<ASendElement>(this, m_sends);
 }
 
+QList<ASendElement*> AElement::get_sends() const
+{
+    return m_sends;
+}
+
 uint16_t AElement::n_outputs() const
 {
     return m_n_outputs;
@@ -100,7 +105,6 @@ ASendElement::~ASendElement() {}
 
 ON_COMPONENT_COMPLETED ( ASendElement )
 {
-
 }
 
 bool ASendElement::prefader() const
@@ -135,11 +139,24 @@ void ASendElement::set_prefader(bool prefader)
 
 //---------------------------------------------------------------------------------------------------
 // WORLD
+#define WORLD_MAX_GENERATORS 25
+#define WORLD_MAX_STREAMS 50
 //---------------------------------------------------------------------------------------------------
 
 World& World::instance()
 {
     return m_instance;
+}
+
+World::World()
+{
+    m_prnodes.reserve( WORLD_MAX_GENERATORS );
+    m_streams.reserve( WORLD_MAX_STREAMS );
+}
+
+World::~World()
+{
+
 }
 
 uint32_t World::samplerate() const
@@ -162,27 +179,142 @@ void World::set_samplerate(uint32_t samplerate)
     m_samplerate = samplerate;
 }
 
-void World::parse()
+void World::set_mstream_n_outputs(uint16_t n_outputs)
 {
+    m_mainstream->nout = n_outputs;
+}
+
+void World::genreg(const AElement& generator)
+{
+    auto node = new pnode;
+
+    //            we catch generator properties
+    node->src    = &generator;
+
+    node->nin    = 0;
+    node->nout   = generator.n_outputs();
+    node->off    = generator.offset();
+    node->prc    = &generator.process;
+
+    m_prnodes.push_back( node );
+
+    // we can't know if children nodes have been instantiated at that point
+    // so we can't yet parse the stream, this would be done when WorldInterface is complete
+}
+
+void World::procreg(const AProcessorElement& processor)
+{
+    auto node = new pnode;
+
+    node->src   = &processor;
+    node->nin   = processor.n_inputs();
+    node->nout  = processor.n_outputs();
+    node->off   = processor.offset();
+    node->prc   = &processor.process;
+
+    m_procnodes.push_back( node );
+}
+
+inline pnode* make_pnode(const AElement& ael)
+{
+    pnode* pn = new pnode;
+    *pn = { &ael, 0,  &ael.process, 0, ael.n_outputs(), ael.offset() };
+
+    return pn;
+}
+
+inline pnode* make_pnode(const AProcessorElement& ael)
+{
+    pnode* pn = new pnode;
+    *pn = { &ael, 0, &ael.process, ael.n_inputs(), ael.n_outputs(), ael.offset() };
+
+    return pn;
+}
+
+inline void World::parse_forked_streams(const pnode& node)
+{
+    auto ael = dynamic_cast<AElement*>( node.src );
+
+    for ( const auto& send : ael->get_sends() )
+    {
+        stream* strm    = new stream;
+        strm->src       = dynamic_cast<AElement*>( send->target() );
+        node.streams    .push_back( strm );
+    }
+}
+
+void World::parse_upstream(const stream& strm)
+{
+    // we take the first element of the stream pnodes vector
+    auto ael = stream.pnodes[0]->src->parent();
+
+    if ( !ael )
+    {
+        // no further parents,
+        // we can make the current processor the source for the stream
+        strm.src = stream.pnodes[0]->src;
+        return;
+    }
+
+    if ( ! dynamic_cast<AProcessorElement*>(ael) )
+    {
+        // then it is a primordial node, end of the line
+        auto pn = make_pnode  ( *dynamic_cast<AElement*>(ael) );
+        pn->streams.push_back ( &strm );
+
+        parse_forked_streams  ( *pn );
+        m_prnodes.push_back   ( pn );
+    }
+    else
+    {
+        // we push front a new pnode in the stream
+        auto pn = make_pnode ( *dynamic_cast<AProcessorElement*>(ael) );
+        parse_forked_streams ( *pn );
+
+        strm.pnodes.insert    ( strm.pnodes.begin(), pn );
+        parse_upstream        ( strm );
+    }
+}
+
+void World::parse_qml(const WorldInterface& interface)
+{
+    m_mainstream            = new stream;
+    m_mainstream->nout      = interface.n_outputs();
+
+    for ( const auto& ael : interface.get_aelements() )
+    {
+        if ( ! dynamic_cast<AProcessorElement*>( ael ) )
+        {
+            auto pn = make_pnode  ( *ael );
+            pn->streams.push_back ( m_mainstream );
+            parse_forked_streams  ( *pn );
+
+            m_prnodes.push_back  ( pn );
+        }
+        else
+        {
+            stream* strm = new stream;
+
+            auto pn = make_pnode    ( *dynamic_cast<AProcessorElement>(ael) );
+            pn->streams.push_back   ( m_mainstream );
+
+            parse_forked_streams    ( *pn );
+            strm->pnodes.push_back  ( pn );
+            parse_upstream          ( *strm );
+        }
+    }
+
+    // at this point we should have all the primordial nodes
+    // now we have to sort the streams out of them
 
 }
 
-void World::genreg(const AElement &)
+void World::alloc()
 {
-
+    // we allocate the different stream buffers
 }
 
-void World::procreg(const AProcessorElement &)
-{
-
-}
-
-void World::alloc(const uint16_t blocksize)
-{
-
-}
-
-float**& World::run(const uint16_t nsamples)
+float**& World::run()
 {
 
 }
@@ -216,6 +348,9 @@ WorldInterface::~WorldInterface() {}
 ON_COMPONENT_COMPLETED ( WorldInterface )
 {
     configure();
+
+    w.parse ( );
+    w.alloc ( );
 }
 
 void WorldInterface::configure()
@@ -280,7 +415,7 @@ qint64 WorldInterface::readData(char* data, qint64 maxlen)
 
     quint16 nout        = m_n_outputs;
     float level         = m_level;
-    quint16 bsize       = w.blocksize();
+    quint16 bsize       = m_blocksize;
     float* bufdata      = m_buffer;
 
     float**& wend       = w.run(bsize);
@@ -322,12 +457,12 @@ qint64 WorldInterface::bytesAvailable()
 
 uint32_t WorldInterface::samplerate() const
 {
-    return World::instance().samplerate();
+    return m_samplerate;
 }
 
 uint16_t WorldInterface::blocksize() const
 {
-    return World::instance().blocksize();
+    return m_blocksize;
 }
 
 uint16_t WorldInterface::n_inputs() const
@@ -347,11 +482,13 @@ QString WorldInterface::device() const
 
 void WorldInterface::set_samplerate(uint32_t samplerate)
 {
+    m_samplerate = samplerate;
     World::instance().set_samplerate(samplerate);
 }
 
 void WorldInterface::set_blocksize(uint16_t blocksize)
 {
+    m_blocksize = blocksize;
     World::instance().set_blocksize(blocksize);
 }
 
@@ -362,12 +499,18 @@ void WorldInterface::setn_inputs(uint16_t n_inputs)
 
 void WorldInterface::setn_outputs(uint16_t n_outputs)
 {
+    World::instance().set_mstream_n_outputs(n_outputs);
     m_n_outputs = n_outputs;
 }
 
 void WorldInterface::set_device(QString device)
 {
     m_device = device;
+}
+
+void WorldInterface::get_aelements() const
+{
+    return m_aelements;
 }
 
 //---------------------------------------------------------------------------------------------------

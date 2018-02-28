@@ -336,7 +336,7 @@ version vst2x_plugin::get_version() const
     return version::VST2X;
 }
 
-std::array<uint16_t, 2>  vst2x_plugin::get_editor_size() const
+std::array<uint16_t, 2> vst2x_plugin::get_editor_size() const
 {
     std::array<uint16_t, 2> res = { 0, 0 };
     ERect* rect = 0;

@@ -10,23 +10,6 @@ using namespace std;
 namespace wpn114 {
 namespace audio {
 
-typedef void ( AElement::*fnproc_t )( float**&, const uint16_t );
-
-struct pnode
-{
-    float**   src;
-    fnproc_t  prc;
-    uint16_t  nin;
-    uint16_t  nout;
-    uint16_t  off;
-    vector<stream*>  streams;
-};
-
-struct stream : pnode
-{
-    vector<pnode*>   pnodes;
-};
-
 class AAbstractElement : public QObject
 {
     Q_OBJECT
@@ -66,8 +49,9 @@ class AElement : public AAbstractElement //-------------------------- GENERATOR_
     public: // ------------------------------------------------------
     ~AElement();
     QQmlListProperty<ASendElement> sends();
+    QList<ASendElement*> get_sends() const ;
 
-    virtual float process (float**&, const uint16_t nsamples) = 0;
+    virtual void process (float**&, const uint16_t nsamples) = 0;
 
     uint16_t n_outputs () const;
     virtual void setn_outputs ( uint16_t );
@@ -116,8 +100,8 @@ class ASendElement : public AAbstractElement, public QQmlParserStatus //--- SEND
     virtual void componentComplete  () override;
     virtual void classBegin         () override;
 
-    bool        prefader    () const;
-    bool        postfx      () const;
+    bool   prefader    () const;
+    bool   postfx      () const;
 
     AProcessorElement* target () const;
 
@@ -132,18 +116,41 @@ class ASendElement : public AAbstractElement, public QQmlParserStatus //--- SEND
     AProcessorElement* m_target;
 };
 
+// -----------------------------------------------------------------------------------------
+// WORLD
+// -----------------------------------------------------------------------------------------
+
+typedef void ( AElement::*fnproc_t )( float**&, const uint16_t );
+
+struct pnode
+{
+    AElement* src;
+    float**   pool;
+    fnproc_t  prc;
+    uint16_t  nin;
+    uint16_t  nout;
+    uint16_t  off;
+    vector<stream*>  streams;
+};
+
+struct stream : pnode
+{
+    vector<pnode*>   pnodes;
+};
+
 class World
 {
     public:
-    void  parse   ( );
 
-    void  genreg  ( const AElement& );
-    void  procreg ( const AProcessorElement& );
-    //    these two funfctions have to be called once the qml element is complete
+    void  alloc   ( );
+    void  update  ( );
+    // this will asynchronously re-parse the qml structure
+    // when done, interchanges the different vector members
 
-    void      alloc   ( const uint16_t blocksize );
+    float**&  run ( );
 
-    float**&  run     ( const uint16_t nsamples );
+    void  parse_qml ( const WorldInterface& interface );
+    // these three functions have to be called once the qml element is complete
 
     stream*             mainstream ( ) const;
     vector<pnode*>      prm_nodes  ( ) const;
@@ -151,10 +158,11 @@ class World
 
     static World&       instance        ( );
 
-    uint32_t     samplerate      ( ) const;
-    uint16_t     blocksize       ( ) const;
-    void         set_samplerate  ( uint32_t );
-    void         set_blocksize   ( uint16_t );
+    uint32_t     samplerate             ( ) const;
+    uint16_t     blocksize              ( ) const;
+    void         set_samplerate         ( uint32_t );
+    void         set_blocksize          ( uint16_t );
+    void         set_mstream_n_outputs  ( uint16_t );
 
 //---------------------------------------------------------------------------------------------------
 #define WORLD_RATE      World::instance().samplerate()
@@ -170,8 +178,13 @@ class World
     ~World ( );
 
     static World        m_instance;
+
+    void parse_forked_streams(const pnode& node);
+    void parse_upstream(const stream& strm);
+
     stream*             m_mainstream;
     vector<pnode*>      m_prnodes;
+    vector<pnode*>      m_procnodes;
     vector<stream*>     m_streams;
     uint32_t            m_samplerate;
     uint16_t            m_blocksize;
@@ -197,6 +210,7 @@ class WorldInterface : public AAbstractElement, public QQmlParserStatus, public 
     ~WorldInterface ( );
 
     QQmlListProperty<AElement> aelements( );
+    QList<AElement*> get_aelements( ) const;
 
     virtual void classBegin ( )                         override;
     virtual void componentComplete ( )                  override;
@@ -224,6 +238,8 @@ class WorldInterface : public AAbstractElement, public QQmlParserStatus, public 
 
     private: //-----------------------------
     void            configure();
+    uint16_t        m_blocksize;
+    uint32_t        m_samplerate;
     uint16_t        m_n_inputs;
     uint16_t        m_n_outputs;
     QString         m_device;
