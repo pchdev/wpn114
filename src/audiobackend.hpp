@@ -119,7 +119,7 @@ protected:
     delete target;
 
 #define INITIALIZE_AUDIO_OUTPUTS                            \
-    IOALLOC ( m_outputs, m_num_outputs );                   \
+    IOALLOC ( m_outputs, m_n_outputs );                     \
 
 #define ON_COMPONENT_COMPLETED(obj)                         \
     void obj::classBegin() {}                               \

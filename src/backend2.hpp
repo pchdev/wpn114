@@ -8,7 +8,7 @@
 
 using namespace std;
 
-class WAElement : public QObject, public QQmlParserStatus //-------- ABSTRACT_AUDIO_ELEMENT
+class WAElement : public QObject //-------------------------------- ABSTRACT_AUDIO_ELEMENT
 {
     Q_OBJECT
     Q_PROPERTY  ( bool active READ active WRITE set_active )
@@ -23,7 +23,11 @@ class WAElement : public QObject, public QQmlParserStatus //-------- ABSTRACT_AU
     virtual void set_active ( bool a) { m_active = a; }
     virtual void set_muted  ( bool m) { m_muted = m;  }
 
+    const WAStream& stream() const { return *m_stream; }
+    void set_stream(const WAStream& stream) { m_stream = &stream; }
+
     protected: //---------------------------------------------------
+    WAStream*   m_stream;
     bool        m_active;
     bool        m_muted;
 
@@ -44,11 +48,13 @@ class WAIElement : public WAElement //-------------------------------- IN_ELEMEN
     public: // ------------------------------------------------------
     QQmlListProperty<WAOElement> inputs();
 
+    virtual void add_receive(const WASndElement& send);
     virtual uint16_t n_inputs() const;
     virtual void setn_inputs(uint16_t);
 
     private: //------------------------------------------------------
     QList<WAOElement*> m_inputs;
+    QList<WASndElement*> m_receives;
     uint16_t m_n_inputs;
 
 };
@@ -99,7 +105,7 @@ class WAIOElement : public WAIElement, public WAOElement // --------- IN_OUT_ELE
     bool m_bypassed;
 };
 
-class WASndElement : public WAElement, public QQmlParserStatus //--- SEND_ELEMENT
+class WASndElement : public WAElement, public QQmlParserStatus //----------- SEND_ELEMENT
 {
     Q_OBJECT
 
@@ -139,14 +145,16 @@ class WAStream : public WAIOElement //------------------------------------------
     // streams are only implicit, as they are not instantiable in qml
 
     public: //----------------------------------------------
-    WAStream(WAElement* const& outfall);
+    WAStream(const WAElement &outfall);
     ~WAStream();
 
-    void pour ( const WAStream& stream ) const;
-    const WAElement& first();
+    static bool begins_with(const WAElement& element);
 
-    virtual void classBegin ( ) override;
-    virtual void componentComplete ( ) override;
+    void pour ( const WAStream& target ) const;
+    void initialize ( );
+
+    const WAElement& first();
+    void push_front ( const WAElement& node );
 
     virtual void process ( float **&, const uint16_t nsamples ) override;
 
@@ -157,12 +165,12 @@ class WAStream : public WAIOElement //------------------------------------------
     // the IO elements that compose the stream
     // note that the sources can or cannot be included
 
-    // i.e. if a WAElement has multiple stream targets to pour itself in
-    // then it becomes a stream in itself
+    // if a WAElement has multiple inputs: this marks the beginning of the stream
+    // if a WAElement has multiple outputs: this marks the end of the stream
 
+    // if World has only one input, i.e. a sine oscillator, then it becomes part of the world stream
     QVector<WAStream*> m_upstreams;
     QVector<WAStream*> m_downstreams;
-    // the descending streams in which this one has to pour itself in
 
     float** m_pool;
 };
@@ -171,8 +179,14 @@ class WAStreamFactory
 {
     public:
     WAStreamFactory();
-    QVector<WAStream*> upstream ( const WAElement& outfall );
-    QVector<WAStream*> upstream ( const WAStream& stream );
+    void upstream ( const WAElement& outfall );
+    void upstream ( const WAStream& stream );
+    void resolve ( );
+
+    const QVector<WAStream>& streams() const;
+
+    private:
+    QVector<WAStream> m_streams;
 
 };
 
@@ -194,6 +208,7 @@ class World : public WAIOElement, public QQmlParserStatus, public QIODevice
 
     public: //------------------------------------------------------------
     static World& instance();
+    static WAStream& worldstream();
 
     QQmlListProperty<WAElement> aelements( );
     QList<WAElement*> get_aelements( ) const;
