@@ -90,7 +90,11 @@ void WAIOElement::set_bypassed(bool bypassed)
 // SEND_ELEMENT
 //---------------------------------------------------------------------------------------------------
 
-WASndElement::WASndElement() {}
+WASndElement::WASndElement() : m_target(0)
+{
+    m_emitter = qobject_cast<WAOElement*>(parent);
+}
+
 WASndElement::~WASndElement() {}
 
 ON_COMPONENT_COMPLETED ( WASndElement )
@@ -111,9 +115,14 @@ bool WASndElement::postfx() const
     return m_postfx;
 }
 
-WAIElement* WASndElement::target()
+WAIElement* const& WASndElement::to() const
 {
     return m_target;
+}
+
+WAOElement* const& WASndElement::from() const
+{
+    return m_emitter;
 }
 
 void WASndElement::set_target(WAIElement* target)
@@ -135,13 +144,18 @@ void WASndElement::set_prefader(bool prefader)
 // STREAMS
 //---------------------------------------------------------------------------------------------------
 
-WAStream::WAStream(const WAElement& outfall)
+WAStream::WAStream(const WAElement& outfall) :
+    has_downstreams(false),
+    has_upstreams(false)
 {
     outfall.set_stream      ( *this );
     m_aelements.push_back   ( &outfall );
 
     if  ( auto out = qobject_cast<WAOElement*>( &outfall ))
+    {
         m_n_outputs = out->n_outputs();
+        m_offset = out->offset();
+    }
 
     else m_n_outputs = 0;
 }
@@ -152,14 +166,24 @@ void WAStream::push_front(const WAElement &node)
     m_aelements.push_front  ( &node );
 }
 
-const WAElement& WAStream::first()
+const WAElement& WAStream::upstream()
 {
-    if ( !m_aelements.empty() ) return *m_aelements[0];
+    if ( !m_aelements.empty() ) return *m_aelements.first();
+}
+
+const WAElement& WAStream::downstream()
+{
+    if ( !m_aelements.empty() ) return *m_aelements.last();
 }
 
 void WAStream::alloc_pool(const uint16_t nsamples)
 {
-    INITIALIZE_AUDIO_IO ( m_pool, m_n_inputs );
+    //! TODO
+}
+
+void WAStream::resolve()
+{
+
 }
 
 inline bool WAStream::begins_with( const WAElement& element)
@@ -168,7 +192,7 @@ inline bool WAStream::begins_with( const WAElement& element)
 
     //  if element has multiple inputs
     if ( in && ( in->children().size() > 1 ||
-         !in->get_receives().empty())) return true;
+         !in->has_receives())) return true;
 
     else return false;
 }
@@ -187,60 +211,99 @@ WAStream::process(float **&, const uint16_t nsamples)
 // STREAM_FACTORY
 //---------------------------------------------------------------------------------------------------
 
-WAStreamFactory::WAStreamFactory() {}
+#define wao_cast ( waelement ) qobject_cast<WAOElement*>( &waelement )
+#define wai_cast ( waelement ) qobject_cast<WAIElement*>( &waelement )
+#define wae_cast ( qobject )   qobject_cast<WAElement*>( qobject )
 
-inline bool can_upstream( const WAElement& element)
+WAStreamMaker::WAStreamMaker() {}
+
+inline bool has_direct_upstream( const WAElement& element)
 {
     return !element.children().empty();
 }
 
-void WAStreamFactory::upstream(const WAStream &stream)
+inline bool has_indirect_upstream( const WAElement& element)
 {
-    WAElement& target = stream.first();
+    auto wai = wai_cast ( element );
+    return wai && wai->has_receives();
+}
 
-    if  ( !can_upstream )
+void WAStreamMaker::upstream(const WAStream &stream)
+{
+    WAElement& target = stream.upstream();
+
+    if  ( !has_direct_upstream ( target) )
     {
-        // stream is complete, we can safely return
-        m_streams.push_back(stream);
+        // stream is complete, no further parsing required
+        stream.has_upstreams = has_indirect_upstream ( target );
+        m_streams.push_back ( stream );
         return;
     }
-    else if ( WAStream::begins_with ( target ))
+    else if ( stream.has_upstreams = WAStream::begins_with ( target ))
     {
-        m_streams.push_back(stream);
+        m_streams.push_back ( stream );
 
-        // we make a new stream and continue to parse upstream...
+        // stream is complete, but there are others upstream
+        // continue parsing
         for ( const auto& child : target.children() )
-            upstream ( *qobject_cast<WAElement*>( child ) );
+            upstream ( *wae_cast ( child ) );
     }
     else
     {
         for ( const auto& child : target.children() )
         {
+            // stream is not complete yet
+
             // we add child to the stream as the new first node
             // and continue to parse upstream...
-            auto element = *qobject_cast<WAElement*>(child);
-            stream.push_front (element);
+            auto element = *wae_cast ( child );
+            stream.push_front ( element );
             upstream ( stream );
         }
     }
 }
 
-void WAStreamFactory::upstream(const WAElement &outfall)
+void WAStreamMaker::upstream(const WAElement &outfall)
 {
-    WAStream stream ( outfall );
+    auto stream = new WAStream( outfall );
+    stream->has_downstreams = wao_cast ( outfall );
+
     upstream( stream );
 
     // note a stream's outfall is not necessarily worldstream
     // it can be an analyzer (vu, freqscope...)
 }
 
-void WAStreamFactory::resolve()
+#define resolve_inputs( target_container, getter_func )         \
+    int i = 0;                                                  \
+    for ( const auto& input : target_container )                \
+    {                                                           \
+        auto stream_target = input->##getter_func;              \
+        int idx = m_streams.indexOf ( stream_target );          \
+        m_streams.move ( idx, i );                              \
+        i++;                                                    \
+        resolve ( &stream_target );                             \
+    }                                                           \
+
+void WAStreamMaker::resolve(WAStream const& stream)
 {
+    if(stream.has_upstreams)
+    {
+        WAIElement* up = wai_cast(stream.upstream());
 
-
+        resolve_inputs ( up->get_inputs(), stream() );
+        resolve_inputs ( up->receives(), from()->stream() );
+    }
 }
 
-const QVector<WAStream> WAStreamFactory::streams() const
+void WAStreamMaker::resolve_streams()
+{
+    // at this point, we should have all the separated streams in vector
+    for ( const auto& stream : m_streams )
+        resolve(*stream);
+}
+
+QVector<WAStream*> WAStreamMaker::streams() const
 {
     return m_streams;
 }
@@ -265,10 +328,12 @@ ON_COMPONENT_COMPLETED ( World )
 {
     configure();
 
-    WAStreamFactory factory;
+    WAStreamMaker factory;
 
     for ( const auto& aelement : m_aelements )
         factory.upstream ( *aelement );
+
+    // + TODO: WORLDSTREAM
 }
 
 void World::configure()
