@@ -1,8 +1,6 @@
 #ifndef FIELDS_H
 #define FIELDS_H
 
-#include <QAudioBuffer>
-#include <QAudioDecoder>
 #include <src/wpnsndfile.hpp>
 #include <src/audiobackend.hpp>
 
