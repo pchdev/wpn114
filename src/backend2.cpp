@@ -6,10 +6,12 @@ inline OutStreamNode* outnode_cast(StreamNode const& node)
 {
     return qobject_cast<OutStreamNode*>(&node);
 }
+
 inline InStreamNode* innode_cast(StreamNode const& node)
 {
     return qobject_cast<InStreamNode*>(&node);
 }
+
 inline StreamNode* streamnode_cast(QObject* const& qobj)
 {
     return qobject_cast<StreamNode*>(qobj);
@@ -165,11 +167,6 @@ Stream::~Stream()
 
 }
 
-Stream::process(float **&, const uint16_t nsamples)
-{
-
-}
-
 inline bool Stream::begins_with( const StreamNode& node)
 {
     InStreamNode* in  = innode_cast ( node ) ;
@@ -198,24 +195,61 @@ StreamSegment::StreamSegment(const StreamNode& outfall) :
         m_offset = out->offset();
     }
 
-    else m_n_outputs = 0;
+    else
+    {
+        m_n_outputs = 0;
+        m_offset = 0;
+    }
 }
 
-const StreamNode& StreamSegment::upstream_node()
+inline const StreamNode& StreamSegment::upstream_node()
 {
     if ( !m_nodes.empty() ) return *m_nodes.first();
 }
 
-const StreamNode& StreamSegment::downstream_node()
+inline const StreamNode& StreamSegment::downstream_node()
 {
     if ( !m_nodes.empty() ) return *m_nodes.last();
 }
 
-void StreamSegment::alloc_pool(const uint16_t nsamples)
+inline void StreamSegment::zero_pool(const uint16_t bsize)
 {
+    for ( uint16_t ch = 0; ch < maxchannels; ++ch )
+        std::memset(m_pool[ch], 0.f, sizeof(float)*bsize);
 }
 
-QVector<StreamSegment*> const& StreamSegment::upstream_segments()
+inline void StreamSegment::alloc_pool(const uint16_t bsize)
+{
+    m_pool = new float* [ maxchannels ];
+    for ( uint16_t ch = 0; ch < maxchannels; ++ch )
+        m_pool[ch] = (float*) std::calloc(bsize, sizeof(float));
+}
+
+inline void Stream::segpour(StreamSegment const& upseg, StreamSegment const& target)
+{
+
+
+}
+
+inline void Stream::process(const uint16_t nsamples)
+{
+    for ( StreamSegment* const& seg : m_segments )
+    {
+        if ( seg->n_inputs() )
+            for ( const auto& upseg : seg->upstream_segments())
+                segpour(upseg, seg);
+
+        seg->process ( nsamples );
+    }
+}
+
+inline void StreamSegment::process(const uint16_t nsamples)
+{
+    for ( StreamNode* const& node : m_nodes )
+        node->process ( nsamples );
+}
+
+QVector<StreamSegment*> const& StreamSegment::upstream_segments(bool recursive)
 {
     QVector<StreamSegment*> segs;
 
@@ -231,12 +265,14 @@ QVector<StreamSegment*> const& StreamSegment::upstream_segments()
 
         for(const auto& input : in)
         {
-            // we push back all inputs' segments
+            // we push back all inputs' segments if they were not already pulled
             auto segtarget = input->segment();
-            segs.push_back  ( segtarget );
 
-            // we recursively prepend all the upstream segment
-            segs = segtarget.upstream_segments() + segs;
+            if ( !segs.contains ( segtarget ) )
+                 segs.push_back ( segtarget );
+
+            if ( recursive )
+                segs = segtarget.upstream_segments() + segs;
         }
     }
 
@@ -295,7 +331,7 @@ void StreamMaker::parse_upstream(const StreamSegment& segment)
     }
 }
 
-void StreamMaker::parse_upstream(const StreamNode& outfall)
+inline void StreamMaker::parse_upstream(const StreamNode& outfall)
 {
     auto segment = new StreamSegment( outfall );
     segment->has_downstreams = outnode_cast ( outfall );
@@ -304,6 +340,16 @@ void StreamMaker::parse_upstream(const StreamNode& outfall)
 
     // note a stream's outfall is not necessarily worldstream's pool
     // it can be an analyzer, or a graphic element
+}
+
+inline void StreamMaker::resolve_streams(StreamNode const& node)
+{
+    // we build streams from firsts world segments
+    // this will recursively parse all segments upstream
+    auto stream = new Stream ( node.segment() );
+
+    m_streams.push_back ( stream );
+
 }
 
 QVector<Stream*> StreamMaker::streams() const
@@ -332,9 +378,7 @@ ON_COMPONENT_COMPLETED ( WorldStream )
     configure();
 
     StreamMaker factory;
-
     factory.upstream ( *this );
-    factory.resolve_streams();
 }
 
 void WorldStream::configure()
@@ -372,7 +416,7 @@ void WorldStream::configure()
 
 }
 
-void WorldStream::onAudioStateChanged(QAudio::State state)
+inline void WorldStream::onAudioStateChanged(QAudio::State state)
 {
     qDebug() << state;
 }
@@ -382,9 +426,10 @@ QQmlListProperty<StreamNode> WorldStream::nodes()
     return QQmlListProperty<StreamNode>(this, m_nodes);
 }
 
-void WorldStream::process(float **&, const uint16_t nsamples)
+inline void WorldStream::process(const uint16_t nsamples)
 {
-
+    for ( const auto& stream : m_streams )
+        stream->process ( nsamples );
 }
 
 void WorldStream::run()
@@ -472,7 +517,7 @@ void WorldStream::set_device(QString device)
     m_device = device;
 }
 
-void WorldStream::get_aelements() const
+void WorldStream::get_nodes() const
 {
-    return m_aelements;
+    return m_nodes;
 }

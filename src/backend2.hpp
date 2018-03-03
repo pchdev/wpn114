@@ -16,7 +16,7 @@ class StreamNode : public QObject //--------------------------------- AUDIO_ELEM
     Q_PROPERTY  ( bool muted READ muted WRITE set_muted )
 
     public: // -----------------------------------------------------
-    virtual void process ( float**&, const uint16_t nsamples ) = 0;
+    virtual void process ( const uint16_t nsamples ) = 0;
 
     virtual bool active  ( ) const  { return m_active; }
     virtual bool muted   ( ) const  { return m_muted; }
@@ -168,7 +168,7 @@ class Stream : protected StreamNode
     const StreamNode& downstream_node ( );
 
     static bool begins_with (const StreamNode& node);
-    virtual void process ( float **&, const uint16_t nsamples ) override;
+    virtual void process (const uint16_t nsamples ) override;
 
     void resolve ( );
 
@@ -194,7 +194,7 @@ class StreamSegment : public Stream, public IOStreamNode //---------------------
     Q_OBJECT
 
     public: //--------------------------------------------------------------
-    virtual void process ( float **&, const uint16_t nsamples ) override;
+    virtual void process (const uint16_t nsamples ) override;
 
     protected: //-----------------------------------------------------------
     StreamSegment(const StreamNode& outfall);
@@ -202,17 +202,14 @@ class StreamSegment : public Stream, public IOStreamNode //---------------------
 
     void alloc_pool ( const uint16_t nsamples );
 
-    QVector<StreamSegment*> const& upstream_segments ( );
-    QVector<StreamSegment*> const& downstream_segments ( );
+    QVector<StreamSegment*> const& upstream_segments (bool recursive = true );
+    QVector<StreamSegment*> const& downstream_segments (bool recursive = true );
 
     bool has_upstreams;
     bool has_downstreams;
-    uint16_t max_channels;
+    uint16_t maxchannels;
     float** m_pool;
-
-    private:
-    void parse_upstream(const StreamNode& outfall);
-    void parse_upstream(const StreamSegment& segment);
+    QVector<StreamNode*> m_nodes;
 
 };
 
@@ -220,13 +217,14 @@ class StreamMaker //----------------------------------------------------- STREAM
 {
     friend class WorldStream;
 
-    public:
+    protected: //-----------------------------------------
     StreamMaker();
-    void upstream ( const StreamNode& outfall );
-    void resolve_streams ( );
 
-    private:
-    void upstream (const StreamSegment& segment );
+    QVector<Stream*> streams() const;
+    void parse_upstream(const StreamNode& outfall);
+    void parse_upstream(const StreamSegment& segment);
+    void resolve_streams(const StreamNode &node);
+
     QVector<StreamSegment*> m_segments;
     QVector<Stream*> m_streams;
 };
@@ -261,7 +259,7 @@ class WorldStream : public IOStreamNode, public QQmlParserStatus, public QIODevi
     virtual qint64 writeData ( const char*, qint64 )    override;
     virtual qint64 bytesAvailable ()                    const override;
 
-    virtual void process ( float **&, const uint16_t nsamples ) override;
+    virtual void process ( const uint16_t nsamples ) override;
     virtual void set_active(bool) override;
 
     uint32_t samplerate ( ) const;

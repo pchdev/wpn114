@@ -104,14 +104,7 @@ protected:
 #define SET_OFFSET(o)   m_offset = o;
 #define OUT             m_outputs
 
-#define ZEROBUF( target, sz )                               \
-    for(int i = 0; i < sz; ++i )                            \
-    std::memset(target[i], 0.f, sizeof(float)*BLOCKSIZE);
 
-#define IOALLOC(target,n)                                   \
-    target = new float*[n];                                 \
-    for(int i = 0; i < n; ++i)                              \
-    target[i] = (float*) std::calloc(n*BLOCKSIZE, sizeof(float));
 
 #define IODEALLOC(target, n)                                \
     for(int i = 0; i < n; ++i)                              \
