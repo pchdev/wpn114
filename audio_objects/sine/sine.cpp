@@ -6,8 +6,6 @@ SinOsc::SinOsc() : m_frequency(440.f), m_pos(0)
     SETN_OUT    ( 1 );
     SET_OFFSET  ( 0 );
 
-    INITIALIZE_AUDIO_OUTPUTS;
-
     for( quint16 i = 0; i < WT_SIZE; ++i )
         m_wavetable[i] = sin ((float) i/WT_SIZE*M_PI*2 );
 }

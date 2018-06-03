@@ -19,137 +19,62 @@ inline StreamNode* streamnode_cast(QObject* const& qobj)
 
 //---------------------------------------------------------------------------------------------------
 
-float OutStreamNode::level() const
-{
-    return m_level;
-}
+float         OutStreamNode::level()        const  { return m_level; }
+uint16_t      OutStreamNode::offset()       const  { return m_offset; }
+uint16_t      OutStreamNode::n_outputs()    const  { return m_n_outputs; }
+QList<Fork*>  OutStreamNode::get_forks()    const  { return m_forks; }
 
-uint16_t OutStreamNode::offset() const
-{
-    return m_offset;
-}
-
-void OutStreamNode::set_level(float level)
-{
-    m_level = level;
-}
-
-void OutStreamNode::set_offset(uint16_t offset)
-{
-    m_offset = offset;
-}
+void OutStreamNode::set_level     ( float level )         { m_level = level; }
+void OutStreamNode::set_offset    ( uint16_t offset )     { m_offset = offset; }
+void OutStreamNode::setn_outputs  ( uint16_t n_outputs )  { m_n_outputs = n_outputs; }
 
 QQmlListProperty<Fork> OutStreamNode::forks()
 {
     return QQmlListProperty<Fork>(this, m_forks);
 }
 
-QList<Fork*> OutStreamNode::get_forks() const
-{
-    return m_forks;
-}
-
-uint16_t OutStreamNode::n_outputs() const
-{
-    return m_n_outputs;
-}
-
-void OutStreamNode::setn_outputs(uint16_t n_outputs)
-{
-    m_n_outputs = n_outputs;
-}
-
 //---------------------------------------------------------------------------------------------------
 // IN_ELEMENT
 //---------------------------------------------------------------------------------------------------
+uint16_t      InStreamNode::n_inputs()      const  { return m_n_inputs; }
+
+void InStreamNode::setn_inputs    ( uint16_t n_inputs )   { m_n_inputs = n_inputs; }
+void InStreamNode::add_receive    ( const Fork &send )    { m_receives.push_back(&send); }
 
 QQmlListProperty<OutStreamNode> InStreamNode::inputs()
 {
     return QQmlListProperty<OutStreamNode>(this, m_inputs);
 }
 
-uint16_t InStreamNode::n_inputs() const
-{
-    return m_n_inputs;
-}
-
-void InStreamNode::setn_inputs(uint16_t n_inputs)
-{
-    m_n_inputs = n_inputs;
-}
-
-void InStreamNode::add_receive(const Fork &send)
-{
-    m_receives.push_back(&send);
-}
-
 //---------------------------------------------------------------------------------------------------
 // IN_OUT_ELEMENT
 //---------------------------------------------------------------------------------------------------
 
-bool IOStreamNode::bypassed() const
-{
-    return m_bypassed;
-}
-
-void IOStreamNode::set_bypassed(bool bypassed)
-{
-    m_bypassed = bypassed;
-}
+bool IOStreamNode::bypassed() const { return m_bypassed; }
+void IOStreamNode::set_bypassed ( bool bypassed ) { m_bypassed = bypassed; }
 
 //---------------------------------------------------------------------------------------------------
 // FORKS
 //---------------------------------------------------------------------------------------------------
 
-Fork::Fork() : m_target(0)
-{
-    m_emitter = qobject_cast<OutStreamNode*>(parent);
-}
+Fork::Fork() : m_target(0) { m_emitter = outnode_cast ( parent() ); }
+
+ON_COMPONENT_COMPLETED ( Fork ) { m_target->add_receive(*this); }
 
 Fork::~Fork() {}
-
-ON_COMPONENT_COMPLETED ( Fork )
-{
-    m_target->add_receive(*this);
-}
 
 void Fork::process(float **&, const uint16_t) {}
 // nothing to process
 
-bool Fork::prefader() const
-{
-    return m_prefader;
-}
+bool Fork::prefader()  const   { return m_prefader; }
+bool Fork::postfx()    const   { return m_postfx; }
 
-bool Fork::postfx() const
-{
-    return m_postfx;
-}
+void Fork::set_target   ( InStreamNode* target )    { m_target = target; }
+void Fork::set_postfx   ( bool postfx )             { m_postfx = postfx; }
+void Fork::set_prefader ( bool prefader )           { m_prefader = prefader; }
 
-InStreamNode* const& Fork::to() const
-{
-    return m_target;
-}
-
-OutStreamNode* const& Fork::from() const
-{
-    return m_emitter;
-}
-
-void Fork::set_target(InStreamNode* target)
-{
-    m_target = target;
-}
-
-void Fork::set_postfx(bool postfx)
-{
-    m_postfx = postfx;
-}
-
-void Fork::set_prefader(bool prefader)
-{
-    m_prefader = prefader;
-}
+InStreamNode*  const& Fork::to()   const { return m_target; }
+OutStreamNode* const& Fork::from() const { return m_emitter; }
 
 //---------------------------------------------------------------------------------------------------
 // STREAMS
@@ -162,10 +87,7 @@ Stream::Stream(const StreamSegment& segment)
 }
 
 
-Stream::~Stream()
-{
-
-}
+Stream::~Stream() { }
 
 inline bool Stream::begins_with( const StreamNode& node)
 {
@@ -416,7 +338,7 @@ void WorldStream::configure()
 
 }
 
-inline void WorldStream::onAudioStateChanged(QAudio::State state)
+ void WorldStream::onAudioStateChanged(QAudio::State state)
 {
     qDebug() << state;
 }
@@ -429,7 +351,8 @@ QQmlListProperty<StreamNode> WorldStream::nodes()
 inline void WorldStream::process(const uint16_t nsamples)
 {
     for ( const auto& stream : m_streams )
-        stream->process ( nsamples );
+        if ( stream->active() )
+             stream->process ( nsamples );
 }
 
 void WorldStream::run()
@@ -482,42 +405,14 @@ qint64 WorldStream::writeData(const char* data, qint64 maxlen)
     return 0;
 }
 
-qint64 WorldStream::bytesAvailable()
-{
-    return 0;
-}
+qint64 WorldStream::bytesAvailable() { return 0; }
 
-uint32_t WorldStream::samplerate() const
-{
-    return m_samplerate;
-}
+uint32_t    WorldStream::samplerate()   const { return m_samplerate; }
+uint16_t    WorldStream::blocksize()    const { return m_blocksize; }
+QString     WorldStream::device()       const { return m_device; }
+void        WorldStream::get_nodes()    const { return m_nodes; }
 
-uint16_t WorldStream::blocksize() const
-{
-    return m_blocksize;
-}
+void WorldStream::set_samplerate  ( uint32_t samplerate )  { m_samplerate = samplerate; }
+void WorldStream::set_blocksize   ( uint16_t blocksize )   { m_blocksize = blocksize; }
+void WorldStream::set_device      ( QString device )       { m_device = device; }
 
-QString WorldStream::device() const
-{
-    return m_device;
-}
-
-void WorldStream::set_samplerate(uint32_t samplerate)
-{
-    m_samplerate = samplerate;
-}
-
-void WorldStream::set_blocksize(uint16_t blocksize)
-{
-    m_blocksize = blocksize;
-}
-
-void WorldStream::set_device(QString device)
-{
-    m_device = device;
-}
-
-void WorldStream::get_nodes() const
-{
-    return m_nodes;
-}

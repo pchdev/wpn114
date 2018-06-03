@@ -150,7 +150,7 @@ class Fork : public StreamNode, public QQmlParserStatus //----------- SEND_ELEME
     InStreamNode*   m_target;
 };
 
-class Stream : protected StreamNode
+class Stream : protected IOStreamNode
 {
     friend class StreamMaker;
     friend class WorldStream;
@@ -177,11 +177,16 @@ class Stream : protected StreamNode
     Stream ( StreamSegment const& );
     ~Stream ( );
 
-    bool processed;
-    QVector<StreamSegment*> m_segments;
+    void alloc_pool ( const uint16_t nsamples );
+    virtual QVector<StreamSegment*> const& upstream_segments (bool recursive = true );
+    virtual QVector<StreamSegment*> const& downstream_segments (bool recursive = true );
+
+    uint16_t maxchannels;
+    float** m_pool;
+    QVector<StreamNode*> m_nodes;
 };
 
-class StreamSegment : public Stream, public IOStreamNode //-------------------------------------- STREAM_SEG
+class StreamSegment : public Stream  //-------------------------------------- STREAM_SEG
 {
     friend class StreamMaker;
 
@@ -200,16 +205,11 @@ class StreamSegment : public Stream, public IOStreamNode //---------------------
     StreamSegment(const StreamNode& outfall);
     ~StreamSegment();
 
-    void alloc_pool ( const uint16_t nsamples );
-
-    QVector<StreamSegment*> const& upstream_segments (bool recursive = true );
-    QVector<StreamSegment*> const& downstream_segments (bool recursive = true );
+    virtual QVector<StreamSegment*> const& upstream_segments (bool recursive = true ) override;
+    virtual QVector<StreamSegment*> const& downstream_segments (bool recursive = true ) override;
 
     bool has_upstreams;
     bool has_downstreams;
-    uint16_t maxchannels;
-    float** m_pool;
-    QVector<StreamNode*> m_nodes;
 
 };
 
@@ -231,7 +231,7 @@ class StreamMaker //----------------------------------------------------- STREAM
 
 //---------------------------------------------------------------------------------------------------
 
-class WorldStream : public IOStreamNode, public QQmlParserStatus, public QIODevice
+class WorldStream : public Stream, public QQmlParserStatus, public QIODevice
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus QIODevice )
