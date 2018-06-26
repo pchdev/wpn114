@@ -8,6 +8,7 @@
 //#include <audio_objects/sharpen/sharpen.hpp>
 
 #include <src/midi-backend.hpp>
+#include <src/oschandler.h>
 
 #include <QQmlEngine>
 #include <qqml.h>
@@ -36,5 +37,6 @@ void qml_plugin::registerTypes(const char *uri)
 //    qmlRegisterType<Ashes, 1>           ( "WPN114", 1, 0, "Ashes" );
 
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
+    qmlRegisterType<OSCHandler, 1>        ( "WPN114", 1, 0, "OSCHandler" );
 
 }

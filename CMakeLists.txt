@@ -25,6 +25,7 @@ set( PROJECT_HDRS
     #src/audiomaster.hpp
     #src/wpnsndfile.hpp
     src/midi-backend.hpp
+    src/oschandler.h
     src/RtMidi.h
  )
 
@@ -41,6 +42,7 @@ set ( PROJECT_SRCS
     #src/audiomaster.cpp
     #src/wpnsndfile.cpp
     src/midi-backend.cpp
+    src/oschandler.cpp
     src/RtMidi.cpp
 )
 
