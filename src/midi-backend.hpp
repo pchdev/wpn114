@@ -42,8 +42,8 @@ class MIDIHandler : public QObject, public QQmlParserStatus
     QString outDevice   () const { return m_out_device; }
     QString inDevice    () const { return m_in_device; }
 
-    void setOutPort     ( uint8_t port );
-    void setInPort      ( uint8_t port );
+    void setOutPort         ( int8_t port );
+    void setInPort          ( int8_t port );
 
     void setOutDevice       ( QString device );
     void setInDevice        ( QString device );
@@ -57,6 +57,7 @@ class MIDIHandler : public QObject, public QQmlParserStatus
     Q_INVOKABLE void program        ( int channel, int index);
     Q_INVOKABLE void aftertouch     ( int channel, int value );
     Q_INVOKABLE void bend           ( int channel, int value );
+    Q_INVOKABLE void chpressure     ( int channel, int index, int value );
     Q_INVOKABLE void sendRaw        ( QByteArray msg );
 
     Q_INVOKABLE QStringList outDevices  () const;
@@ -70,13 +71,14 @@ class MIDIHandler : public QObject, public QQmlParserStatus
     void inPortOpen         ( );
     void outPortOpen        ( );
 
-    void noteOnReceived         ( int channel, int index, int velocity );
-    void noteOffReceived        ( int channel, int index, int velocity );
-    void controlReceived        ( int channel, int index, int value );
-    void aftertouchReceived     ( int channel, int value );
-    void pitchBendReceived      ( int channel, int value );
-    void programReceived        ( int channel, int index );
-    void eventReceived          ( QByteArray event );
+    void noteOnReceived             ( int channel, int index, int velocity );
+    void noteOffReceived            ( int channel, int index, int velocity );
+    void controlReceived            ( int channel, int index, int value );
+    void channelPressureReceived    ( int channel, int index, int value );
+    void aftertouchReceived         ( int channel, int value );
+    void pitchBendReceived          ( int channel, int value );
+    void programReceived            ( int channel, int index );
+    void eventReceived              ( QByteArray event );
 
     private:
     RtMidiIn*   m_rt_in;
