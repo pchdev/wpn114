@@ -1,4 +1,6 @@
 #include "MIDI-backend.hpp"
+#include <QVariantList>
+#include <QtDebug>
 
 void ReceiveCallback(double delta, std::vector<uint8_t>* msg, void* userData )
 {
@@ -17,7 +19,7 @@ void ReceiveCallback(double delta, std::vector<uint8_t>* msg, void* userData )
         hdl->controlReceived(msg_d[0]-0xb0, msg_d[1], msg_d[2]);
 
     else if ( msg_d[0] >= 0xa0 && msg_d[0] <= 0xaf )
-        hdl->aftertouchReceived(msg_d[0]-0xa0, msg_d[1]);
+        hdl->channelPressureReceived(msg_d[0]-0xa0, msg_d[1], msg_d[2]);
 
     else if ( msg_d[0] >= 0xc0 && msg_d[0] <= 0xcf )
         hdl->programReceived(msg_d[0]-0xc0, msg_d[1]);
@@ -213,5 +215,20 @@ void MIDIHandler::chpressure(int channel, int index, int value)
 void MIDIHandler::sendRaw(QByteArray msg)
 {
     std::vector<uint8_t> vec(msg.begin(), msg.end());
+    m_rt_out->sendMessage(&vec);
+}
+
+void MIDIHandler::sendVariant(QVariantList list)
+{
+    QByteArray arr;
+    for ( const QVariant& var : list )
+    {
+        if ( var.type() == QMetaType::QString )
+            for ( const QChar& c : var.toString() )
+                arr.append(c.toLatin1());
+        else arr.append(var.toInt());
+    }
+
+    std::vector<uint8_t> vec(arr.begin(), arr.end());
     m_rt_out->sendMessage(&vec);
 }

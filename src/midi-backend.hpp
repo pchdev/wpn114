@@ -59,6 +59,7 @@ class MIDIHandler : public QObject, public QQmlParserStatus
     Q_INVOKABLE void bend           ( int channel, int value );
     Q_INVOKABLE void chpressure     ( int channel, int index, int value );
     Q_INVOKABLE void sendRaw        ( QByteArray msg );
+    Q_INVOKABLE void sendVariant    ( QVariantList list );
 
     Q_INVOKABLE QStringList outDevices  () const;
     Q_INVOKABLE QStringList inDevices   () const;
