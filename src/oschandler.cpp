@@ -38,60 +38,87 @@ template<typename T> inline void parseArgumentsFromStream(QVariantList& dest, QD
     dest << value;
 }
 
+void OSCHandler::readOSCBundle(QByteArray bundle)
+{
+    QDataStream stream(bundle);
+
+    // skipping 16 first bytes, including time-tag, useless for now
+    stream.skipRawData(16);
+
+    while ( !stream.atEnd() )
+    {
+        quint32     element_sz;
+        stream >>   element_sz;
+        QByteArray  message(element_sz, '\0');
+
+        stream.readRawData  ( message.data(), element_sz );
+        readOSCMessage      ( message );
+    }
+}
+
+void OSCHandler::readOSCMessage(QByteArray message)
+{
+    QString         address, typetag;
+    QVariantList    arguments;
+    QDataStream     stream(message);
+
+    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    auto spl = message.split(',');
+
+    address = spl[0];
+    typetag = spl[1].split('\0')[0];
+
+    uint8_t adpads = 4-(address.size()%4);
+    uint8_t ttpads = 4-((typetag.size()+1)%4);
+    uint32_t total = address.size()+adpads+typetag.size()+ttpads+1;
+
+    stream.skipRawData(total);
+
+    for ( const QChar& c : typetag )
+    {
+        if        ( c == 'i' ) parseArgumentsFromStream<int>(arguments, stream);
+        else if   ( c == 'f' ) parseArgumentsFromStream<float>(arguments, stream);
+        else if   ( c == 's' )
+        {
+            quint8 byte, padding;
+            QString res;
+            stream >> byte;
+
+            while ( byte )
+            {
+                res.append(byte);
+                stream >> byte;
+            }
+
+            // we add padding after string's end
+            padding = 4-(res.size()%4);
+            stream.skipRawData(padding-1);
+
+            arguments << res;
+        }
+    }
+
+    emit messageReceived(address, arguments);
+
+}
+
 void OSCHandler::readPendingDatagrams()
 {
     while(m_udpsocket->hasPendingDatagrams())
     {
-        QNetworkDatagram    datagram = m_udpsocket->receiveDatagram();
-        QString             address, typetag;
-        QVariantList        arguments;
-        QDataStream         stream(datagram.data());
+        QNetworkDatagram datagram = m_udpsocket->receiveDatagram();
+        QByteArray data = datagram.data();
 
-        stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
-        auto spl = datagram.data().split(',');
-
-        address = spl[0];
-        typetag = spl[1].split('\0')[0];
-
-        uint8_t adpads = 4-(address.size()%4);
-        uint8_t ttpads = 4-((typetag.size()+1)%4);
-        uint32_t total = address.size()+adpads+typetag.size()+ttpads+1;
-
-        stream.skipRawData(total);
-
-        for ( const QChar& c : typetag )
-        {
-            if        ( c == 'i' ) parseArgumentsFromStream<int>(arguments, stream);
-            else if   ( c == 'f' ) parseArgumentsFromStream<float>(arguments, stream);
-            else if   ( c == 's' )
-            {
-                quint8 byte, padding;
-                QString res;
-                stream >> byte;
-
-                while ( byte )
-                {
-                    res.append(byte);
-                    stream >> byte;
-                }
-
-                // we add padding after string's end
-                padding = 4-(res.size()%4);
-                stream.skipRawData(padding-1);
-
-                arguments << res;
-            }
-        }
-
-        emit messageReceived(address, arguments);
+        if       ( data.startsWith('#') ) readOSCBundle(data);
+        else if  ( data.startsWith('/') ) readOSCMessage(data);
     }
 }
 
 void OSCHandler::sendMessage(QString address, QVariantList arguments)
 {
-    QByteArray data;
-    QString typetag;
-    QNetworkDatagram datagram;
+    QString             typetag;
+    QByteArray          data;
+    QNetworkDatagram    datagram;
 
     typetag.append(',');
     for ( const auto& var : arguments )
@@ -166,8 +193,6 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
         }
         }
     }
-
-    qDebug() << data;
 
     datagram.setData            ( data );
     datagram.setDestination     ( QHostAddress(m_remote_address), m_remote_port );

@@ -31,6 +31,8 @@ class OSCHandler : public QObject, public QQmlParserStatus
 
     protected slots:
     void readPendingDatagrams   ( );
+    void readOSCMessage         ( QByteArray message );
+    void readOSCBundle          ( QByteArray bundle );
 
     signals:
     void localPortChanged       ( );
