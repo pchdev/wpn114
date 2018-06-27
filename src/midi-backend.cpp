@@ -53,6 +53,7 @@ void MIDIHandler::componentComplete() { }
 void MIDIHandler::setInVirtualPort(QString name)
 {
     if ( m_rt_in->isPortOpen() ) m_rt_in->closePort();
+
     m_rt_in->openVirtualPort(name.toStdString());
     m_rt_in->setCallback(ReceiveCallback, static_cast<void*>(this));
 

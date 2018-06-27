@@ -3,10 +3,7 @@
 #include <QNetworkDatagram>
 
 OSCHandler::OSCHandler() : m_remote_address("127.0.0.1"), m_remote_port(8889), m_local_port(8888),
-    m_udpsocket(0)
-{
-
-}
+    m_udpsocket(0) { }
 
 void OSCHandler::componentComplete()
 {
@@ -31,11 +28,13 @@ void OSCHandler::setRemoteAddress(QString address)
     m_remote_address = address;
 }
 
-template<typename T> inline void parseArgumentsFromStream(QVariantList& dest, QDataStream& stream)
+template<typename T>
+inline void parseArgumentsFromStream(QVariantList& dest, QDataStream& stream)
 {
     T value;
-    stream >> value;
-    dest << value;
+
+    stream  >> value;
+    dest    << value;
 }
 
 void OSCHandler::readOSCBundle(QByteArray bundle)
@@ -62,7 +61,7 @@ void OSCHandler::readOSCMessage(QByteArray message)
     QVariantList    arguments;
     QDataStream     stream(message);
 
-    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    stream.setFloatingPointPrecision ( QDataStream::SinglePrecision );
     auto spl = message.split(',');
 
     address = spl[0];

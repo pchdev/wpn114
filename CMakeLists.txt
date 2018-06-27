@@ -27,6 +27,7 @@ set( PROJECT_HDRS
     src/midi-backend.hpp
     src/oschandler.h
     src/RtMidi.h
+    src/oscqueryhandler.hpp
  )
 
 set ( PROJECT_SRCS
@@ -44,6 +45,7 @@ set ( PROJECT_SRCS
     src/midi-backend.cpp
     src/oschandler.cpp
     src/RtMidi.cpp
+    src/oscqueryhandler.cpp
 )
 
 if ( APPLE )
@@ -54,10 +56,11 @@ find_package( Sndfile REQUIRED )
 find_package( Qt5QuickWidgets REQUIRED )
 find_package( Qt5Multimedia REQUIRED)
 find_package( Qt5Widgets REQUIRED )
+find_package ( Qt5WebSockets REQUIRED )
 
 add_library(${PROJECT_NAME} SHARED ${PROJECT_HDRS} ${PROJECT_SRCS})
 
-target_link_libraries( ${PROJECT_NAME} Qt5::QuickWidgets Qt5::Multimedia Qt5::Widgets )
+target_link_libraries( ${PROJECT_NAME} Qt5::QuickWidgets Qt5::Multimedia Qt5::Widgets Qt5::WebSockets )
 target_link_libraries( ${PROJECT_NAME} Sndfile )
 
 if(APPLE)
