@@ -9,6 +9,7 @@
 
 #include <src/midi-backend.hpp>
 #include <src/oschandler.h>
+#include <src/oscqueryhandler.hpp>
 
 #include <QQmlEngine>
 #include <qqml.h>
@@ -38,5 +39,8 @@ void qml_plugin::registerTypes(const char *uri)
 
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
     qmlRegisterType<OSCHandler, 1>        ( "WPN114", 1, 0, "OSCHandler" );
+    qmlRegisterType<QueryParameter, 1>    ( "WPN114", 1, 0, "QueryParameter" );
+    qmlRegisterType<OSCQueryServer, 1>    ( "WPN114", 1, 0, "OSCQueryServer" );
+    qmlRegisterType<OSCQueryClient, 1>    ( "WPN114", 1, 0, "OSCQueryClient" );
 
 }

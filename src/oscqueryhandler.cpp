@@ -45,11 +45,13 @@ void QueryParameter::setValue(QVariant value)
 
     if ( m_critical && m_device )
     {
+        // TODO: if variant is list
         m_device->sendMessageWS(m_address, QVariantList{value} );
     }
 
     else if ( !m_critical && m_device )
     {
+        // TODO: if variant is list
         m_device->sendMessageUDP(m_address, QVariantList{value});
     }
 }
@@ -161,7 +163,7 @@ void OSCQueryServer::onWSMessage(QString msg)
 
 OSCQueryClient::OSCQueryClient() : m_ws_hdl(new QWebSocket)
 {
-
+    QObject::connect(m_osc_hdl, SIGNAL(messageReceived(QString,QVariantList)), this, SIGNAL(messageReceived(QString,QVariantList)));
     QObject::connect(m_ws_hdl, SIGNAL(textMessageReceived(QString)), this, SLOT(onWSMessage(QString)));
     QObject::connect(m_ws_hdl, SIGNAL(connected()), this, SLOT(onNewConnection()));
     QObject::connect(m_ws_hdl, SIGNAL(disconnected()), this, SLOT(onDisconnection()));
@@ -185,12 +187,19 @@ void OSCQueryClient::onWSMessage(QString msg)
 
 void OSCQueryClient::onNewConnection()
 {
-
+    emit clientConnected(m_ws_hdl->peerAddress().toString());
 }
 
 void OSCQueryClient::onDisconnection()
 {
+    emit clientDisconnected(m_ws_hdl->peerAddress().toString());
+}
 
+QueryParameter* OSCQueryClient::parameter(QString address)
+{
+    for ( const auto& parameter : m_parameters )
+        if ( parameter->address() == address )
+            return parameter;
 }
 
 

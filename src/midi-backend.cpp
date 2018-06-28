@@ -19,16 +19,19 @@ void ReceiveCallback(double delta, std::vector<uint8_t>* msg, void* userData )
         hdl->controlReceived(msg_d[0]-0xb0, msg_d[1], msg_d[2]);
 
     else if ( msg_d[0] >= 0xa0 && msg_d[0] <= 0xaf )
-        hdl->channelPressureReceived(msg_d[0]-0xa0, msg_d[1], msg_d[2]);
+        hdl->aftertouchReceived(msg_d[0]-0xa0, msg_d[1], msg_d[2]);
 
     else if ( msg_d[0] >= 0xc0 && msg_d[0] <= 0xcf )
         hdl->programReceived(msg_d[0]-0xc0, msg_d[1]);
 
     else if ( msg_d[0] >= 0xe0 && msg_d[0] <= 0xef )
-        hdl->pitchBendReceived(msg_d[0]-0xe0, msg_d[1]);
+    {
+        int value = (msg_d[2] << 7) | msg_d[1];
+        hdl->pitchBendReceived(msg_d[0]-0xe0, value);
+    }
 
     else if ( msg_d[0] >= 0xd0 && msg_d[0] <= 0xdf )
-        hdl->channelPressureReceived(msg_d[0]-0xd0, msg_d[1], msg_d[2]);
+        hdl->channelPressureReceived(msg_d[0]-0xd0, msg_d[1]);
 }
 
 MIDIHandler::MIDIHandler() :
@@ -188,9 +191,10 @@ void MIDIHandler::program(int channel, int index)
     m_rt_out->sendMessage ( &msg );
 }
 
-void MIDIHandler::aftertouch(int channel, int value)
+void MIDIHandler::aftertouch(int channel, int index, int value)
 {
     std::vector<uint8_t> msg = { static_cast<uint8_t>(0xa0+channel),
+                                 static_cast<uint8_t>(index),
                                  static_cast<uint8_t>(value) };
 
     m_rt_out->sendMessage ( &msg );
@@ -198,16 +202,17 @@ void MIDIHandler::aftertouch(int channel, int value)
 
 void MIDIHandler::bend(int channel, int value)
 {
-    std::vector<uint8_t> msg = { static_cast<uint8_t>(0xe0+channel),
-                                 static_cast<uint8_t>(value) };
+    uint8_t msb = value >> 7;
+    uint8_t lsb = value - ( msb << 7 );
+
+    std::vector<uint8_t> msg = { static_cast<uint8_t>(0xe0+channel), lsb, msb };
 
     m_rt_out->sendMessage ( &msg );
 }
 
-void MIDIHandler::chpressure(int channel, int index, int value)
+void MIDIHandler::pressure(int channel, int value)
 {
     std::vector<uint8_t> msg = { static_cast<uint8_t>(0xd0+channel),
-                               static_cast<uint8_t>(index),
                                static_cast<uint8_t>(value) };
 
     m_rt_out->sendMessage( &msg );

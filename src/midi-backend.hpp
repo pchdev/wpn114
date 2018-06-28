@@ -55,9 +55,9 @@ class MIDIHandler : public QObject, public QQmlParserStatus
     Q_INVOKABLE void noteOff        ( int channel, int index, int value );
     Q_INVOKABLE void control        ( int channel, int index, int value );
     Q_INVOKABLE void program        ( int channel, int index);
-    Q_INVOKABLE void aftertouch     ( int channel, int value );
+    Q_INVOKABLE void aftertouch     ( int channel, int index, int value );
     Q_INVOKABLE void bend           ( int channel, int value );
-    Q_INVOKABLE void chpressure     ( int channel, int index, int value );
+    Q_INVOKABLE void pressure       ( int channel, int value );
     Q_INVOKABLE void sendRaw        ( QByteArray msg );
     Q_INVOKABLE void sendVariant    ( QVariantList list );
 
@@ -75,8 +75,8 @@ class MIDIHandler : public QObject, public QQmlParserStatus
     void noteOnReceived             ( int channel, int index, int velocity );
     void noteOffReceived            ( int channel, int index, int velocity );
     void controlReceived            ( int channel, int index, int value );
-    void channelPressureReceived    ( int channel, int index, int value );
-    void aftertouchReceived         ( int channel, int value );
+    void channelPressureReceived    ( int channel, int value );
+    void aftertouchReceived         ( int channel, int index, int value );
     void pitchBendReceived          ( int channel, int value );
     void programReceived            ( int channel, int index );
     void eventReceived              ( QByteArray event );

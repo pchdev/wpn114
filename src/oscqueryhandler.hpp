@@ -111,7 +111,7 @@ class OSCQueryServer : public OSCQueryDevice
     QVector<QWebSocket*> m_clients;
 };
 
-class OSCQueryClient : public QObject
+class OSCQueryClient : public OSCQueryDevice
 {
     Q_OBJECT
 
@@ -123,6 +123,8 @@ class OSCQueryClient : public QObject
 
     QString hostAddr    ( ) const { return m_host_addr; }
     void setHostAddr    ( QString addr );
+
+    QueryParameter* parameter(QString address);
 
     signals:
     void hostAddrChanged();
