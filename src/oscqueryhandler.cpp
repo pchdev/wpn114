@@ -4,29 +4,28 @@
 // PARAMETER
 //-------------------------------------------------------------------------------------------------------
 
-QueryParameter::QueryParameter() : m_device(0), m_critical(false)
+QueryNode::QueryNode() : m_device(0), m_critical(false)
 {
 
 }
 
-QueryParameter::~QueryParameter()
+QueryNode::~QueryNode()
 {
-    if ( m_device ) m_device->unRegisterParameter(this);
+    if ( m_device ) m_device->removeNode(this);
 }
 
-void QueryParameter::classBegin() {}
+void QueryNode::classBegin() {}
 
-void QueryParameter::componentComplete()
+void QueryNode::componentComplete()
 {
-
 }
 
-void QueryParameter::setAddress(QString address)
+void QueryNode::setAddress(QString address)
 {
     m_address = address;
 }
 
-void QueryParameter::setValueFromNetwork(QVariant value)
+void QueryNode::setValueQuiet(QVariant value)
 {
     emit valueReceived();
 
@@ -37,54 +36,127 @@ void QueryParameter::setValueFromNetwork(QVariant value)
     }
 }
 
-void QueryParameter::setValue(QVariant value)
+void QueryNode::setValue(QVariant value)
 {
-    if ( value.type() != m_type ) return;
+    // TODO: check type
 
     m_value = value;
 
     if ( m_critical && m_device )
     {
         // TODO: if variant is list
-        m_device->sendMessageWS(m_address, QVariantList{value} );
+        m_device->sendMessageWS(m_address, QVariantList { value });
     }
 
     else if ( !m_critical && m_device )
     {
         // TODO: if variant is list
-        m_device->sendMessageUDP(m_address, QVariantList{value});
+        m_device->sendMessageUDP(m_address, QVariantList { value });
     }
 }
 
-void QueryParameter::setCritical(bool critical)
+void QueryNode::setCritical(bool critical)
 {
     m_critical = critical;
 }
 
-void QueryParameter::setDevice(OSCQueryDevice* device)
+void QueryNode::setDevice(OSCQueryDevice* device)
 {
     m_device = device;
-    device->registerParameter(this);
+    device->addNode(this);
 }
 
-void QueryParameter::setType(QMetaType::Type type)
+void QueryNode::setType(QueryNode::Type type)
 {
     m_type = type;
+}
+
+void QueryNode::addChild(QueryNode *node)
+{
+    m_children.push_back(node);
+}
+
+void QueryNode::addChild(QString name)
+{
+    auto node = new QueryNode;
+    node->setAddress(address()+"/"+name);
+
+    m_children.push_back(node);
+}
+
+void QueryNode::addChild(QStringList list)
+{
+    if ( list.size() == 1 )
+    {
+        addChild(list[0]);
+        return;
+    }
+
+    auto next = getChild(list[0]);
+    list.removeFirst();
+
+    next->addChild(list);
+}
+
+void QueryNode::removeChild(QueryNode *node)
+{
+    m_children.removeAll(node);
+}
+
+QueryNode* QueryNode::getChild(QStringList list)
+{
+
+
+}
+
+QueryNode* QueryNode::getChild(QString target)
+{
+    for ( const auto& child : m_children )
+        if ( child->address() == target )
+            return child;
+
+    for ( const auto& child : m_children )
+        if ( child->getChild(target) ) return child;
+
+    return 0;
+}
+
+QueryNode* QueryNode::getChild(uint64_t index)
+{
+    return m_children[index];
+}
+
+QVector<QueryNode*> QueryNode::getChildren() const
+{
+    return m_children;
 }
 
 //-------------------------------------------------------------------------------------------------------
 // DEVICE
 //-------------------------------------------------------------------------------------------------------
 
-void OSCQueryDevice::registerParameter(QueryParameter* parameter)
+OSCQueryDevice::OSCQueryDevice()
 {
-    if ( !m_parameters.contains(parameter) )
-        m_parameters.push_back(parameter);
+    m_root_node = new QueryNode;
+    m_root_node->setAddress("/");
 }
 
-void OSCQueryDevice::unRegisterParameter(QueryParameter* parameter)
+OSCQueryDevice::~OSCQueryDevice()
 {
-    m_parameters.removeAll(parameter);
+
+}
+
+void OSCQueryDevice::addNode(QueryNode *node)
+{
+    auto address = node->address();
+    auto spl = address.split('/');
+
+    m_root_node->addChild(spl);
+}
+
+void OSCQueryDevice::removeNode(QueryNode *node)
+{
+
 }
 
 void OSCQueryDevice::sendMessageUDP(QString address, QVariantList arguments)
@@ -112,6 +184,16 @@ void OSCQueryDevice::setDeviceName(QString name)
     m_name = name;
 }
 
+QueryNode* OSCQueryDevice::getRootNode()
+{
+    return m_root_node;
+}
+
+QueryNode* OSCQueryDevice::getNode(QString address)
+{
+    return m_root_node->getChild(address);
+}
+
 //-------------------------------------------------------------------------------------------------------
 // SERVER
 //-------------------------------------------------------------------------------------------------------
@@ -131,6 +213,8 @@ void OSCQueryServer::setWsPort(uint16_t port)
 void OSCQueryServer::sendMessageWS(QString address, QVariantList arguments)
 {
     // json stringify
+
+    qDebug() << address << arguments;
 }
 
 void OSCQueryServer::onNewConnection()
@@ -140,13 +224,13 @@ void OSCQueryServer::onNewConnection()
     QObject::connect(connection, SIGNAL(disconnected()), this, SLOT(onDisconnection()));
 
     m_clients.push_back(connection);
-    emit clientConnected(connection->localAddress().toString());
+    emit connected(connection->localAddress().toString());
 }
 
 void OSCQueryServer::onDisconnection()
 {
     QWebSocket* snd = qobject_cast<QWebSocket*>(sender());
-    emit clientDisconnected(snd->localAddress().toString());
+    emit disconnected(snd->localAddress().toString());
 
     m_clients.removeAll(snd);
 }
@@ -187,20 +271,10 @@ void OSCQueryClient::onWSMessage(QString msg)
 
 void OSCQueryClient::onNewConnection()
 {
-    emit clientConnected(m_ws_hdl->peerAddress().toString());
+    emit connected(m_ws_hdl->peerAddress().toString());
 }
 
 void OSCQueryClient::onDisconnection()
 {
-    emit clientDisconnected(m_ws_hdl->peerAddress().toString());
+    emit disconnected(m_ws_hdl->peerAddress().toString());
 }
-
-QueryParameter* OSCQueryClient::parameter(QString address)
-{
-    for ( const auto& parameter : m_parameters )
-        if ( parameter->address() == address )
-            return parameter;
-}
-
-
-

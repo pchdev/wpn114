@@ -9,19 +9,34 @@
 
 class OSCQueryDevice;
 
-class QueryParameter : public QObject, public QQmlParserStatus
+class QueryNode : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
 
     Q_PROPERTY  ( QString address READ address WRITE setAddress NOTIFY addressChanged )
     Q_PROPERTY  ( QVariant value READ value WRITE setValue NOTIFY valueChanged )
-    Q_PROPERTY  ( QMetaType::Type type READ type WRITE setType )
+    Q_PROPERTY  ( QueryNode::Type type READ type WRITE setType )
     Q_PROPERTY  ( bool critical READ critical WRITE setCritical )
     Q_PROPERTY  ( OSCQueryDevice* device READ device WRITE setDevice NOTIFY deviceChanged )
 
     public:
-    QueryParameter();
-    ~QueryParameter();
+    QueryNode();
+    ~QueryNode();
+
+    enum class Type
+    {
+        None        = 0,
+        Bool        = 1,
+        Int         = 2,
+        Float       = 3,
+        String      = 4,
+        List        = 5,
+        Vec2f       = 6,
+        Vec3f       = 7,
+        Vec4f       = 8,
+        Char        = 9,
+        Impulse     = 10,
+    };
 
     virtual void componentComplete();
     virtual void classBegin();
@@ -30,14 +45,25 @@ class QueryParameter : public QObject, public QQmlParserStatus
     QVariant value              ( ) const { return m_value; }
     bool critical               ( ) const { return m_critical; }
     OSCQueryDevice* device      ( ) const { return m_device; }
-    QMetaType::Type type        ( ) const { return m_type; }
+    QueryNode::Type type        ( ) const { return m_type; }
 
-    void setAddress   ( QString address );
-    void setValue     ( QVariant value );
-    void setValueFromNetwork ( QVariant value );
-    void setCritical  ( bool critical );
-    void setDevice    ( OSCQueryDevice* device );
-    void setType      ( QMetaType::Type type );
+    void setAddress     ( QString address );
+    void setValue       ( QVariant value );
+    void setValueQuiet  ( QVariant value );
+    void setCritical    ( bool critical );
+    void setDevice      ( OSCQueryDevice* device );
+    void setType        ( QueryNode::Type type );
+
+    QueryNode* getChild ( QString child );
+    QueryNode* getChild ( uint64_t index );
+    QueryNode* getChild ( QStringList list );
+
+    QVector<QueryNode*> getChildren ( ) const;
+
+    void addChild       ( QueryNode* node );
+    void addChild       ( QStringList list );
+    void addChild       ( QString name );
+    void removeChild    ( QueryNode* node );
 
     signals:
     void addressChanged     ( QString );
@@ -46,11 +72,12 @@ class QueryParameter : public QObject, public QQmlParserStatus
     void deviceChanged      ( OSCQueryDevice* );
 
     private:
-    QString m_address;
-    QMetaType::Type m_type;
-    QVariant m_value;
-    OSCQueryDevice* m_device;
-    bool m_critical;
+    QString                 m_address;
+    QueryNode::Type         m_type;
+    QVariant                m_value;
+    OSCQueryDevice*         m_device;
+    bool                    m_critical;
+    QVector<QueryNode*>     m_children;
 
 };
 
@@ -61,27 +88,41 @@ class OSCQueryDevice : public QObject
     Q_PROPERTY  ( QString deviceName READ deviceName WRITE setDeviceName )
 
     public:
-    virtual void sendMessageWS  ( QString address, QVariantList arguments ) = 0;
-    void sendMessageUDP ( QString address, QVariantList arguments );
 
-    void registerParameter      ( QueryParameter* parameter );
-    void unRegisterParameter    ( QueryParameter* parameter );
+    OSCQueryDevice      ( );
+    ~OSCQueryDevice     ( );
+
+    virtual void sendMessageWS      ( QString address, QVariantList arguments ) = 0;
+    void sendMessageUDP             ( QString address, QVariantList arguments );
+
+    void addNode                    ( QueryNode* node );
+    void removeNode                 ( QueryNode* node );
 
     uint16_t oscPort            ( ) const;
-    void setOscPort             ( uint16_t port );
     QString deviceName          ( ) const;
+    void setOscPort             ( uint16_t port );
     void setDeviceName          ( QString name );
 
+    Q_INVOKABLE QueryNode* getRootNode  ( );
+    Q_INVOKABLE QueryNode* getNode      ( QString address );
+
     signals:
-    void clientConnected        ( QString );
-    void clientDisconnected     ( QString );
+    void connected              ( QString );
+    void disconnected           ( QString );
     void messageReceived        ( QString address, QVariantList arguments );
     void oscPortChanged         ( );
 
     protected:
-    QString m_name;
-    OSCHandler* m_osc_hdl;
-    QVector<QueryParameter*> m_parameters;
+    QString             m_name;
+    OSCHandler*         m_osc_hdl;
+    QueryNode*          m_root_node;
+};
+
+struct Client
+{
+    QWebSocket* ws;
+    QString host;
+    qint16 osc_port;
 };
 
 class OSCQueryServer : public OSCQueryDevice
@@ -123,8 +164,6 @@ class OSCQueryClient : public OSCQueryDevice
 
     QString hostAddr    ( ) const { return m_host_addr; }
     void setHostAddr    ( QString addr );
-
-    QueryParameter* parameter(QString address);
 
     signals:
     void hostAddrChanged();

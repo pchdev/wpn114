@@ -39,7 +39,7 @@ void qml_plugin::registerTypes(const char *uri)
 
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
     qmlRegisterType<OSCHandler, 1>        ( "WPN114", 1, 0, "OSCHandler" );
-    qmlRegisterType<QueryParameter, 1>    ( "WPN114", 1, 0, "QueryParameter" );
+    qmlRegisterType<QueryNode, 1>         ( "WPN114", 1, 0, "QueryNode" );
     qmlRegisterType<OSCQueryServer, 1>    ( "WPN114", 1, 0, "OSCQueryServer" );
     qmlRegisterType<OSCQueryClient, 1>    ( "WPN114", 1, 0, "OSCQueryClient" );
 

@@ -103,7 +103,7 @@ void OSCHandler::readOSCMessage(QByteArray message)
 
 void OSCHandler::readPendingDatagrams()
 {
-    while(m_udpsocket->hasPendingDatagrams())
+    while ( m_udpsocket->hasPendingDatagrams() )
     {
         QNetworkDatagram datagram = m_udpsocket->receiveDatagram();
         QByteArray data = datagram.data();
@@ -135,15 +135,13 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
 
     data.append(address);
 
-    auto pads = 4-(address.size() % 4);
-    while (pads--)
-        data.append((char)0);
+    auto    pads = 4-(address.size() % 4);
+    while   ( pads-- ) data.append((char)0);
 
     data.append(typetag);
 
-    pads = 4-(typetag.size() % 4);
-    while(pads--)
-        data.append((char)0);
+    pads    = 4-(typetag.size() % 4);
+    while   ( pads-- ) data.append((char)0);
 
     for ( const auto& var : arguments )
     {
@@ -185,8 +183,7 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
             QString str = var.toString();
             pads = 4-(var.toString().size() % 4);
             while(pads--)
-                str.append('\0');
-
+                str.append('\0');w
             data.append(str);
             break;
         }

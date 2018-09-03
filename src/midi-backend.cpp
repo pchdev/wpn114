@@ -4,9 +4,10 @@
 
 void ReceiveCallback(double delta, std::vector<uint8_t>* msg, void* userData )
 {
-    auto& msg_d = *msg;
-    MIDIHandler* hdl = static_cast<MIDIHandler*>(userData);
-    QByteArray* buf = new QByteArray(reinterpret_cast<const char*>(msg->data()), msg->size());
+    auto& msg_d         = *msg;
+    MIDIHandler* hdl    = static_cast<MIDIHandler*>(userData);
+    QByteArray* buf     = new QByteArray(reinterpret_cast<const char*>(msg->data()), msg->size());
+
     hdl->eventReceived(*buf);
 
     if ( msg_d[0] >= 0x80 && msg_d[0] <= 0x8f )
