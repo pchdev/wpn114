@@ -28,7 +28,7 @@ set( PROJECT_HDRS
     src/oschandler.h
     src/RtMidi.h
     src/oscqueryhandler.hpp
-    src/audio.hpp
+    #src/audio.hpp
  )
 
 set ( PROJECT_SRCS
@@ -47,7 +47,7 @@ set ( PROJECT_SRCS
     src/oschandler.cpp
     src/RtMidi.cpp
     src/oscqueryhandler.cpp
-    src/audio.cpp
+    #src/audio.cpp
 )
 
 if ( APPLE )

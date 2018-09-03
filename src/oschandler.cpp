@@ -183,7 +183,7 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
             QString str = var.toString();
             pads = 4-(var.toString().size() % 4);
             while(pads--)
-                str.append('\0');w
+                str.append('\0');
             data.append(str);
             break;
         }

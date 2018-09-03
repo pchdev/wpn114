@@ -7,12 +7,16 @@
 #include <QQmlParserStatus>
 #include "oschandler.h"
 
+#include <QJsonDocument>
+#include <QJsonObject>
+
 class OSCQueryDevice;
 
 class QueryNode : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
 
+    Q_PROPERTY  ( QString name READ name WRITE setName NOTIFY nameChanged )
     Q_PROPERTY  ( QString address READ address WRITE setAddress NOTIFY addressChanged )
     Q_PROPERTY  ( QVariant value READ value WRITE setValue NOTIFY valueChanged )
     Q_PROPERTY  ( QueryNode::Type type READ type WRITE setType )
@@ -41,12 +45,17 @@ class QueryNode : public QObject, public QQmlParserStatus
     virtual void componentComplete();
     virtual void classBegin();
 
+    QString name                ( ) const { return m_name; }
     QString address             ( ) const { return m_address; }
     QVariant value              ( ) const { return m_value; }
     bool critical               ( ) const { return m_critical; }
     OSCQueryDevice* device      ( ) const { return m_device; }
     QueryNode::Type type        ( ) const { return m_type; }
+    QString typeString          ( ) const;
 
+    QJsonObject info    ( ) const;
+
+    void setName        ( QString name );
     void setAddress     ( QString address );
     void setValue       ( QVariant value );
     void setValueQuiet  ( QVariant value );
@@ -66,12 +75,15 @@ class QueryNode : public QObject, public QQmlParserStatus
     void removeChild    ( QueryNode* node );
 
     signals:
+    void nameChanged        ( QString );
     void addressChanged     ( QString );
     void valueChanged       ( QVariant );
     void valueReceived      ( );
     void deviceChanged      ( OSCQueryDevice* );
 
-    private:
+    private:    
+    QJsonValue valueJson    () const;
+    QString                 m_name;
     QString                 m_address;
     QueryNode::Type         m_type;
     QVariant                m_value;
@@ -147,6 +159,8 @@ class OSCQueryServer : public OSCQueryDevice
     void onDisconnection();
 
     private:
+    void exposeHostInfo(QWebSocket* remote);
+    void exposeHostTree(QWebSocket* remote);
     uint16_t m_ws_port;
     QWebSocketServer*   m_ws_hdl;
     QVector<QWebSocket*> m_clients;
