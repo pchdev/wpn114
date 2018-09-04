@@ -16,23 +16,22 @@ class OSCQueryDevice : public QObject
     virtual void sendMessageWS      ( QString address, QVariantList arguments ) = 0;
     void sendMessageUDP             ( QString address, QVariantList arguments );
 
-    void addNode                    ( QueryNode* node );
-    void removeNode                 ( QueryNode* node );
+    static QueryNode* findOrCreateNode  ( QString path );
+    static QueryNode* getNode           ( QString path );
 
-    uint16_t oscPort            ( ) const;
-    QString deviceName          ( ) const;
+    uint16_t oscPort            ( ) const { return m_osc_hdl->localPort(); }
+    QString deviceName          ( ) const { return m_name; }
+    QueryNode* rootNode         ( ) { return m_root_node; }
+
     void setOscPort             ( uint16_t port );
     void setDeviceName          ( QString name );
 
-    Q_INVOKABLE QueryNode* getRootNode  ( );
-    Q_INVOKABLE QueryNode* getNode      ( QString address );
-
-    Q_INVOKABLE void explore    ( ) const;
+    Q_INVOKABLE void explore         ( ) const;
 
     signals:
     void connected              ( QString );
     void disconnected           ( QString );
-    void messageReceived        ( QString address, QVariantList arguments );
+    void messageReceived        ( QString path, QVariantList arguments );
     void oscPortChanged         ( );
 
     protected:
