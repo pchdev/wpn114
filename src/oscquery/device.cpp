@@ -5,7 +5,7 @@ OSCQueryDevice::OSCQueryDevice()
 {
     m_osc_hdl   = new OSCHandler();
     m_root_node = new QueryNode;
-    m_root_node ->setAddress("/");
+    m_root_node ->setPath("/");
 
 }
 
@@ -15,12 +15,12 @@ OSCQueryDevice::~OSCQueryDevice()
 }
 
 
-QueryNode* OSCQueryDevice::findOrCreateNode(QString path)
+QueryNode* OSCQueryDevice::findOrCreateNode(OSCQueryDevice* dev, QString path)
 {
     QStringList split = path.split('/');
     split.removeFirst(); // first is space
 
-    QueryNode* target = m_root_node;
+    QueryNode* target = dev->rootNode();
 
     for ( const auto& node : split )
     {
@@ -35,7 +35,10 @@ QueryNode* OSCQueryDevice::findOrCreateNode(QString path)
 
         target = target->createSubnode(node);
         next:
+        ;
     }
+
+    return target;
 }
 
 QueryNode* OSCQueryDevice::getNode(QString path)

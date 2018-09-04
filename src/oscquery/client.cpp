@@ -1,5 +1,5 @@
 #include "client.hpp"
-
+#include <QJsonDocument>
 
 OSCQueryClient::OSCQueryClient() : m_ws_hdl(new QWebSocket)
 {

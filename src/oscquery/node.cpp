@@ -18,11 +18,11 @@ void QueryNode::componentComplete()
     m_name = m_path;
     m_name.remove(0, 1);
 
-    if ( m_device ) m_device->findOrCreateNode(m_path);
+    if ( m_device ) m_device->findOrCreateNode(m_device, m_path);
     else if ( m_parent )
     {
         m_device = m_parent->device();
-        m_device->findOrCreateNode(m_path);
+        m_device->findOrCreateNode(m_device, m_path);
     }
 }
 
@@ -148,6 +148,11 @@ void QueryNode::setDevice(OSCQueryDevice* device)
 void QueryNode::setType(QueryNode::Type type)
 {
     m_type = type;
+}
+
+void QueryNode::setParent(QueryNode* parent)
+{
+    m_parent = parent;
 }
 
 QueryNode* QueryNode::createSubnode(QString name)

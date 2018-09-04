@@ -1,4 +1,4 @@
-#include "MIDI-backend.hpp"
+#include "midi.hpp"
 #include <QVariantList>
 #include <QtDebug>
 

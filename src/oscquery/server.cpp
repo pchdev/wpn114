@@ -1,4 +1,5 @@
 #include "server.hpp"
+#include <QJsonDocument>
 
 OSCQueryServer::OSCQueryServer() : m_ws_port(5986)
 {
@@ -71,7 +72,7 @@ void OSCQueryServer::exposeHostInfo(QWebSocket *remote)
 
 void OSCQueryServer::exposeHostTree(QWebSocket *remote)
 {
-    auto cdn = m_root_node->getChildren();
+    auto cdn = m_root_node->subnodes();
     QJsonObject rn, contents;
 
     rn.insert("FULL_PATH", "/");

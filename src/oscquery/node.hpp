@@ -4,6 +4,10 @@
 #include <QQmlParserStatus>
 #include <QJsonObject>
 #include "device.hpp"
+#include <QVariant>
+#include <QVector>
+
+class OSCQueryDevice;
 
 class QueryNode : public QObject, public QQmlParserStatus
 {

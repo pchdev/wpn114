@@ -2,6 +2,8 @@
 #include "node.hpp"
 #include <src/osc/osc.hpp>
 
+class QueryNode;
+
 class OSCQueryDevice : public QObject
 {
     Q_OBJECT
@@ -16,7 +18,7 @@ class OSCQueryDevice : public QObject
     virtual void sendMessageWS      ( QString address, QVariantList arguments ) = 0;
     void sendMessageUDP             ( QString address, QVariantList arguments );
 
-    static QueryNode* findOrCreateNode  ( QString path );
+    static QueryNode* findOrCreateNode  ( OSCQueryDevice *dev, QString path );
     static QueryNode* getNode           ( QString path );
 
     uint16_t oscPort            ( ) const { return m_osc_hdl->localPort(); }
