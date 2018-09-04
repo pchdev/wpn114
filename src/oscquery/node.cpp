@@ -18,12 +18,13 @@ void QueryNode::componentComplete()
     m_name = m_path;
     m_name.remove(0, 1);
 
-    if ( m_device ) m_device->findOrCreateNode(m_device, m_path);
+    if ( m_device ) m_device->addNode(m_device, this);
     else if ( m_parent )
     {
         m_device = m_parent->device();
-        m_device->findOrCreateNode(m_device, m_path);
+        m_device->addNode(m_device, this);
     }
+
 }
 
 QString QueryNode::typeString() const
@@ -67,10 +68,12 @@ QJsonValue QueryNode::valueJson() const
 
 QJsonObject QueryNode::info() const
 {
+
+    qDebug() << m_path;
     QJsonObject info;
     info.insert("DESCRIPTION", "No description available");
     info.insert("FULL_PATH", m_path);
-    info.insert("ACCESS", 3);
+    info.insert("ACCESS", m_type == QueryNode::Type::None ? 0 : 3 );
     info.insert("TYPE", typeString());
     info.insert("VALUE", valueJson());
 
@@ -153,6 +156,12 @@ void QueryNode::setType(QueryNode::Type type)
 void QueryNode::setParent(QueryNode* parent)
 {
     m_parent = parent;
+}
+
+void QueryNode::addSubnode(QueryNode *node)
+{
+    node->setParent(this);
+    m_children.push_back(node);
 }
 
 QueryNode* QueryNode::createSubnode(QString name)

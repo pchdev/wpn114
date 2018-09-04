@@ -1,23 +1,31 @@
 #include "server.hpp"
 #include <QJsonDocument>
 
-OSCQueryServer::OSCQueryServer() : m_ws_port(5986)
+OSCQueryServer::OSCQueryServer() : m_ws_port(5986), m_ws_hdl(0), OSCQueryDevice()
 {
     m_name      = "WPN-SERVER";
-    m_ws_hdl    = new QWebSocketServer(m_name, QWebSocketServer::NonSecureMode, this);
-
-    QObject::connect(m_osc_hdl, SIGNAL(messageReceived(QString,QVariantList)), this, SIGNAL(messageReceived(QString,QVariantList)));
-    QObject::connect(m_ws_hdl, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
-
-    m_ws_hdl->listen(QHostAddress::Any, m_ws_port);
 }
 
 void OSCQueryServer::setWsPort(uint16_t port)
 {
     m_ws_port = port;
 
-    if ( m_ws_hdl->isListening() ) m_ws_hdl->close();
-    m_ws_hdl->listen ( QHostAddress::Any, m_ws_port );
+    if ( m_ws_hdl && m_ws_hdl->isListening() )
+    {
+        m_ws_hdl->close();
+        m_ws_hdl->listen ( QHostAddress::Any, m_ws_port );
+    }
+}
+
+void OSCQueryServer::classBegin(){}
+void OSCQueryServer::componentComplete()
+{
+    m_ws_hdl    = new QWebSocketServer(m_name, QWebSocketServer::NonSecureMode, this);
+
+    QObject::connect(m_osc_hdl, SIGNAL(messageReceived(QString,QVariantList)), this, SIGNAL(messageReceived(QString,QVariantList)));
+    QObject::connect(m_ws_hdl, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
+
+    m_ws_hdl->listen(QHostAddress::Any, m_ws_port);
 }
 
 void OSCQueryServer::sendMessageWS(QString address, QVariantList arguments)
@@ -51,12 +59,12 @@ void OSCQueryServer::exposeHostInfo(QWebSocket *remote)
     ext.insert("TYPE", true);
     ext.insert("ACCESS", true);
     ext.insert("VALUE", true);
-    ext.insert("RANGE", true);
-    ext.insert("TAGS", true);
-    ext.insert("CLIPMODE", true);
-    ext.insert("UNIT", true);
-    ext.insert("CRITICAL", true);
-    ext.insert("HTML", true);
+    ext.insert("RANGE", false);
+    ext.insert("TAGS", false);
+    ext.insert("CLIPMODE", false);
+    ext.insert("UNIT", false);
+    ext.insert("CRITICAL", false);
+    ext.insert("HTML", false);
     ext.insert("OSC_STREAMING", true);
     ext.insert("LISTEN", true);
     ext.insert("PATH_CHANGED", true);
@@ -67,6 +75,7 @@ void OSCQueryServer::exposeHostInfo(QWebSocket *remote)
     reply.insert("EXTENSIONS", ext);
 
     QJsonDocument r(reply);
+    qDebug() << r.toJson(QJsonDocument::Compact);
     remote->sendTextMessage(r.toJson(QJsonDocument::Compact));
 }
 
@@ -83,6 +92,7 @@ void OSCQueryServer::exposeHostTree(QWebSocket *remote)
     rn.insert("CONTENTS", contents);
     QJsonDocument tree(rn);
 
+    qDebug() << tree.toJson(QJsonDocument::Compact);
     remote->sendTextMessage(tree.toJson(QJsonDocument::Compact));
 }
 

@@ -2,20 +2,24 @@
 #include <QDataStream>
 #include <QNetworkDatagram>
 
-OSCHandler::OSCHandler() : m_remote_address("127.0.0.1"), m_remote_port(8889), m_local_port(8888),
-    m_udpsocket(0) { }
+OSCHandler::OSCHandler() :
+    m_remote_address("127.0.0.1"), m_remote_port(8889), m_local_port(8888),
+    m_udpsocket(new QUdpSocket(this))
+{
+    QObject::connect(m_udpsocket, SIGNAL(readyRead()), this, SLOT(readPendingDatagrams()));
+}
 
 void OSCHandler::componentComplete()
-{
-    m_udpsocket = new QUdpSocket(this);
-    QObject::connect(m_udpsocket, SIGNAL(readyRead()), this, SLOT(readPendingDatagrams()));
-
+{    
     m_udpsocket->bind(QHostAddress::LocalHost, m_local_port);
 }
 
 void OSCHandler::setLocalPort(uint16_t port)
 {
     m_local_port = port;
+    if ( m_udpsocket->isOpen() ) m_udpsocket->close();
+
+    m_udpsocket->bind(QHostAddress::LocalHost, m_local_port);
 }
 
 void OSCHandler::setRemotePort(uint16_t port)
@@ -97,6 +101,7 @@ void OSCHandler::readOSCMessage(QByteArray message)
         }
     }
 
+    qDebug() << "OSCMessage received:" << address << arguments;
     emit messageReceived(address, arguments);
 
 }

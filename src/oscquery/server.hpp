@@ -3,6 +3,7 @@
 
 #include <QWebSocket>
 #include <QWebSocketServer>
+#include <QQmlParserStatus>
 
 struct Client
 {
@@ -11,7 +12,7 @@ struct Client
     qint16 osc_port;
 };
 
-class OSCQueryServer : public OSCQueryDevice
+class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
 {
     Q_OBJECT
 
@@ -19,7 +20,9 @@ class OSCQueryServer : public OSCQueryDevice
 
     public:
     OSCQueryServer();
-    virtual void sendMessageWS  ( QString address, QVariantList arguments );
+    virtual void sendMessageWS      ( QString address, QVariantList arguments );
+    virtual void componentComplete  ( );
+    virtual void classBegin         ( );
 
     uint16_t wsPort () const { return m_ws_port; }
     void setWsPort  (uint16_t port);

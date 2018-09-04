@@ -18,8 +18,9 @@ class OSCQueryDevice : public QObject
     virtual void sendMessageWS      ( QString address, QVariantList arguments ) = 0;
     void sendMessageUDP             ( QString address, QVariantList arguments );
 
-    static QueryNode* findOrCreateNode  ( OSCQueryDevice *dev, QString path );
-    static QueryNode* getNode           ( QString path );
+    static void         addNode           ( OSCQueryDevice* dev, QueryNode* node );
+    static QueryNode*   findOrCreateNode  ( OSCQueryDevice* dev, QString path );
+    static QueryNode*   getNode           ( QString path );
 
     uint16_t oscPort            ( ) const { return m_osc_hdl->localPort(); }
     QString deviceName          ( ) const { return m_name; }

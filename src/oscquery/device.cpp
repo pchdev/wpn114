@@ -6,7 +6,6 @@ OSCQueryDevice::OSCQueryDevice()
     m_osc_hdl   = new OSCHandler();
     m_root_node = new QueryNode;
     m_root_node ->setPath("/");
-
 }
 
 OSCQueryDevice::~OSCQueryDevice()
@@ -14,6 +13,17 @@ OSCQueryDevice::~OSCQueryDevice()
 
 }
 
+void OSCQueryDevice::addNode(OSCQueryDevice* dev, QueryNode *node)
+{
+    // get node's parent
+
+    QStringList spl = node->path().split('/');
+    spl.removeLast();
+    QString path = spl.join('/');
+
+    auto parent = findOrCreateNode(dev, path);
+    parent->addSubnode(node);
+}
 
 QueryNode* OSCQueryDevice::findOrCreateNode(OSCQueryDevice* dev, QString path)
 {
