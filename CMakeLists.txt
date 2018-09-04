@@ -24,10 +24,13 @@ set( PROJECT_HDRS
     #src/audiobackend.hpp
     #src/audiomaster.hpp
     #src/wpnsndfile.hpp
-    src/midi-backend.hpp
-    src/oschandler.h
-    src/RtMidi.h
-    src/oscqueryhandler.hpp
+    src/midi/midi.hpp
+    src/osc/osc.hpp
+    src/midi/RtMidi.h
+    src/oscquery/device.hpp
+    src/oscquery/server.hpp
+    src/oscquery/client.hpp
+    src/oscquery/node.hpp
     #src/audio.hpp
  )
 
@@ -43,10 +46,14 @@ set ( PROJECT_SRCS
     #src/audiobackend.cpp
     #src/audiomaster.cpp
     #src/wpnsndfile.cpp
-    src/midi-backend.cpp
-    src/oschandler.cpp
-    src/RtMidi.cpp
-    src/oscqueryhandler.cpp
+    src/midi/midi.cpp
+    src/osc/osc.cpp
+    src/midi/RtMidi.cpp
+    src/oscquery/device.cpp
+    src/oscquery/server.cpp
+    src/oscquery/client.cpp
+    src/oscquery/node.cpp
+
     #src/audio.cpp
 )
 
