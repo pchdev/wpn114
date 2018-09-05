@@ -31,6 +31,7 @@ class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
     void wsPortChanged();
 
     protected slots:
+    void onBinaryMessage(QByteArray msg);
     void onWSMessage(QString msg);
     void onNewConnection();
     void onDisconnection();

@@ -53,7 +53,7 @@ QueryNode* OSCQueryDevice::findOrCreateNode(OSCQueryDevice* dev, QString path)
 
 QueryNode* OSCQueryDevice::getNode(QString path)
 {
-
+    return nullptr;
 }
 
 void OSCQueryDevice::sendMessageUDP(QString address, QVariantList arguments)

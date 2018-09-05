@@ -1,9 +1,10 @@
 #include "server.hpp"
 #include <QJsonDocument>
+#include <QJsonArray>
 
-OSCQueryServer::OSCQueryServer() : m_ws_port(5986), m_ws_hdl(0), OSCQueryDevice()
+OSCQueryServer::OSCQueryServer() : m_ws_port(5986), m_ws_hdl(nullptr), OSCQueryDevice()
 {
-    m_name      = "WPN-SERVER";
+    m_name = "WPN-SERVER";
 }
 
 void OSCQueryServer::setWsPort(uint16_t port)
@@ -20,7 +21,7 @@ void OSCQueryServer::setWsPort(uint16_t port)
 void OSCQueryServer::classBegin(){}
 void OSCQueryServer::componentComplete()
 {
-    m_ws_hdl    = new QWebSocketServer(m_name, QWebSocketServer::NonSecureMode, this);
+    m_ws_hdl = new QWebSocketServer(m_name, QWebSocketServer::NonSecureMode, this);
 
     QObject::connect(m_osc_hdl, SIGNAL(messageReceived(QString,QVariantList)), this, SIGNAL(messageReceived(QString,QVariantList)));
     QObject::connect(m_ws_hdl, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
@@ -40,10 +41,12 @@ void OSCQueryServer::onNewConnection()
     qDebug() << "new connection";
     auto connection = m_ws_hdl->nextPendingConnection();
     QObject::connect(connection, SIGNAL(textMessageReceived(QString)), this, SLOT(onWSMessage(QString)));
+    QObject::connect(connection, SIGNAL(binaryMessageReceived(QByteArray)), this, SLOT(onBinaryMessage(QByteArray)));
     QObject::connect(connection, SIGNAL(disconnected()), this, SLOT(onDisconnection()));
 
     m_clients.push_back(connection);
     emit connected(connection->localAddress().toString());
+
     exposeHostInfo(connection);
     exposeHostTree(connection);
 }
@@ -52,6 +55,7 @@ void OSCQueryServer::exposeHostInfo(QWebSocket *remote)
 {
     QJsonObject reply;
     reply.insert("NAME", m_name);
+    //reply.insert("OSC_IP", "127.0.0.1");
     reply.insert("OSC_PORT", m_osc_hdl->localPort());
     reply.insert("OSC_TRANSPORT", "UDP");
 
@@ -85,7 +89,6 @@ void OSCQueryServer::exposeHostTree(QWebSocket *remote)
     QJsonObject rn, contents;
 
     rn.insert("FULL_PATH", "/");
-
     for ( const auto& child : cdn )
         contents.insert(child->name(), child->info());
 
@@ -104,8 +107,13 @@ void OSCQueryServer::onDisconnection()
     m_clients.removeAll(snd);
 }
 
+void OSCQueryServer::onBinaryMessage(QByteArray msg)
+{
+    this->onWSMessage(msg);
+}
+
 void OSCQueryServer::onWSMessage(QString msg)
 {
     qDebug() << msg;
-
+    auto obj = QJsonDocument::fromJson(msg.toUtf8()).object();
 }

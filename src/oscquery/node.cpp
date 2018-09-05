@@ -1,7 +1,7 @@
 #include "node.hpp"
 
 QueryNode::QueryNode() :
-    m_device(0), m_parent(0), m_critical(false), m_type(QueryNode::Type::None)
+    m_device(nullptr), m_parent(nullptr), m_critical(false), m_type(QueryNode::Type::None)
 { }
 
 QueryNode::~QueryNode()
@@ -31,28 +31,28 @@ QString QueryNode::typeString() const
 {
     switch ( m_type )
     {
-    case QueryNode::Type::Bool:         return "T"; break;
-    case QueryNode::Type::Char:         return "c"; break;
-    case QueryNode::Type::Float:        return "f"; break;
-    case QueryNode::Type::Impulse:      return "N"; break;
-    case QueryNode::Type::Int:          return "i"; break;
-    case QueryNode::Type::List:         return "b"; break;
-    case QueryNode::Type::None:         return "null"; break;
-    case QueryNode::Type::String:       return "s"; break;
-    case QueryNode::Type::Vec2f:        return "ff"; break;
-    case QueryNode::Type::Vec3f:        return "fff"; break;
-    case QueryNode::Type::Vec4f:        return "ffff"; break;
+    case QueryNode::Type::Bool:         return "T";
+    case QueryNode::Type::Char:         return "c";
+    case QueryNode::Type::Float:        return "f";
+    case QueryNode::Type::Impulse:      return "N";
+    case QueryNode::Type::Int:          return "i";
+    case QueryNode::Type::List:         return "b";
+    case QueryNode::Type::None:         return "null";
+    case QueryNode::Type::String:       return "s";
+    case QueryNode::Type::Vec2f:        return "ff";
+    case QueryNode::Type::Vec3f:        return "fff";
+    case QueryNode::Type::Vec4f:        return "ffff";
     }
 }
 
 QJsonValue QueryNode::valueJson() const
 {
     QJsonValue v;
-    switch(m_type)
+    switch ( m_type )
     {
     case QueryNode::Type::Bool:         v = m_value.toBool(); break;
     case QueryNode::Type::Char:         v = m_value.toString(); break;
-    case QueryNode::Type::Float:        v = m_value.toFloat(); break;
+    case QueryNode::Type::Float:        v = m_value.toDouble(); break;
     case QueryNode::Type::Impulse:      return v;
     case QueryNode::Type::Int:          v = m_value.toInt(); break;
   //  case QueryNode::Type::List:       v = m_value.toList(); break;
@@ -68,8 +68,6 @@ QJsonValue QueryNode::valueJson() const
 
 QJsonObject QueryNode::info() const
 {
-
-    qDebug() << m_path;
     QJsonObject info;
     info.insert("DESCRIPTION", "No description available");
     info.insert("FULL_PATH", m_path);
@@ -196,7 +194,7 @@ QueryNode* QueryNode::subnode(QString path)
     for ( const auto& child : m_children )
         if ( child->subnode(path) ) return child;
 
-    return 0;
+    return nullptr;
 }
 
 QueryNode* QueryNode::subnode(uint64_t index)

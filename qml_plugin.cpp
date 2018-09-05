@@ -9,6 +9,8 @@
 
 void qml_plugin::registerTypes(const char *uri)
 {
+    Q_UNUSED    ( uri );
+
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
     qmlRegisterType<OSCHandler, 1>        ( "WPN114", 1, 0, "OSCHandler" );
     qmlRegisterType<QueryNode, 1>         ( "WPN114", 1, 0, "QueryNode" );
