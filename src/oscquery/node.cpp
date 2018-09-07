@@ -126,13 +126,13 @@ void QueryNode::setValue(QVariant value)
     if ( m_critical && m_device )
     {
         // TODO: if variant is list
-        m_device->sendMessageWS(m_path, QVariantList { value });
+        m_device->writeWebSocket(m_path, QVariantList { value });
     }
 
     else if ( !m_critical && m_device )
     {
         // TODO: if variant is list
-        m_device->sendMessageUDP(m_path, QVariantList { value });
+        m_device->writeOSC(m_path, QVariantList { value });
     }
 }
 

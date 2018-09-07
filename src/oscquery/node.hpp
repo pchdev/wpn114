@@ -77,7 +77,7 @@ class QueryNode : public QObject, public QQmlParserStatus
 
     signals:
     void nameChanged        ( QString );
-    void pathChanged     ( QString );
+    void pathChanged        ( QString );
     void valueChanged       ( QVariant );
     void valueReceived      ( );
     void deviceChanged      ( OSCQueryDevice* );

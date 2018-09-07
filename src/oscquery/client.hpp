@@ -8,7 +8,7 @@ class OSCQueryClient : public OSCQueryDevice
 
     public:
     OSCQueryClient();
-    virtual void sendMessageWS  ( QString address, QVariantList arguments );
+    virtual void writeWebSocket  ( QString address, QVariantList arguments );
 
     QString hostAddr    ( ) const { return m_host_addr; }
     void setHostAddr    ( QString addr );

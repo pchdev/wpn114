@@ -1,7 +1,7 @@
 #include "qml_plugin.hpp"
 #include <src/midi/midi.hpp>
 #include <src/oscquery/client.hpp>
-#include <src/oscquery/server.hpp>
+#include <src/oscquery/query-server.hpp>
 #include <src/oscquery/node.hpp>
 
 #include <QQmlEngine>

@@ -3,8 +3,8 @@
 #include <QNetworkDatagram>
 
 OSCHandler::OSCHandler() :
-    m_remote_address("127.0.0.1"), m_remote_port(8889), m_local_port(8888),
-    m_udpsocket(new QUdpSocket(this))
+     m_local_port(8888), m_remote_port(8889),m_remote_address("127.0.0.1"),
+     m_udpsocket(new QUdpSocket(this))
 {
     QObject::connect(m_udpsocket, SIGNAL(readyRead()), this, SLOT(readPendingDatagrams()));
 }
@@ -142,12 +142,10 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
 
     auto    pads = 4-(address.size() % 4);
     while   ( pads-- ) data.append((char)0);
-
     data.append(typetag);
 
     pads    = 4-(typetag.size() % 4);
     while   ( pads-- ) data.append((char)0);
-
     for ( const auto& var : arguments )
     {
         switch(var.type())

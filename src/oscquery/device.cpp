@@ -56,7 +56,7 @@ QueryNode* OSCQueryDevice::getNode(QString path)
     return nullptr;
 }
 
-void OSCQueryDevice::sendMessageUDP(QString address, QVariantList arguments)
+void OSCQueryDevice::writeOSC(QString address, QVariantList arguments)
 {
     m_osc_hdl->sendMessage(address, arguments);
 }

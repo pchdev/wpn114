@@ -19,7 +19,7 @@ void OSCQueryClient::setHostAddr(QString addr)
     m_ws_hdl->open(QUrl(addr));
 }
 
-void OSCQueryClient::sendMessageWS(QString address, QVariantList arguments)
+void OSCQueryClient::writeWebSocket(QString address, QVariantList arguments)
 {
     m_ws_hdl->sendTextMessage(address);
 }
@@ -33,7 +33,6 @@ void OSCQueryClient::onWSMessage(QString msg)
 void OSCQueryClient::onNewConnection()
 {
     emit connected(m_ws_hdl->peerAddress().toString());
-    m_ws_hdl->sendTextMessage("HOST_INFO");
 }
 
 void OSCQueryClient::onDisconnection()
