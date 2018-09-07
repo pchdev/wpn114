@@ -43,7 +43,7 @@ class QueryNode : public QObject, public QQmlParserStatus
     Q_ENUM  ( Type )
 
     virtual void componentComplete  ( );
-    virtual void classBegin         ( );
+    virtual void classBegin         ( ) { }
 
     QJsonObject attribute   ( QString attr ) const;
 

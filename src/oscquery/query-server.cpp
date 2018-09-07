@@ -9,31 +9,35 @@
 
 QJsonObject HostExtensions::toJson() const
 {
-    QJsonObject ext;
-    ext.insert("ACCESS", access);
-    ext.insert("VALUE", value);
-    ext.insert("RANGE", range);
-    ext.insert("DESCRIPTION", description);
-    ext.insert("TAGS", tags);
-    ext.insert("EXTENDED_TYPE", extended_type);
-    ext.insert("UNIT", unit);
-    ext.insert("CRITICAL", critical);
-    ext.insert("CLIPMODE", clipmode);
-    ext.insert("LISTEN", listen);
-    ext.insert("PATH_CHANGED", path_changed);
-    ext.insert("PATH_REMOVED", path_removed);
-    ext.insert("PATH_ADDED", path_added);
+    QJsonObject ext
+    {
+        { "ACCESS", access },
+        { "VALUE", value },
+        { "RANGE", range },
+        { "DESCRIPTION", description },
+        { "TAGS", tags },
+        { "EXTENDED_TYPE", extended_type },
+        { "UNIT", unit },
+        { "CRITICAL", critical },
+        { "CLIPMODE", clipmode },
+        { "LISTEN", listen },
+        { "PATH_CHANGED", path_changed },
+        { "PATH_REMOVED", path_removed },
+        { "PATH_ADDED", path_added }
+    };
 
     return ext;
 }
 
 QJsonObject HostSettings::toJson() const
 {
-    QJsonObject obj;
-    obj.insert("NAME", name);
-    obj.insert("OSC_PORT", osc_port);
-    obj.insert("OSC_TRANSPORT", osc_transport);
-    obj.insert("EXTENSIONS", extensions.toJson());
+    QJsonObject obj
+    {
+        { "NAME", name },
+        { "OSC_PORT", osc_port },
+        { "OSC_TRANSPORT", osc_transport },
+        { "EXTENSIONS", extensions.toJson() }
+    };
 
     return obj;
 }
@@ -190,7 +194,30 @@ void OSCQueryServer::onHandshakeRequest(QString key, QTcpSocket* sender)
 void OSCQueryServer::onWebsocketDataReceived(QByteArray data)
 {
     // decrypt encrypted message
+    QDataStream stream(data);
+    QByteArray decoded;
 
+    quint8 fbyte, fin, opcode, sbyte, mask[4];
+    quint64 payle;
+
+    stream >> fbyte >> sbyte;
+
+    if      ( fbyte-128 > 0 ) { fin = true; opcode = fbyte-128; }
+    else    { fin = false; opcode = fbyte; }
+
+    if      ( sbyte-128 <= 125 ) payle = sbyte-128;
+    else if ( sbyte-128 == 127 ) stream >> payle;
+    else if ( sbyte-128 == 126 ) { quint16 payle16; stream >> payle16; payle = payle16; }
+
+    for ( quint8 i = 0; i < 4; ++i ) stream >> mask[i];
+    for ( quint8 i = 0; i < payle; ++i )
+    {
+        quint8 byte;
+        stream >> byte;
+        decoded.append(byte^mask[i%4]);
+    }
+
+    qDebug() << "WebSocket in:" << decoded;
 }
 
 void OSCQueryServer::onNamespaceQuery(QString method, QTcpSocket* sender)
@@ -263,5 +290,5 @@ void OSCQueryServer::write(QTcpSocket* target, QString message)
     data.append(message.toLatin1());
     target->write(data);
 
-    qDebug() << "WS Out:" << message;
+    qDebug() << "WebSocket Out:" << message;
 }

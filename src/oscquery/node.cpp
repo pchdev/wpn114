@@ -4,12 +4,7 @@ QueryNode::QueryNode() :
     m_device(nullptr), m_parent(nullptr), m_critical(false), m_type(QueryNode::Type::None)
 { }
 
-QueryNode::~QueryNode()
-{
-
-}
-
-void QueryNode::classBegin() {}
+QueryNode::~QueryNode() { }
 void QueryNode::componentComplete()
 {
     if ( m_path.isEmpty() )
