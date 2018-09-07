@@ -27,6 +27,14 @@ void QueryNode::componentComplete()
 
 }
 
+QJsonObject QueryNode::attribute(QString attr) const
+{
+    QJsonObject obj;
+
+    if ( attr == "VALUE" ) obj.insert("VALUE", valueJson());
+    return obj;
+}
+
 QString QueryNode::typeString() const
 {
     switch ( m_type )
@@ -56,7 +64,7 @@ QJsonValue QueryNode::valueJson() const
     case QueryNode::Type::Impulse:      return v;
     case QueryNode::Type::Int:          v = m_value.toInt(); break;
   //  case QueryNode::Type::List:       v = m_value.toList(); break;
-    case QueryNode::Type::None:         return v;
+    case QueryNode::Type::None:         v = "null"; break;
     case QueryNode::Type::String:       v = m_value.toString(); break;
 //    case QueryNode::Type::Vec2f:      v = m_value.toList(); break;
 //    case QueryNode::Type::Vec3f:      v = m_value.toList(); break;
@@ -193,6 +201,8 @@ QueryNode* QueryNode::subnode(QString path)
 
     for ( const auto& child : m_children )
         if ( child->subnode(path) ) return child;
+
+    if ( path == m_path ) return this;
 
     return nullptr;
 }

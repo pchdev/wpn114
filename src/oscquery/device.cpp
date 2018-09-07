@@ -6,6 +6,8 @@ OSCQueryDevice::OSCQueryDevice()
     m_osc_hdl   = new OSCHandler();
     m_root_node = new QueryNode;
     m_root_node ->setPath("/");
+
+    m_root_node->setType(QueryNode::Type::None);
 }
 
 OSCQueryDevice::~OSCQueryDevice()

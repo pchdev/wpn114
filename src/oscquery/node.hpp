@@ -42,18 +42,19 @@ class QueryNode : public QObject, public QQmlParserStatus
 
     Q_ENUM  ( Type )
 
-    virtual void componentComplete();
-    virtual void classBegin();
+    virtual void componentComplete  ( );
+    virtual void classBegin         ( );
 
-    QString name                 ( ) const { return m_name; }
-    QString path              ( ) const { return m_path; }
-    QVariant value               ( ) const { return m_value; }
-    bool critical                ( ) const { return m_critical; }
-    OSCQueryDevice* device       ( ) const { return m_device; }
-    QueryNode::Type type         ( ) const { return m_type; }
-    QVector<QueryNode*> subnodes ( ) const { return m_children; }
-    QueryNode* parent            ( )       { return m_parent; }
-    QString typeString           ( )        const;
+    QJsonObject attribute   ( QString attr ) const;
+
+    QString name                    ( ) const { return m_name; }
+    QString path                    ( ) const { return m_path; }
+    QVariant value                  ( ) const { return m_value; }
+    bool critical                   ( ) const { return m_critical; }
+    OSCQueryDevice* device          ( ) const { return m_device; }
+    QueryNode::Type type            ( ) const { return m_type; }
+    QueryNode* parent               ( )       { return m_parent; }
+    QString typeString              ( )        const;
 
     QJsonObject info        ( ) const;
     void post               ( ) const;
@@ -67,13 +68,13 @@ class QueryNode : public QObject, public QQmlParserStatus
     void setType            ( QueryNode::Type type );
     void setParent          ( QueryNode* parent );
 
-    QueryNode* subnode      (QString path );
-    QueryNode* subnode      ( uint64_t index );
-
-    void addSubnode         ( QueryNode* node );
-    QueryNode *createSubnode( QString name );
-    void removeSubnode      ( QueryNode* node );
-    void removeSubnode      ( QString name );
+    QueryNode* subnode              ( QString path );
+    QueryNode* subnode              ( uint64_t index );
+    QVector<QueryNode*> subnodes    ( ) const { return m_children; }
+    QueryNode *createSubnode        ( QString name );
+    void addSubnode                 ( QueryNode* node );
+    void removeSubnode              ( QueryNode* node );
+    void removeSubnode              ( QString name );
 
     signals:
     void nameChanged        ( QString );

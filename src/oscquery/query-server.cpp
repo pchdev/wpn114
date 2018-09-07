@@ -224,9 +224,14 @@ void OSCQueryServer::onQueryCommand( QString cmd, QTcpSocket* sender )
 
 }
 
-void OSCQueryServer::onAttributeQuery( QString attr, QTcpSocket* sender )
+void OSCQueryServer::onAttributeQuery( QString query, QTcpSocket* sender )
 {
-    qDebug() << "attribute query:" << attr;
+    auto spl = query.split('?');
+
+    QJsonObject obj = m_root_node->subnode(spl[0])->attribute(spl[1]);
+    QTcpSocket* con = getWebSocketConnectionFromSender(sender);
+
+    write(con, QJsonDocument(obj).toJson(QJsonDocument::Compact));
 }
 
 void OSCQueryServer::writeWebSocket ( QString addr, QVariantList arguments )
