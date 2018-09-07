@@ -76,6 +76,9 @@ class QueryNode : public QObject, public QQmlParserStatus
     void removeSubnode              ( QueryNode* node );
     void removeSubnode              ( QString name );
 
+    bool listening          ( ) const { return m_listening; }
+    bool setListening       ( bool listen ) { m_listening = listen; }
+
     signals:
     void nameChanged        ( QString );
     void pathChanged        ( QString );
@@ -93,6 +96,7 @@ class QueryNode : public QObject, public QQmlParserStatus
     QVariant                m_value;
     OSCQueryDevice*         m_device;
     bool                    m_critical;
+    bool                    m_listening;
     QVector<QueryNode*>     m_children;
     QueryNode*              m_parent;
 

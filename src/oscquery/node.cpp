@@ -13,7 +13,7 @@ void QueryNode::componentComplete()
     m_name = m_path;
     m_name.remove(0, 1);
 
-    if ( m_device ) m_device->addNode(m_device, this);
+    if      ( m_device ) m_device->addNode(m_device, this);
     else if ( m_parent )
     {
         m_device = m_parent->device();
@@ -106,7 +106,7 @@ void QueryNode::setName(QString name)
 
 void QueryNode::setPath(QString path)
 {
-    m_path   = path;
+    m_path = path;
 }
 
 void QueryNode::setValueQuiet(QVariant value)
@@ -122,19 +122,15 @@ void QueryNode::setValueQuiet(QVariant value)
 
 void QueryNode::setValue(QVariant value)
 {
-    // TODO: check type
-
     m_value = value;
 
-    if ( m_critical && m_device )
+    if ( m_listening && m_critical && m_device )
     {
-        // TODO: if variant is list
         m_device->writeWebSocket(m_path, QVariantList { value });
     }
 
-    else if ( !m_critical && m_device )
+    else if ( m_listening && !m_critical && m_device )
     {
-        // TODO: if variant is list
         m_device->writeOSC(m_path, QVariantList { value });
     }
 }

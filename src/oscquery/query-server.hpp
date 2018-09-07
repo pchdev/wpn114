@@ -51,6 +51,7 @@ struct HostExtensions
     bool path_changed;
     bool path_removed;
     bool path_added;
+    bool path_renamed;
 
     QJsonObject toJson() const;
 };

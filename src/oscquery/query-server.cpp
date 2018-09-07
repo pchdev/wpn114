@@ -23,7 +23,8 @@ QJsonObject HostExtensions::toJson() const
         { "LISTEN", listen },
         { "PATH_CHANGED", path_changed },
         { "PATH_REMOVED", path_removed },
-        { "PATH_ADDED", path_added }
+        { "PATH_ADDED", path_added },
+        { "PATH_RENAMED", path_renamed }
     };
 
     return ext;
@@ -92,7 +93,8 @@ QString Http::formatResponse( QString response )
     return resp;
 }
 
-OSCQueryServer::OSCQueryServer() : m_tcp_server( new QTcpServer(this))
+OSCQueryServer::OSCQueryServer() :
+    m_tcp_server( new QTcpServer(this)), OSCQueryDevice ()
 {
     // default settings & extensions
 
@@ -110,6 +112,7 @@ OSCQueryServer::OSCQueryServer() : m_tcp_server( new QTcpServer(this))
     m_settings.extensions.path_added        = false;
     m_settings.extensions.path_changed      = false;
     m_settings.extensions.path_removed      = false;
+    m_settings.extensions.path_renamed      = false;
     m_settings.extensions.range             = false;
     m_settings.extensions.tags              = false;
     m_settings.extensions.unit              = false;

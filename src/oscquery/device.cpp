@@ -58,6 +58,12 @@ QueryNode* OSCQueryDevice::getNode(QString path)
     return nullptr;
 }
 
+void OSCQueryDevice::onOscMessageReceived(QString method, QVariantList arguments)
+{
+    auto node = m_root_node->subnode(method);
+    node->setValue(arguments);
+}
+
 void OSCQueryDevice::writeOSC(QString address, QVariantList arguments)
 {
     m_osc_hdl->sendMessage(address, arguments);

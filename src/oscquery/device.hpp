@@ -37,6 +37,10 @@ class OSCQueryDevice : public QObject
     void messageReceived        ( QString path, QVariantList arguments );
     void oscPortChanged         ( );
 
+    protected slots:
+    void onOscMessageReceived   ( QString method, QVariantList arguments );
+
+
     protected:
     QString             m_name;
     OSCHandler*         m_osc_hdl;
