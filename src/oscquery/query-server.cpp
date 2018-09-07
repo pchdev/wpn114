@@ -60,6 +60,12 @@ QPair<Http::Request, QString> Http::parseRequest( QByteArray data )
     else if ( data.contains("/?HOST_INFO") )
         return QPair<Http::Request,QString>(Http::Request::HOST_INFO, QString());
 
+    else if ( data.contains("?") )
+    {
+        QString attr = data.split(' ')[1];
+        return QPair<Http::Request,QString>(Http::Request::ATTRIBUTE, attr);
+    }
+
     else if ( data.startsWith("GET"))
         return QPair<Http::Request,QString>(Http::Request::NAMESPACE, data.split(' ')[1]);
 
@@ -201,8 +207,7 @@ void OSCQueryServer::onNamespaceQuery(QString method, QTcpSocket* sender)
 inline QTcpSocket* OSCQueryServer::getWebSocketConnectionFromSender(QTcpSocket* sender)
 {
     for ( const auto& con : m_ws_connections )
-        if ( con->peerAddress() == sender->peerAddress() &&
-             con->peerPort() == sender->peerPort() )
+        if ( con->peerAddress() == sender->peerAddress() )
             return con;
 
     return nullptr;
@@ -221,7 +226,7 @@ void OSCQueryServer::onQueryCommand( QString cmd, QTcpSocket* sender )
 
 void OSCQueryServer::onAttributeQuery( QString attr, QTcpSocket* sender )
 {
-
+    qDebug() << "attribute query:" << attr;
 }
 
 void OSCQueryServer::writeWebSocket ( QString addr, QVariantList arguments )
