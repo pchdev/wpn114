@@ -41,6 +41,7 @@ class WPNWebSocket : public QObject
     void onRawMessageReceived   ( );
 
     protected:
+    bool m_mask;
     QString m_device;
     QString m_host_addr;
     quint16 m_host_port;

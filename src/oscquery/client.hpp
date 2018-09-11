@@ -34,7 +34,7 @@ class OSCQueryClient : public OSCQueryDevice, public QQmlParserStatus
     void hostAddrChanged    ( );
     void hostInfoRequest    ( );
     void valueUpdate        ( QString mtd, QVariantList arg );
-    void commandRequest     ( QString );
+    void command            ( QString );
 
     protected slots:
     void onConnected ( );

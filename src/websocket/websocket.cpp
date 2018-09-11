@@ -41,6 +41,8 @@ void WPNWebSocketServer::onTcpReadyRead()
      {
          QByteArray data = sender->readAll ( );
 
+         qDebug() << "TCP.in:" << data;
+
          if ( data.contains("Sec-WebSocket-Key"))
          {
              onHandshakeRequest(sender, data);
@@ -106,7 +108,7 @@ void WPNWebSocketServer::onHttpRequestReceived(QString req)
 // CLIENT ----------------------------------------------------------------------------------------------
 
 WPNWebSocket::WPNWebSocket(QString host_addr, quint16 port) :
-    m_host_addr(host_addr), m_host_port(port)
+    m_host_addr(host_addr), m_host_port(port), m_mask(true)
 {
     // direct client case
     QObject::connect(m_tcp_con, SIGNAL(connected()), this, SLOT(onConnected()));
@@ -114,7 +116,7 @@ WPNWebSocket::WPNWebSocket(QString host_addr, quint16 port) :
     QObject::connect(m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
 }
 
-WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con)
+WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con), m_mask(false)
 {
     // server catching a client
     // the proxy is already connected, so nothing to do here, except chain signals
@@ -189,7 +191,7 @@ void WPNWebSocket::requestHandshake()
 void WPNWebSocket::write(QString message)
 {
     QByteArray data;
-    quint8 mask[4], size_mask;
+    quint8 mask[4], size_mask = m_mask*128;
     quint64 sz = message.size();
 
     QDataStream stream ( &data, QIODevice::WriteOnly );
@@ -198,26 +200,31 @@ void WPNWebSocket::write(QString message)
     // we have to set the mask bit here
     if ( sz > 65535 )
     {
-        stream << (quint8) 255;
+        stream << (quint8) (127+size_mask);
         stream << (quint64) message.size();
     }
     else if ( sz > 125 )
     {
-        stream << (quint8) 254;
+        stream << (quint8) (126+size_mask);
         stream << (quint16) message.size();
     }
-    else stream << ( (quint8) message.size() + 128 );
+    else stream << (quint8) (message.size() + size_mask);
 
-    for ( quint8 i = 0; i < 4; ++i )
+    if ( m_mask )
     {
-        QRandomGenerator rdm;
-        mask[i] = rdm.bounded(256);
-        stream << mask[i];
+        for ( quint8 i = 0; i < 4; ++i )
+        {
+            QRandomGenerator rdm;
+            mask[i] = rdm.bounded(256);
+            stream << mask[i];
+        }
+
+        // ...and encode the message with it
+        for ( quint8 i = 0; i < message.size(); ++i )
+            stream << ( mask[i%4] ^ message[i].toLatin1() );
     }
 
-    // ...and encode the message with it
-    for ( quint8 i = 0; i < message.size(); ++i )
-        stream << ( mask[i%4] ^ message[i].toLatin1() );
+    else data.append(message.toLatin1());
 
     m_tcp_con->write(data);
     qDebug() << "WebSocket Out:" << message;
@@ -225,8 +232,6 @@ void WPNWebSocket::write(QString message)
 
 void WPNWebSocket::decode(QByteArray data)
 {
-    // coming from the server, it should be unmasked, but it might not be
-    // decrypt encrypted message
     QDataStream stream(data);
     QByteArray decoded;
 

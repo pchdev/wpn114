@@ -75,6 +75,9 @@ void OSCQueryServer::componentComplete()
     QObject::connect( m_ws_server, SIGNAL(newConnection(WPNWebSocket*)),
                       this, SLOT(onNewConnection(WPNWebSocket*)));
 
+    QObject::connect( m_ws_server, SIGNAL(httpRequestReceived(WPNWebSocket*,QString)),
+                      this, SLOT(onHttpRequest(WPNWebSocket*,QString)));
+
     m_osc_hdl->setLocalPort     ( m_settings.osc_port );
     m_ws_server->setPort        ( m_settings.tcp_port );
     m_ws_server->start          ( );
@@ -88,12 +91,13 @@ void OSCQueryServer::setTcpPort(quint16 port)
 
 void OSCQueryServer::setUdpPort(quint16 port)
 {
-    m_settings.osc_port = port;
-    m_osc_hdl->setLocalPort(port);
+    m_settings.osc_port     = port;
+    m_osc_hdl->setLocalPort ( port );
 }
 
 void OSCQueryServer::onNewConnection(WPNWebSocket* con)
 {
+    qDebug () << "new OSCQueryClient";
     auto client = new OSCQueryClient(con);
     m_clients.push_back(client);
 
@@ -126,6 +130,9 @@ void OSCQueryServer::onHostInfoRequest()
 
 void OSCQueryServer::onNamespaceRequest(QString method)
 {
+    if ( method == "/" )
+        for ( const auto& con : m_clients )
+            con->writeWebSocket(m_root_node->info());
 
 }
 

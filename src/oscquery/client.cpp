@@ -50,6 +50,7 @@ void OSCQueryClient::onTextMessageReceived(QString message)
     // - ...
     // - signal chains...
 
+    qDebug() << "WebSocket In:" << message;
 }
 
 void OSCQueryClient::writeOsc(QString method, QVariantList arguments)
