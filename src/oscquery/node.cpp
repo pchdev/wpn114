@@ -126,7 +126,8 @@ void QueryNode::setValue(QVariant value)
 
     if ( m_listening && m_critical && m_device )
     {
-        m_device->writeWebSocket(m_path, QVariantList { value });
+        m_device->onValueUpdate(m_path, QVariantList { value });
+        //m_device->onValueUpdate(m_path, QVariantList { value });
     }
 
     else if ( m_listening && !m_critical && m_device )

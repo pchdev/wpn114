@@ -1,3 +1,5 @@
+#pragma once
+
 #include "device.hpp"
 #include <src/websocket/websocket.hpp>
 #include <QTcpSocket>

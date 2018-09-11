@@ -58,7 +58,7 @@ QueryNode* OSCQueryDevice::getNode(QString path)
     return nullptr;
 }
 
-void OSCQueryDevice::onOscMessageReceived(QString method, QVariantList arguments)
+void OSCQueryDevice::onValueUpdate(QString method, QVariantList arguments)
 {
     auto node = m_root_node->subnode(method);
     node->setValue(arguments);

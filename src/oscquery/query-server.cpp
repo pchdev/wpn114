@@ -103,9 +103,14 @@ void OSCQueryServer::onNewConnection(WPNWebSocket* con)
     QObject::connect ( client, SIGNAL(command(QString)), this, SLOT(onCommand(QString)));
 }
 
-void OSCQueryServer::onValueUpdate(QString method, QVariantList arguments)
+void OSCQueryServer::onHttpRequest(WPNWebSocket* client, QString req)
 {
-
+    if ( req.contains("HOST_INFO") ) onHostInfoRequest();
+    else if ( req.contains("GET /") )
+    {
+        auto spl = req.split(' ');
+        onNamespaceRequest(spl[1]);
+    }
 }
 
 void OSCQueryServer::onCommand(QString data)
@@ -115,7 +120,8 @@ void OSCQueryServer::onCommand(QString data)
 
 void OSCQueryServer::onHostInfoRequest()
 {
-
+    for ( const auto& con : m_clients )
+        con->writeWebSocket(m_settings.toJson());
 }
 
 void OSCQueryServer::onNamespaceRequest(QString method)

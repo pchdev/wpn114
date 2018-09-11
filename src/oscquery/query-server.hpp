@@ -53,7 +53,6 @@ class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
     public:
     OSCQueryServer();
 
-    virtual void writeWebSocket     ( QString addr, QVariantList arguments );
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) {}
 
@@ -67,8 +66,8 @@ class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
 
     protected slots:
     void onNewConnection        ( WPNWebSocket* client );
-    void onValueUpdate          ( QString method, QVariantList arguments );
     void onCommand              ( QString data );
+    void onHttpRequest          ( WPNWebSocket* client, QString req );
     void onHostInfoRequest      ( );
     void onNamespaceRequest     ( QString method );
 

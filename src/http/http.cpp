@@ -1,7 +1,8 @@
 #include "http.hpp"
+#include <QString>
+#include <QDateTime>
 
-
-QString Http::formatResponse( QString response )
+QString formatResponse( QString response )
 {
     QString resp    ( "HTTP/1.1 200 OK\r\n" );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));

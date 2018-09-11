@@ -28,17 +28,13 @@ class OSCQueryDevice : public QObject
     void setOscPort             ( uint16_t port );
     void setDeviceName          ( QString name );
 
-    Q_INVOKABLE void explore         ( ) const;
+    Q_INVOKABLE void explore    ( ) const;
 
     signals:
-    void connected              ( QString );
-    void disconnected           ( QString );
-    void messageReceived        ( QString path, QVariantList arguments );
     void oscPortChanged         ( );
 
-    protected slots:
-    void onOscMessageReceived   ( QString method, QVariantList arguments );
-
+    public slots:
+    void onValueUpdate          ( QString method, QVariantList arguments );
 
     protected:
     QString             m_name;

@@ -11,6 +11,8 @@ WPNWebSocketServer::WPNWebSocketServer(quint16 port) : m_port(port),
     QObject::connect(m_tcp_server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 }
 
+WPNWebSocketServer::~WPNWebSocketServer() {}
+
 void WPNWebSocketServer::start()
 {
     m_tcp_server->listen(QHostAddress::Any, m_port);
@@ -38,6 +40,7 @@ void WPNWebSocketServer::onTcpReadyRead()
      while ( sender->bytesAvailable())
      {
          QByteArray data = sender->readAll ( );
+
          if ( data.contains("Sec-WebSocket-Key"))
          {
              onHandshakeRequest(sender, data);
@@ -46,9 +49,7 @@ void WPNWebSocketServer::onTcpReadyRead()
          }
 
          else if ( data.contains("HTTP") )
-         {
-             // parsing todo
-         }
+             emit httpRequestReceived(nullptr, data);
      }
 }
 
@@ -119,6 +120,11 @@ WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con)
     // the proxy is already connected, so nothing to do here, except chain signals
     QObject::connect(m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     QObject::connect(m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
+}
+
+WPNWebSocket::~WPNWebSocket()
+{
+    delete m_tcp_con;
 }
 
 void WPNWebSocket::connect()

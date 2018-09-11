@@ -77,7 +77,6 @@ class WPNWebSocketServer : public QObject
     void onTcpReadyRead         ( );
     void onHttpRequestReceived  ( QString );
     void onNewConnection        ( );
-    void onDisconnection        ( );
     void onHandshakeRequest     ( QTcpSocket* sender, QByteArray data );
 
     private:

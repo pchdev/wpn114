@@ -27,6 +27,21 @@ void OSCQueryClient::componentComplete()
     m_ws_con->connect();
 }
 
+void OSCQueryClient::onConnected()
+{
+
+}
+
+void OSCQueryClient::setHostAddr(QString addr)
+{
+    m_host_addr = addr;
+}
+
+void OSCQueryClient::setPort(quint16 port)
+{
+    m_host_port = port;
+}
+
 void OSCQueryClient::onTextMessageReceived(QString message)
 {
     // - host_info
