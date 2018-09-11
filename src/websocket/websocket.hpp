@@ -70,13 +70,12 @@ class WPNWebSocketServer : public QObject
     void setPort        ( quint16 port ) { m_port = port; }
 
     signals:
-    void httpRequestReceived    ( WPNWebSocket*, QString );
+    void httpRequestReceived    ( QTcpSocket*, QString );
     void newConnection          ( WPNWebSocket* );
     void disconnection          ( WPNWebSocket* );
 
     protected slots:
     void onTcpReadyRead         ( );
-    void onHttpRequestReceived  ( QString );
     void onNewConnection        ( );
     void onHandshakeRequest     ( QTcpSocket* sender, QByteArray data );
 

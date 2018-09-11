@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QRegExp>
 #include <QBitArray>
+#include "../http/http.hpp"
 
 QJsonObject HostExtensions::toJson() const
 {
@@ -75,8 +76,8 @@ void OSCQueryServer::componentComplete()
     QObject::connect( m_ws_server, SIGNAL(newConnection(WPNWebSocket*)),
                       this, SLOT(onNewConnection(WPNWebSocket*)));
 
-    QObject::connect( m_ws_server, SIGNAL(httpRequestReceived(WPNWebSocket*,QString)),
-                      this, SLOT(onHttpRequest(WPNWebSocket*,QString)));
+    QObject::connect( m_ws_server, SIGNAL(httpRequestReceived(QTcpSocket*,QString)),
+                      this, SLOT(onHttpRequest(QTcpSocket*,QString)));
 
     m_osc_hdl->setLocalPort     ( m_settings.osc_port );
     m_ws_server->setPort        ( m_settings.tcp_port );
@@ -105,15 +106,19 @@ void OSCQueryServer::onNewConnection(WPNWebSocket* con)
                       this, SLOT(onValueUpdate(QString,QVariantList)));
 
     QObject::connect ( client, SIGNAL(command(QString)), this, SLOT(onCommand(QString)));
+
+    // send host info and namespace
+    client->writeWebSocket(m_settings.toJson());
+    client->writeWebSocket(m_root_node->info());
 }
 
-void OSCQueryServer::onHttpRequest(WPNWebSocket* client, QString req)
+void OSCQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
 {
-    if ( req.contains("HOST_INFO") ) onHostInfoRequest();
+    if ( req.contains("HOST_INFO") ) onHostInfoRequest(sender);
     else if ( req.contains("GET /") )
     {
         auto spl = req.split(' ');
-        onNamespaceRequest(spl[1]);
+        onNamespaceRequest(sender, spl[1]);
     }
 }
 
@@ -122,18 +127,27 @@ void OSCQueryServer::onCommand(QString data)
 
 }
 
-void OSCQueryServer::onHostInfoRequest()
+void OSCQueryServer::onHostInfoRequest(QTcpSocket* sender)
 {
-    for ( const auto& con : m_clients )
-        con->writeWebSocket(m_settings.toJson());
+    auto resp = HTTP::formatJsonResponse(m_settings.toJson());
+    sender->write(resp.toUtf8());
 }
 
-void OSCQueryServer::onNamespaceRequest(QString method)
+void OSCQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
 {
-    if ( method == "/" )
-        for ( const auto& con : m_clients )
-            con->writeWebSocket(m_root_node->info());
+    if ( method.contains("?") )
+    {
+        QJsonObject obj;
+        auto spl = method.split('?');
+        obj.insert(spl[1], m_root_node->subnode(spl[0])->attribute(spl[1]));
 
+        auto resp = HTTP::formatJsonResponse(obj);
+        sender->write(resp.toUtf8());
+    }
+    else
+    {
+        QueryNode* node = m_root_node->subnode(method);
+        auto resp = HTTP::formatJsonResponse(node->info());
+        sender->write(resp.toUtf8());
+    }
 }
-
-

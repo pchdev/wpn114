@@ -51,7 +51,7 @@ void WPNWebSocketServer::onTcpReadyRead()
          }
 
          else if ( data.contains("HTTP") )
-             emit httpRequestReceived(nullptr, data);
+             emit httpRequestReceived(sender, data);
      }
 }
 
@@ -97,12 +97,6 @@ void WPNWebSocketServer::sendHandshakeResponse ( QTcpSocket* target, QString key
     // upgrade connection to websocket
     WPNWebSocket* client = new WPNWebSocket(target);
     emit newConnection(client);
-}
-
-void WPNWebSocketServer::onHttpRequestReceived(QString req)
-{
-    WPNWebSocket* sender = qobject_cast<WPNWebSocket*>(QObject::sender());
-    emit httpRequestReceived(sender, req);
 }
 
 // CLIENT ----------------------------------------------------------------------------------------------

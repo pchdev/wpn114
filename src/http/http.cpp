@@ -1,8 +1,7 @@
 #include "http.hpp"
-#include <QString>
 #include <QDateTime>
 
-QString formatResponse( QString response )
+QString HTTP::formatJsonResponse( QString response )
 {
     QString resp    ( "HTTP/1.1 200 OK\r\n" );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
@@ -16,4 +15,9 @@ QString formatResponse( QString response )
     resp.append     ( response );
 
     return resp;
+}
+
+QString HTTP::formatJsonResponse(QJsonObject obj)
+{
+    return HTTP::formatJsonResponse(QJsonDocument(obj).toJson(QJsonDocument::Compact));
 }

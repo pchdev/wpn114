@@ -67,9 +67,9 @@ class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
     protected slots:
     void onNewConnection        ( WPNWebSocket* client );
     void onCommand              ( QString data );
-    void onHttpRequest          ( WPNWebSocket* client, QString req );
-    void onHostInfoRequest      ( );
-    void onNamespaceRequest     ( QString method );
+    void onHttpRequest          ( QTcpSocket* sender, QString req );
+    void onHostInfoRequest      ( QTcpSocket* sender );
+    void onNamespaceRequest     ( QTcpSocket* sender, QString method );
 
     private:    
     HostSettings m_settings;
