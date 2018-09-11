@@ -15,8 +15,7 @@ class OSCQueryDevice : public QObject
     OSCQueryDevice      ( );
     ~OSCQueryDevice     ( );
 
-    virtual void writeWebSocket     ( QString address, QVariantList arguments ) = 0;
-    void writeOSC                   ( QString address, QVariantList arguments );
+    void writeOSC ( QString address, QVariantList arguments );
 
     static void         addNode           ( OSCQueryDevice* dev, QueryNode* node );
     static QueryNode*   findOrCreateNode  ( OSCQueryDevice* dev, QString path );

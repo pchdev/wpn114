@@ -28,10 +28,11 @@ set( PROJECT_HDRS
     src/osc/osc.hpp
     src/midi/RtMidi.h
     src/oscquery/device.hpp
-    #src/oscquery/server.hpp
     src/oscquery/client.hpp
     src/oscquery/node.hpp
     src/oscquery/query-server.hpp
+    src/http/http.hpp
+    src/websocket/websocket.hpp
     #src/audio.hpp
  )
 
@@ -51,10 +52,11 @@ set ( PROJECT_SRCS
     src/osc/osc.cpp
     src/midi/RtMidi.cpp
     src/oscquery/device.cpp
-    #src/oscquery/server.cpp
     src/oscquery/client.cpp
     src/oscquery/node.cpp
     src/oscquery/query-server.cpp
+    src/http/http.cpp
+    src/websocket/websocket.cpp
 
     #src/audio.cpp
 )

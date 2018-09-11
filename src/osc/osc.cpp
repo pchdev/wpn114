@@ -32,13 +32,9 @@ void OSCHandler::setRemoteAddress(QString address)
     m_remote_address = address;
 }
 
-template<typename T>
-inline void parseArgumentsFromStream(QVariantList& dest, QDataStream& stream)
+template<typename T> inline void parseArgumentsFromStream(QVariantList& dest, QDataStream& stream)
 {
-    T value;
-
-    stream  >> value;
-    dest    << value;
+    T value; stream >> value; dest << value;
 }
 
 void OSCHandler::readOSCBundle(QByteArray bundle)

@@ -7,35 +7,9 @@
 #include <QWebSocketServer>
 #include <QWebSocket>
 #include "device.hpp"
+#include "client.hpp"
+#include "../websocket/websocket.hpp"
 
-namespace Http
-{
-enum class Request
-{
-    NAMESPACE = 0,
-    HOST_INFO = 1,
-    ATTRIBUTE = 2,
-    COMMAND = 3,
-    UNKNOWN = 4,
-    HANDSHAKE = 5,
-};
-
-QPair<Request, QString> parseRequest ( QByteArray data );
-QString formatResponse ( QString response );
-}
-
-namespace WebSocket
-{
-enum class Opcodes
-{
-    CONTINUATION_FRAME = 0x0,
-    TEXT_FRAME = 0x1,
-    BINARY_FRAME = 0x2,
-    CONNECTION_CLOSE = 0x8,
-    PING = 0x9,
-    PONG = 0xa
-};
-}
 struct HostExtensions
 {
     bool access;
@@ -60,6 +34,7 @@ struct HostSettings
 {
     QString name;
     QString osc_transport;
+    bool osc_streaming;
     quint16 osc_port;
     quint16 tcp_port;
     HostExtensions extensions;
@@ -86,25 +61,20 @@ class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
     quint16 udpPort() const { return m_settings.osc_port; }
     QString name() const { return m_settings.name; }
 
-    void setTcpPort ( quint16 port ) { m_settings.tcp_port = port; }
-    void setUdpPort ( quint16 port ) ;
+    void setTcpPort ( quint16 port );
+    void setUdpPort ( quint16 port );
     void setName    ( QString name ) { m_settings.name = name; }
-    void write      ( QTcpSocket* target, QString message );
 
     protected slots:
-    void onNewTcpConnection         ( );
-    void onTcpDataReceived          ( );
-    void onWebsocketDataReceived    ( QByteArray data );
-    void onHandshakeRequest         ( QString key, QTcpSocket* sender);
-    void onNamespaceQuery           ( QString , QTcpSocket* sender);
-    void onHostInfoQuery            ( QTcpSocket* sender );
-    void onQueryCommand             ( QString cmd, QTcpSocket* sender );
-    void onAttributeQuery           ( QString attr, QTcpSocket* sender );
+    void onNewConnection        ( WPNWebSocket* client );
+    void onValueUpdate          ( QString method, QVariantList arguments );
+    void onCommand              ( QString data );
+    void onHostInfoRequest      ( );
+    void onNamespaceRequest     ( QString method );
 
     private:    
-    QTcpSocket* getWebSocketConnectionFromSender(QTcpSocket* sender);
-
     HostSettings m_settings;
-    QTcpServer* m_tcp_server;
-    QVector<QTcpSocket*> m_ws_connections;
+    WPNWebSocketServer* m_ws_server;
+    QVector<OSCQueryClient*> m_clients;
+
 };

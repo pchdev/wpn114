@@ -1,4 +1,5 @@
 #include "device.hpp"
+#include <src/websocket/websocket.hpp>
 #include <QTcpSocket>
 #include <QQmlParserStatus>
 
@@ -10,13 +11,15 @@ class OSCQueryClient : public OSCQueryDevice, public QQmlParserStatus
 
     public:
     OSCQueryClient();
+    OSCQueryClient(WPNWebSocket* con);
 
     virtual void componentComplete  ();
     virtual void classBegin         () {}
-    virtual void writeWebSocket     ( QString address, QVariantList arguments );
 
-    void requestHostInfo    ( );
-    void requestNamespace   ( );
+    void writeOsc           ( QString method, QVariantList arguments );
+    void writeWebSocket     ( QString method, QVariantList arguments );
+    void writeWebSocket     ( QString message );
+    void writeWebSocket     ( QJsonObject message );
 
     quint16 port        ( ) const { return m_host_port; }
     QString hostAddr    ( ) const { return m_host_addr; }
@@ -24,20 +27,19 @@ class OSCQueryClient : public OSCQueryDevice, public QQmlParserStatus
     void setHostAddr    ( QString addr );
 
     signals:
-    void hostAddrChanged();
+    void connected          ( );
+    void disconnected       ( );
+    void hostAddrChanged    ( );
+    void hostInfoRequest    ( );
+    void valueUpdate        ( QString mtd, QVariantList arg );
+    void commandRequest     ( QString );
 
     protected slots:
-    void requestHandshake           ( );
-    void generateSecKey             ( );
-    void onWebSocketDataReceived    ( );
-    void onHandshakeResponse        ( );
-    void onHostInfoReceived         ( );
-    void onNamespaceReceived        ( );
+    void onConnected ( );
+    void onTextMessageReceived(QString message);
 
     private:
+    WPNWebSocket* m_ws_con;
     quint16 m_host_port;
-    QByteArray m_sec_ws_key;
-    QByteArray m_sec_accept_key;
-    QTcpSocket* m_ws_socket;
     QString m_host_addr;
 };
