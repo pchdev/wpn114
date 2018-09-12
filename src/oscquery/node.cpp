@@ -1,12 +1,12 @@
 #include "node.hpp"
 #include <QtDebug>
 
-WPNNode::WPNNode() :
-    m_device(nullptr), m_parent(nullptr)
+WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr)
 {
-    m_attributes.access         = Access::NONE;
+    m_attributes.access         = Access::RW;
     m_attributes.clipmode       = Clipmode::NONE;
     m_attributes.description    = "No description";
+    m_attributes.critical       = false;
 }
 
 WPNNode::~WPNNode() { }
@@ -42,7 +42,7 @@ QJsonObject WPNNode::attributesJson() const
 {
     QJsonObject obj;
 
-    obj.insert("PATH", m_attributes.path);
+    obj.insert("FULL_PATH", m_attributes.path);
     obj.insert("TYPE", typeTag());
     obj.insert("ACCESS", static_cast<quint8>(m_attributes.access));
     obj.insert("VALUE", jsonValue());
@@ -52,6 +52,8 @@ QJsonObject WPNNode::attributesJson() const
     //obj.insert("TAGS", m_attributes.tags);
     //obj.insert("RANGE");
     // + clipmode todo
+
+    return obj;
 
 }
 

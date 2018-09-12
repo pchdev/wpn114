@@ -6,7 +6,8 @@ WPNDevice::WPNDevice()
     m_root_node = new WPNNode;
 
     m_root_node ->setPath   ( "/" );
-    m_root_node ->setType   ( Type::None );
+    m_root_node ->setType   ( Type::Values::None );
+    m_root_node ->setAccess ( Access::Values::NONE );
 }
 
 WPNDevice::~WPNDevice() {}
