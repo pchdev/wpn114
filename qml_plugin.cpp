@@ -11,6 +11,10 @@ void qml_plugin::registerTypes(const char *uri)
 {
     Q_UNUSED    ( uri );
 
+    qmlRegisterUncreatableType<Type, 1>         ( "WPN114", 1, 0, "Type", "Coucou" );
+    qmlRegisterUncreatableType<Access, 1>       ( "WPN114", 1, 0, "Access", "Coucou" );
+    qmlRegisterUncreatableType<Clipmode, 1>     ( "WPN114", 1, 0, "Clipmode", "Coucou" );
+
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
     qmlRegisterType<OSCHandler, 1>        ( "WPN114", 1, 0, "OSCHandler" );
     qmlRegisterType<WPNNode, 1>           ( "WPN114", 1, 0, "Node" );

@@ -8,55 +8,79 @@
 
 class WPNDevice;
 
-enum class Type
+
+class Type : public QObject
 {
-    None        = 0,
-    Bool        = 1,
-    Int         = 2,
-    Float       = 3,
-    String      = 4,
-    List        = 5,
-    Vec2f       = 6,
-    Vec3f       = 7,
-    Vec4f       = 8,
-    Char        = 9,
-    Impulse     = 10,
+    Q_OBJECT
+    public:
+    enum Values
+    {
+        None        = 0,
+        Bool        = 1,
+        Int         = 2,
+        Float       = 3,
+        String      = 4,
+        List        = 5,
+        Vec2f       = 6,
+        Vec3f       = 7,
+        Vec4f       = 8,
+        Char        = 9,
+        Impulse     = 10,
+    };
+
+    Q_ENUM ( Values )
 };
+
+class Access : public QObject
+{
+    Q_OBJECT
+    public:
+    enum Values
+    {
+        NONE    = 0,
+        READ    = 1,
+        WRITE   = 2,
+        RW      = 3
+    };
+
+    Q_ENUM ( Values )
+};
+
+class Clipmode : public QObject
+{
+    Q_OBJECT
+    public:
+    enum Values
+    {
+        NONE    = 0,
+        LOW     = 1,
+        HIGH    = 2,
+        BOTH    = 3,
+    };
+
+    Q_ENUM ( Values )
+};
+
 
 struct Range
 {
+    public:
     QVariant min;
     QVariant max;
     QVariantList vals;
 };
 
-enum class Clipmode
-{
-    NONE    = 0,
-    LOW     = 1,
-    HIGH    = 2,
-    BOTH    = 3,
-};
-
-enum class Access
-{
-    NONE    = 0,
-    READ    = 1,
-    WRITE   = 2,
-    RW      = 3
-};
-
 struct Attributes
 {
-    QString         path;
-    Type            type;
-    Access          access;
-    QVariant        value;
-    Range           range;
-    QString         description;
-    QStringList     tags;
-    bool            critical;
-    Clipmode        clipmode;
+    QString             path;
+    Type::Values        type;
+    Access::Values      access;
+    QVariant            value;
+    Range               range;
+    QString             description;
+    QStringList         tags;
+    bool                critical;
+    Clipmode::Values    clipmode;
 };
 
 class WPNNode : public QObject, public QQmlParserStatus
@@ -68,14 +92,14 @@ class WPNNode : public QObject, public QQmlParserStatus
     Q_PROPERTY  ( WPNNode* parent READ parent WRITE setParent )
 
     Q_PROPERTY  ( QString path READ path WRITE setPath )
-    Q_PROPERTY  ( Type type READ type WRITE setType )
-    Q_PROPERTY  ( Access access READ access WRITE setAccess )
+    Q_PROPERTY  ( Type::Values type READ type WRITE setType )
+    Q_PROPERTY  ( Access::Values access READ access WRITE setAccess )
     Q_PROPERTY  ( QVariant value READ value WRITE setValue NOTIFY valueChanged )
     Q_PROPERTY  ( Range range READ range WRITE setRange )
     Q_PROPERTY  ( QString description READ description WRITE setDescription )
     Q_PROPERTY  ( QStringList tags READ tags WRITE setTags )
     Q_PROPERTY  ( bool critical READ critical WRITE setCritical )
-    Q_PROPERTY  ( Clipmode clipmode READ clipmode WRITE setClipmode )
+    Q_PROPERTY  ( Clipmode::Values clipmode READ clipmode WRITE setClipmode )
 
     public:
     WPNNode();
@@ -104,26 +128,26 @@ class WPNNode : public QObject, public QQmlParserStatus
 
     // attributes --------------------------------------------------------
 
-    QString path            ( ) const { return m_attributes.path; }
-    Type type               ( ) const { return m_attributes.type; }
-    Access access           ( ) const { return m_attributes.access; }
-    QVariant value          ( ) const { return m_attributes.value; }
-    Range range             ( ) const { return m_attributes.range; }
-    QString description     ( ) const { return m_attributes.description; }
-    QStringList tags        ( ) const { return m_attributes.tags; }
-    bool critical           ( ) const { return m_attributes.critical; }
-    Clipmode clipmode       ( ) const { return m_attributes.clipmode; }
+    QString path                ( ) const { return m_attributes.path; }
+    Type::Values type           ( ) const { return m_attributes.type; }
+    Access::Values access       ( ) const { return m_attributes.access; }
+    QVariant value              ( ) const { return m_attributes.value; }
+    Range range                 ( ) const { return m_attributes.range; }
+    QString description         ( ) const { return m_attributes.description; }
+    QStringList tags            ( ) const { return m_attributes.tags; }
+    bool critical               ( ) const { return m_attributes.critical; }
+    Clipmode::Values clipmode   ( ) const { return m_attributes.clipmode; }
 
     void setPath            ( QString path );
-    void setType            ( Type type );
-    void setAccess          ( Access access );
+    void setType            ( Type::Values type );
+    void setAccess          ( Access::Values access );
     void setValue           ( QVariant value );
     void setValueQuiet      ( QVariant value );
     void setRange           ( Range range );
     void setDescription     ( QString description );
     void setTags            ( QStringList tags );
     void setCritical        ( bool critical );    
-    void setClipmode        ( Clipmode clipmode );
+    void setClipmode        ( Clipmode::Values clipmode );
 
     // tree/hierarchy ----------------------------------------------------
 

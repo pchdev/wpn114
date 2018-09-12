@@ -27,6 +27,17 @@ void WPNNode::componentComplete()
     }
 }
 
+void WPNNode::setAccess         ( Access::Values access ) { m_attributes.access = access; }
+void WPNNode::setClipmode       ( Clipmode::Values mode ) { m_attributes.clipmode = mode; }
+void WPNNode::setCritical       ( bool critical ) { m_attributes.critical = critical; }
+void WPNNode::setDescription    ( QString description ) { m_attributes.description = description; }
+void WPNNode::setTags           ( QStringList tags ) { m_attributes.tags = tags; }
+void WPNNode::setRange          ( Range range ) { m_attributes.range = range; }
+
+void WPNNode::setName           ( QString name ) { m_name = name; }
+void WPNNode::setDevice         ( WPNDevice* device) { m_device = device; }
+void WPNNode::setParent         ( WPNNode* parent ) { m_parent = parent; }
+
 QJsonObject WPNNode::attributesJson() const
 {
     QJsonObject obj;
@@ -35,10 +46,11 @@ QJsonObject WPNNode::attributesJson() const
     obj.insert("TYPE", typeTag());
     obj.insert("ACCESS", static_cast<quint8>(m_attributes.access));
     obj.insert("VALUE", jsonValue());
-    //obj.insert("RANGE");
     obj.insert("DESCRIPTION", m_attributes.description);
-    //obj.insert("TAGS", m_attributes.tags);
     obj.insert("CRITICAL", m_attributes.critical);
+
+    //obj.insert("TAGS", m_attributes.tags);
+    //obj.insert("RANGE");
     // + clipmode todo
 
 }
@@ -114,7 +126,6 @@ void WPNNode::post() const
         child->post();
 }
 
-
 void WPNNode::setPath(QString path)
 {
     m_attributes.path = path;
@@ -140,21 +151,11 @@ void WPNNode::setValue(QVariant value)
          listener->pushNodeValue(this);
 }
 
-void WPNNode::setType(Type type)
+void WPNNode::setType(Type::Values type)
 {
     m_attributes.type = type;
 }
 
-void WPNNode::setAccess         ( Access access ) { m_attributes.access = access; }
-void WPNNode::setClipmode       ( Clipmode mode ) { m_attributes.clipmode = mode; }
-void WPNNode::setCritical       ( bool critical ) { m_attributes.critical = critical; }
-void WPNNode::setDescription    ( QString description ) { m_attributes.description = description; }
-void WPNNode::setTags           ( QStringList tags ) { m_attributes.tags = tags; }
-void WPNNode::setRange          ( Range range ) { m_attributes.range = range; }
-
-void WPNNode::setName           ( QString name ) { m_name = name; }
-void WPNNode::setDevice         ( WPNDevice* device) { m_device = device; }
-void WPNNode::setParent         ( WPNNode* parent ) { m_parent = parent; }
 
 void WPNNode::setListening(bool listen, WPNDevice *target)
 {
