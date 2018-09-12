@@ -47,7 +47,7 @@ void WPNQueryClient::setPort(quint16 port)
 void WPNQueryClient::setOscPort(quint16 port)
 {
     m_osc_hdl->setRemotePort(port);
-    m_osc_hdl->listen();
+    //m_osc_hdl->listen();
 }
 
 void WPNQueryClient::onTextMessageReceived(QString message)
@@ -88,9 +88,10 @@ void WPNQueryClient::writeWebSocket(QJsonObject json)
 
 void WPNQueryClient::pushNodeValue(WPNNode* node)
 {
+    qDebug() << node->value();
+
     if ( node->critical() )
         m_ws_con->write(QJsonDocument(node->attributeJson("VALUE")).toJson(QJsonDocument::Compact));
-
 
     else m_osc_hdl->sendMessage(node->path(), QVariantList{node->value()});
 }

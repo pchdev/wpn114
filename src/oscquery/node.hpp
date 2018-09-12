@@ -164,7 +164,7 @@ class WPNNode : public QObject, public QQmlParserStatus
 
     signals:
     void valueChanged       ( QVariant );
-    void valueReceived      ( );
+    void valueReceived      ( QVariant );
 
     private:
     Attributes      m_attributes;

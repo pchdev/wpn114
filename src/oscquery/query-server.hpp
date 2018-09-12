@@ -25,6 +25,7 @@ struct HostExtensions
     bool path_removed;
     bool path_added;
     bool path_renamed;
+    bool osc_streaming;
 
     QJsonObject toJson() const;
 };
@@ -33,7 +34,6 @@ struct HostSettings
 {
     QString name;
     QString osc_transport;
-    bool osc_streaming;
     quint16 osc_port;
     quint16 tcp_port;
     HostExtensions extensions;

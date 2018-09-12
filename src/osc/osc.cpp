@@ -196,6 +196,8 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
         }
     }
 
+    qDebug() << "UPP-OSC out:" << data;
+
     datagram.setData            ( data );
     datagram.setDestination     ( QHostAddress(m_remote_address), m_remote_port );
     m_udpsocket->writeDatagram  ( datagram );

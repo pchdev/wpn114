@@ -12,6 +12,7 @@ QJsonObject HostExtensions::toJson() const
 {
     QJsonObject ext
     {
+        { "OSC_STREAMING", osc_streaming },
         { "ACCESS", access },
         { "VALUE", value },
         { "RANGE", range },
@@ -38,7 +39,6 @@ QJsonObject HostSettings::toJson() const
         { "NAME", name },
         { "OSC_PORT", osc_port },
         { "OSC_TRANSPORT", osc_transport },
-        { "OSC_STREAMING", osc_streaming },
         { "EXTENSIONS", extensions.toJson() }
     };
 
@@ -54,22 +54,22 @@ WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketSer
     m_settings.tcp_port         = 5678;
     m_settings.osc_port         = 1234;
     m_settings.osc_transport    = "UDP";
-    m_settings.osc_streaming    = true;
 
-    m_settings.extensions.access            = false;
-    m_settings.extensions.clipmode          = false;
-    m_settings.extensions.critical          = false;
-    m_settings.extensions.description       = false;
+    m_settings.extensions.osc_streaming     = true;
+    m_settings.extensions.access            = true;
+    m_settings.extensions.clipmode          = true;
+    m_settings.extensions.critical          = true;
+    m_settings.extensions.description       = true;
     m_settings.extensions.extended_type     = false;
-    m_settings.extensions.listen            = false;
+    m_settings.extensions.listen            = true;
     m_settings.extensions.path_added        = false;
     m_settings.extensions.path_changed      = false;
     m_settings.extensions.path_removed      = false;
     m_settings.extensions.path_renamed      = false;
     m_settings.extensions.range             = false;
-    m_settings.extensions.tags              = false;
+    m_settings.extensions.tags              = true;
     m_settings.extensions.unit              = false;
-    m_settings.extensions.value             = false;
+    m_settings.extensions.value             = true;
 }
 
 void WPNQueryServer::componentComplete()
@@ -112,10 +112,6 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
 
     QObject::connect ( client, SIGNAL(command(QJsonObject)),
                        this, SLOT(onCommand(QJsonObject)));
-
-    // send host info and namespace
-    //client->writeWebSocket  ( m_settings.toJson() );
-    //client->writeWebSocket  ( m_root_node->info() );
 }
 
 void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
@@ -131,7 +127,7 @@ void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
 void WPNQueryServer::onHostInfoRequest(QTcpSocket* sender)
 {
     auto resp = HTTP::formatJsonResponse(m_settings.toJson());
-    sender->write(resp.toUtf8());
+    if ( sender ) sender->write(resp.toUtf8());
 
     for ( const auto& client : m_clients )
         client->writeWebSocket  ( m_settings.toJson() );
@@ -141,12 +137,13 @@ void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
 {
     if ( method.contains("?") )
     {
-        QJsonObject obj;
-
         auto spl        = method.split('?');
-        obj.insert      ( spl[1], m_root_node->subnode(spl[0])->attributeJson(spl[1]) );
+        auto obj        = ( spl[1], m_root_node->subnode(spl[0])->attributeJson(spl[1]) );
         auto resp       = HTTP::formatJsonResponse(obj);
         sender->write   ( resp.toUtf8() );
+
+        for ( const auto& client : m_clients )
+            client->writeWebSocket(obj);
     }
     else
     {
@@ -163,12 +160,19 @@ void WPNQueryServer::onCommand(QJsonObject command_obj)
 {
     WPNQueryClient* listener = qobject_cast<WPNQueryClient*>(QObject::sender());
 
-    QString command     = command_obj["COMMAND"].toString();
-    QString method      = command_obj["DATA"].toString();
+    QString command = command_obj["COMMAND"].toString();
 
-    auto node = m_root_node->subnode(method);
-
-    node->setListening(command == "LISTEN" ? true : false, listener);
+    if ( command == "LISTEN" || command == "IGNORE" )
+    {
+        QString method = command_obj["DATA"].toString();
+        auto node = m_root_node->subnode(method);
+        node->setListening(command == "LISTEN", listener);
+    }
+    else if ( command == "START_OSC_STREAMING" )
+    {
+        quint16 port = command_obj["DATA"].toObject()["LOCAL_SERVER_PORT"].toInt();
+        listener->setOscPort(port);
+    }
 }
 
 void WPNQueryServer::pushNodeValue(WPNNode* node)

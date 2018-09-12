@@ -1,5 +1,6 @@
 #include "node.hpp"
 #include <QtDebug>
+#include <QJsonArray>
 
 WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr)
 {
@@ -61,7 +62,7 @@ QJsonObject WPNNode::attributeJson(QString attr) const
 {
     QJsonObject obj;
 
-    if ( attr == "VALUE" ) obj.insert("VALUE", jsonValue());
+    if ( attr == "VALUE" ) obj.insert("VALUE", QJsonArray { jsonValue() });
     return obj;
 }
 
@@ -135,7 +136,7 @@ void WPNNode::setPath(QString path)
 
 void WPNNode::setValueQuiet(QVariant value)
 {
-    emit valueReceived();
+    emit valueReceived(value);
 
     if ( m_attributes.value != value )
     {
@@ -146,7 +147,8 @@ void WPNNode::setValueQuiet(QVariant value)
 
 void WPNNode::setValue(QVariant value)
 {
-    qDebug() << "new value:" << value;
+    qDebug() << "setValue:" << value;
+
     m_attributes.value = value;
 
     for ( const auto& listener : m_listeners )

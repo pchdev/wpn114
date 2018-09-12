@@ -274,7 +274,6 @@ void WPNWebSocket::decode(QByteArray data)
             decoded.append ( byte^mask[i%4] );
         }
     }
-
     emit textMessageReceived(decoded);
 }
 
