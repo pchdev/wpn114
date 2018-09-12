@@ -45,7 +45,8 @@ QJsonObject HostSettings::toJson() const
     return obj;
 }
 
-WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketServer(5678))
+WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketServer(5678)),
+    m_osc_hdl(new OSCHandler())
 {
     // default settings & extensions
 
@@ -80,7 +81,7 @@ void WPNQueryServer::componentComplete()
                       this, SLOT(onHttpRequest(QTcpSocket*,QString)));
 
     QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariantList)),
-                      this, SLOT(onValueUpdate(QString,QVariant)));
+                      this, SLOT(onValueUpdate(QString,QVariantList)));
 
     m_osc_hdl->setLocalPort     ( m_settings.osc_port );
     m_ws_server->setPort        ( m_settings.tcp_port );
@@ -113,8 +114,8 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
                        this, SLOT(onCommand(QJsonObject)));
 
     // send host info and namespace
-    client->writeWebSocket(m_settings.toJson());
-    client->writeWebSocket(m_root_node->info());
+    //client->writeWebSocket  ( m_settings.toJson() );
+    //client->writeWebSocket  ( m_root_node->info() );
 }
 
 void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
@@ -131,6 +132,9 @@ void WPNQueryServer::onHostInfoRequest(QTcpSocket* sender)
 {
     auto resp = HTTP::formatJsonResponse(m_settings.toJson());
     sender->write(resp.toUtf8());
+
+    for ( const auto& client : m_clients )
+        client->writeWebSocket  ( m_settings.toJson() );
 }
 
 void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
@@ -140,15 +144,18 @@ void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
         QJsonObject obj;
 
         auto spl        = method.split('?');
-        obj.insert      ( spl[1], m_root_node->subnode(spl[0])->attribute(spl[1]) );
+        obj.insert      ( spl[1], m_root_node->subnode(spl[0])->attributeJson(spl[1]) );
         auto resp       = HTTP::formatJsonResponse(obj);
         sender->write   ( resp.toUtf8() );
     }
     else
     {
         WPNNode* node       = m_root_node->subnode(method);
-        auto resp           = HTTP::formatJsonResponse(node->info());
+        auto resp           = HTTP::formatJsonResponse(node->toJson());
         sender->write       ( resp.toUtf8() );
+
+        for ( const auto& client : m_clients )
+            client->writeWebSocket ( m_root_node->subnode(method)->toJson() );
     }
 }
 

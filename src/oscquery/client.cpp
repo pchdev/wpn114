@@ -4,7 +4,7 @@
 #include <QCryptographicHash>
 #include <QDataStream>
 
-WPNQueryClient::WPNQueryClient() : WPNDevice()
+WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
 {
     // direct client
     m_ws_con = new WPNWebSocket("127.0.0.1", 5678);
@@ -13,7 +13,7 @@ WPNQueryClient::WPNQueryClient() : WPNDevice()
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
 }
 
-WPNQueryClient::WPNQueryClient(WPNWebSocket* con)
+WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler())
 {
     // indirect client (server image)
     // no need for a local udp port
@@ -89,7 +89,8 @@ void WPNQueryClient::writeWebSocket(QJsonObject json)
 void WPNQueryClient::pushNodeValue(WPNNode* node)
 {
     if ( node->critical() )
-        m_ws_con->write(QJsonDocument(node->attribute("VALUE")).toJson(QJsonDocument::Compact));
+        m_ws_con->write(QJsonDocument(node->attributeJson("VALUE")).toJson(QJsonDocument::Compact));
+
 
     else m_osc_hdl->sendMessage(node->path(), QVariantList{node->value()});
 }

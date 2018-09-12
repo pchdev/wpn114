@@ -62,6 +62,7 @@ void OSCHandler::readOSCBundle(QByteArray bundle)
 
 void OSCHandler::readOSCMessage(QByteArray message)
 {
+    qDebug() << message;
     QString         address, typetag;
     QVariantList    arguments;
     QDataStream     stream(message);
@@ -82,6 +83,8 @@ void OSCHandler::readOSCMessage(QByteArray message)
     {
         if        ( c == 'i' ) parseArgumentsFromStream<int>(arguments, stream);
         else if   ( c == 'f' ) parseArgumentsFromStream<float>(arguments, stream);
+        else if   ( c == 'T' ) arguments << true;
+        else if   ( c == 'F' ) arguments << false;
         else if   ( c == 's' )
         {
             quint8 byte, padding;
@@ -130,8 +133,13 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
     {
         switch(var.type())
         {
-        case QMetaType::Void:       break;
-        case QMetaType::Bool:       typetag.append('i'); break;
+        case QMetaType::Void: typetag.append('N'); break;
+        case QMetaType::Bool:
+        {
+            if ( var.toBool() ) typetag.append('T');
+            else typetag.append('F');
+            break;
+        }
         case QMetaType::Int:        typetag.append('i'); break;
         case QMetaType::Float:      typetag.append('f'); break;
         case QMetaType::Double:     typetag.append('f'); break;
@@ -152,13 +160,7 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
         switch(var.type())
         {
         case QMetaType::Void: break;
-        case QMetaType::Bool:
-        {
-            QDataStream stream(&data, QIODevice::ReadWrite);
-            stream.skipRawData(data.size());
-            stream << var.toInt();
-            break;
-        }
+        case QMetaType::Bool: break;
         case QMetaType::Int:
         {
             QDataStream stream(&data, QIODevice::ReadWrite);

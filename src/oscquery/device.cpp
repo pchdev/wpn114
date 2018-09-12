@@ -6,13 +6,10 @@ WPNDevice::WPNDevice()
     m_root_node = new WPNNode;
 
     m_root_node ->setPath   ( "/" );
-    m_root_node ->setType   ( WPNNode::Type::None );
+    m_root_node ->setType   ( Type::None );
 }
 
-WPNDevice::~WPNDevice()
-{
-
-}
+WPNDevice::~WPNDevice() {}
 
 void WPNDevice::addNode(WPNDevice* dev, WPNNode *node)
 {
@@ -62,9 +59,9 @@ void WPNDevice::onValueUpdate(QJsonObject obj)
 
 }
 
-void WPNDevice::onValueUpdate(QString method, QVariant arguments)
+void WPNDevice::onValueUpdate(QString method, QVariantList arguments)
 {
-
+    m_root_node->subnode(method)->setValueQuiet(arguments);
 }
 
 void WPNDevice::setDeviceName(QString name)

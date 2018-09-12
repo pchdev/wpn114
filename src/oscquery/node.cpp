@@ -2,16 +2,21 @@
 #include <QtDebug>
 
 WPNNode::WPNNode() :
-    m_device(nullptr), m_parent(nullptr), m_critical(false), m_type(WPNNode::Type::None)
-{ }
+    m_device(nullptr), m_parent(nullptr)
+{
+    m_attributes.access         = Access::NONE;
+    m_attributes.clipmode       = Clipmode::NONE;
+    m_attributes.description    = "No description";
+}
 
 WPNNode::~WPNNode() { }
+
 void WPNNode::componentComplete()
 {
-    if ( m_path.isEmpty() )
-        m_path = "/"+ m_name;
+    if ( m_attributes.path.isEmpty() )
+         m_attributes.path = "/"+ m_name;
 
-    m_name = m_path;
+    m_name = m_attributes.path;
     m_name.remove(0, 1);
 
     if      ( m_device ) m_device->addNode(m_device, this);
@@ -22,45 +27,62 @@ void WPNNode::componentComplete()
     }
 }
 
-QJsonObject WPNNode::attribute(QString attr) const
+QJsonObject WPNNode::attributesJson() const
 {
     QJsonObject obj;
 
-    if ( attr == "VALUE" ) obj.insert("VALUE", valueJson());
+    obj.insert("PATH", m_attributes.path);
+    obj.insert("TYPE", typeTag());
+    obj.insert("ACCESS", static_cast<quint8>(m_attributes.access));
+    obj.insert("VALUE", jsonValue());
+    //obj.insert("RANGE");
+    obj.insert("DESCRIPTION", m_attributes.description);
+    //obj.insert("TAGS", m_attributes.tags);
+    obj.insert("CRITICAL", m_attributes.critical);
+    // + clipmode todo
+
+}
+
+QJsonObject WPNNode::attributeJson(QString attr) const
+{
+    QJsonObject obj;
+
+    if ( attr == "VALUE" ) obj.insert("VALUE", jsonValue());
     return obj;
 }
 
-QString WPNNode::typeString() const
+QString WPNNode::typeTag() const
 {
-    switch ( m_type )
+    switch ( m_attributes.type )
     {
-    case WPNNode::Type::Bool:         return "T";
-    case WPNNode::Type::Char:         return "c";
-    case WPNNode::Type::Float:        return "f";
-    case WPNNode::Type::Impulse:      return "N";
-    case WPNNode::Type::Int:          return "i";
-    case WPNNode::Type::List:         return "b";
-    case WPNNode::Type::None:         return "null";
-    case WPNNode::Type::String:       return "s";
-    case WPNNode::Type::Vec2f:        return "ff";
-    case WPNNode::Type::Vec3f:        return "fff";
-    case WPNNode::Type::Vec4f:        return "ffff";
+    case Type::Bool:         return "T";
+    case Type::Char:         return "c";
+    case Type::Float:        return "f";
+    case Type::Impulse:      return "N";
+    case Type::Int:          return "i";
+    case Type::List:         return "b";
+    case Type::None:         return "null";
+    case Type::String:       return "s";
+    case Type::Vec2f:        return "ff";
+    case Type::Vec3f:        return "fff";
+    case Type::Vec4f:        return "ffff";
     }
 }
 
-QJsonValue WPNNode::valueJson() const
+QJsonValue WPNNode::jsonValue() const
 {
     QJsonValue v;
-    switch ( m_type )
+    switch ( m_attributes.type )
     {
-    case WPNNode::Type::Bool:         v = m_value.toBool(); break;
-    case WPNNode::Type::Char:         v = m_value.toString(); break;
-    case WPNNode::Type::Float:        v = m_value.toDouble(); break;
-    case WPNNode::Type::Impulse:      return v;
-    case WPNNode::Type::Int:          v = m_value.toInt(); break;
-  //  case WPNNode::Type::List:       v = m_value.toList(); break;
-    case WPNNode::Type::None:         v = "null"; break;
-    case WPNNode::Type::String:       v = m_value.toString(); break;
+    case Type::Bool:         v = m_attributes.value.toBool(); break;
+    case Type::Char:         v = m_attributes.value.toString(); break;
+    case Type::Float:        v = m_attributes.value.toDouble(); break;
+    case Type::String:       v = m_attributes.value.toString(); break;
+    case Type::Int:          v = m_attributes.value.toInt(); break;
+    case Type::None:         v = "null"; break;
+    case Type::Impulse:      return v;
+
+//    case WPNNode::Type::List:       v = m_value.toList(); break;
 //    case WPNNode::Type::Vec2f:      v = m_value.toList(); break;
 //    case WPNNode::Type::Vec3f:      v = m_value.toList(); break;
 //    case WPNNode::Type::Vec4f:      v = m_value.toList(); break;
@@ -69,92 +91,79 @@ QJsonValue WPNNode::valueJson() const
     return v;
 }
 
-QJsonObject WPNNode::info() const
+QJsonObject WPNNode::toJson() const
 {
-    QJsonObject info;
-    info.insert("DESCRIPTION", "No description available");
-    info.insert("FULL_PATH", m_path);
-    info.insert("ACCESS", m_type == WPNNode::Type::None ? 0 : 3 );
-    info.insert("TYPE", typeString());
-    info.insert("VALUE", valueJson());
-
-    if ( m_children.empty() ) return info;
+    auto attr = attributesJson();
+    if ( m_children.empty() ) return attr;
 
     QJsonObject contents;
 
     for ( const auto& child : m_children )
-        contents.insert(child->name(), child->info());
+        contents.insert(child->name(), child->toJson());
 
-    info.insert("CONTENTS", contents);
-    return info;
-
+    attr.insert("CONTENTS", contents);
+    return attr;
 }
 
 void WPNNode::post() const
 {
-    qDebug() << m_path << m_type << m_value;
+    qDebug() << m_attributes.path
+             << typeTag() << m_attributes.value;
 
     for ( const auto& child : m_children )
         child->post();
 }
 
-void WPNNode::setName(QString name)
-{
-    m_name = name;
-    emit nameChanged(name);
-}
 
 void WPNNode::setPath(QString path)
 {
-    m_path = path;
+    m_attributes.path = path;
 }
 
 void WPNNode::setValueQuiet(QVariant value)
 {
     emit valueReceived();
 
-    if ( m_value != value )
+    if ( m_attributes.value != value )
     {
-        m_value = value;
+        m_attributes.value = value;
         emit valueChanged(value);
     }
 }
 
 void WPNNode::setValue(QVariant value)
 {
-    m_value = value;
+    qDebug() << "new value:" << value;
+    m_attributes.value = value;
 
     for ( const auto& listener : m_listeners )
          listener->pushNodeValue(this);
-
 }
+
+void WPNNode::setType(Type type)
+{
+    m_attributes.type = type;
+}
+
+void WPNNode::setAccess         ( Access access ) { m_attributes.access = access; }
+void WPNNode::setClipmode       ( Clipmode mode ) { m_attributes.clipmode = mode; }
+void WPNNode::setCritical       ( bool critical ) { m_attributes.critical = critical; }
+void WPNNode::setDescription    ( QString description ) { m_attributes.description = description; }
+void WPNNode::setTags           ( QStringList tags ) { m_attributes.tags = tags; }
+void WPNNode::setRange          ( Range range ) { m_attributes.range = range; }
+
+void WPNNode::setName           ( QString name ) { m_name = name; }
+void WPNNode::setDevice         ( WPNDevice* device) { m_device = device; }
+void WPNNode::setParent         ( WPNNode* parent ) { m_parent = parent; }
 
 void WPNNode::setListening(bool listen, WPNDevice *target)
 {
+    qDebug() << "new listener";
+
     if ( listen && !m_listeners.contains(target) )
         m_listeners.push_back(target);
 
     else m_listeners.removeAll(target);
-}
-
-void WPNNode::setCritical(bool critical)
-{
-    m_critical = critical;
-}
-
-void WPNNode::setDevice(WPNDevice* device)
-{
-    m_device = device;
-}
-
-void WPNNode::setType(WPNNode::Type type)
-{
-    m_type = type;
-}
-
-void WPNNode::setParent(WPNNode* parent)
-{
-    m_parent = parent;
 }
 
 void WPNNode::addSubnode(WPNNode *node)
@@ -195,7 +204,7 @@ WPNNode* WPNNode::subnode(QString path)
     for ( const auto& child : m_children )
         if ( child->subnode(path) ) return child;
 
-    if ( path == m_path ) return this;
+    if ( path == m_attributes.path ) return this;
 
     return nullptr;
 }

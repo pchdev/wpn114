@@ -8,63 +8,124 @@
 
 class WPNDevice;
 
+enum class Type
+{
+    None        = 0,
+    Bool        = 1,
+    Int         = 2,
+    Float       = 3,
+    String      = 4,
+    List        = 5,
+    Vec2f       = 6,
+    Vec3f       = 7,
+    Vec4f       = 8,
+    Char        = 9,
+    Impulse     = 10,
+};
+
+struct Range
+{
+    QVariant min;
+    QVariant max;
+    QVariantList vals;
+};
+
+enum class Clipmode
+{
+    NONE    = 0,
+    LOW     = 1,
+    HIGH    = 2,
+    BOTH    = 3,
+};
+
+enum class Access
+{
+    NONE    = 0,
+    READ    = 1,
+    WRITE   = 2,
+    RW      = 3
+};
+
+struct Attributes
+{
+    QString         path;
+    Type            type;
+    Access          access;
+    QVariant        value;
+    Range           range;
+    QString         description;
+    QStringList     tags;
+    bool            critical;
+    Clipmode        clipmode;
+};
+
 class WPNNode : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
 
-    Q_PROPERTY  ( QString name READ name WRITE setName NOTIFY nameChanged )
-    Q_PROPERTY  ( QString path READ path WRITE setPath NOTIFY pathChanged )
+    Q_PROPERTY  ( QString name READ name WRITE setName )
+    Q_PROPERTY  ( WPNDevice* device READ device WRITE setDevice )
+    Q_PROPERTY  ( WPNNode* parent READ parent WRITE setParent )
+
+    Q_PROPERTY  ( QString path READ path WRITE setPath )
+    Q_PROPERTY  ( Type type READ type WRITE setType )
+    Q_PROPERTY  ( Access access READ access WRITE setAccess )
     Q_PROPERTY  ( QVariant value READ value WRITE setValue NOTIFY valueChanged )
-    Q_PROPERTY  ( WPNNode::Type type READ type WRITE setType )
+    Q_PROPERTY  ( Range range READ range WRITE setRange )
+    Q_PROPERTY  ( QString description READ description WRITE setDescription )
+    Q_PROPERTY  ( QStringList tags READ tags WRITE setTags )
     Q_PROPERTY  ( bool critical READ critical WRITE setCritical )
-    Q_PROPERTY  ( WPNDevice* device READ device WRITE setDevice NOTIFY deviceChanged )
-    Q_PROPERTY  ( WPNNode* parent READ parent WRITE setParent NOTIFY parentChanged )
+    Q_PROPERTY  ( Clipmode clipmode READ clipmode WRITE setClipmode )
 
     public:
     WPNNode();
     ~WPNNode();
 
-    enum class Type
-    {
-        None        = 0,
-        Bool        = 1,
-        Int         = 2,
-        Float       = 3,
-        String      = 4,
-        List        = 5,
-        Vec2f       = 6,
-        Vec3f       = 7,
-        Vec4f       = 8,
-        Char        = 9,
-        Impulse     = 10,
-    };
-
-    Q_ENUM  ( Type )
-
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) { }
 
-    QJsonObject attribute   ( QString attr ) const;
-
     QString name            ( ) const { return m_name; }
-    QString path            ( ) const { return m_path; }
-    QVariant value          ( ) const { return m_value; }
-    bool critical           ( ) const { return m_critical; }
     WPNDevice* device       ( ) const { return m_device; }
-    WPNNode::Type type      ( ) const { return m_type; }
-    WPNNode* parent         ( )       { return m_parent; }
-    QString typeString      ( ) const;
-    QJsonObject info        ( ) const;
+    WPNNode* parent         ( ) { return m_parent; }
     void post               ( ) const;
 
-    void setName            ( QString name );
+    void setName    ( QString name );
+    void setDevice  ( WPNDevice* device );
+    void setParent  ( WPNNode* parent );
+
+    // attributes & json -------------------------------------------------
+
+    QJsonObject attributeJson     ( QString attr ) const;
+    QJsonObject attributesJson    ( ) const;
+    const Attributes& attributes  ( ) const;
+    QJsonValue jsonValue          ( ) const;
+    QString typeTag               ( ) const;
+    QJsonObject toJson            ( ) const;
+
+    // attributes --------------------------------------------------------
+
+    QString path            ( ) const { return m_attributes.path; }
+    Type type               ( ) const { return m_attributes.type; }
+    Access access           ( ) const { return m_attributes.access; }
+    QVariant value          ( ) const { return m_attributes.value; }
+    Range range             ( ) const { return m_attributes.range; }
+    QString description     ( ) const { return m_attributes.description; }
+    QStringList tags        ( ) const { return m_attributes.tags; }
+    bool critical           ( ) const { return m_attributes.critical; }
+    Clipmode clipmode       ( ) const { return m_attributes.clipmode; }
+
     void setPath            ( QString path );
+    void setType            ( Type type );
+    void setAccess          ( Access access );
     void setValue           ( QVariant value );
     void setValueQuiet      ( QVariant value );
-    void setCritical        ( bool critical );
-    void setDevice          ( WPNDevice* device );
-    void setType            ( WPNNode::Type type );
-    void setParent          ( WPNNode* parent );
+    void setRange           ( Range range );
+    void setDescription     ( QString description );
+    void setTags            ( QStringList tags );
+    void setCritical        ( bool critical );    
+    void setClipmode        ( Clipmode clipmode );
+
+    // tree/hierarchy ----------------------------------------------------
 
     WPNNode* subnode                ( QString path );
     WPNNode* subnode                ( uint64_t index );
@@ -78,24 +139,15 @@ class WPNNode : public QObject, public QQmlParserStatus
     void setListening       ( bool listen, WPNDevice* target );
 
     signals:
-    void nameChanged        ( QString );
-    void pathChanged        ( QString );
     void valueChanged       ( QVariant );
     void valueReceived      ( );
-    void deviceChanged      ( WPNDevice* );
-    void parentChanged      ( );
 
     private:
-    QJsonValue valueJson    () const;
+    Attributes      m_attributes;
+    QString         m_name;
+    WPNDevice*      m_device;
+    WPNNode*        m_parent;
 
-    QString             m_name;
-    QString             m_path;
-    WPNNode::Type       m_type;
-    QVariant            m_value;
-    WPNDevice*          m_device;
-    WPNNode*            m_parent;
-
-    bool  m_critical;
     bool  m_listening;
 
     QVector<WPNNode*>      m_children;
