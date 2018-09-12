@@ -11,6 +11,11 @@ OSCHandler::OSCHandler() :
 
 void OSCHandler::componentComplete()
 {    
+
+}
+
+void OSCHandler::listen()
+{
     m_udpsocket->bind(QHostAddress::LocalHost, m_local_port);
 }
 

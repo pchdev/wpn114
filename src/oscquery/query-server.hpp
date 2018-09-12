@@ -6,7 +6,6 @@
 #include <QQmlParserStatus>
 #include <QWebSocketServer>
 #include <QWebSocket>
-#include "device.hpp"
 #include "client.hpp"
 #include "../websocket/websocket.hpp"
 
@@ -42,7 +41,7 @@ struct HostSettings
     QJsonObject toJson() const;
 };
 
-class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
+class WPNQueryServer : public WPNDevice, public QQmlParserStatus
 {
     Q_OBJECT
 
@@ -51,10 +50,11 @@ class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
     Q_PROPERTY ( QString name READ name WRITE setName )
 
     public:
-    OSCQueryServer();
+    WPNQueryServer();
 
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) {}
+    virtual void pushNodeValue    ( WPNNode* node );
 
     quint16 tcpPort() const { return m_settings.tcp_port; }
     quint16 udpPort() const { return m_settings.osc_port; }
@@ -65,15 +65,15 @@ class OSCQueryServer : public OSCQueryDevice, public QQmlParserStatus
     void setName    ( QString name ) { m_settings.name = name; }
 
     protected slots:
+    void onCommand              ( QJsonObject command_obj );
     void onNewConnection        ( WPNWebSocket* client );
-    void onCommand              ( QString data );
     void onHttpRequest          ( QTcpSocket* sender, QString req );
     void onHostInfoRequest      ( QTcpSocket* sender );
     void onNamespaceRequest     ( QTcpSocket* sender, QString method );
 
     private:    
+    OSCHandler* m_osc_hdl;
     HostSettings m_settings;
     WPNWebSocketServer* m_ws_server;
-    QVector<OSCQueryClient*> m_clients;
-
+    QVector<WPNQueryClient*> m_clients;
 };

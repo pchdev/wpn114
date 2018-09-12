@@ -45,7 +45,7 @@ QJsonObject HostSettings::toJson() const
     return obj;
 }
 
-OSCQueryServer::OSCQueryServer() : OSCQueryDevice (), m_ws_server(new WPNWebSocketServer(5678))
+WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketServer(5678))
 {
     // default settings & extensions
 
@@ -71,7 +71,7 @@ OSCQueryServer::OSCQueryServer() : OSCQueryDevice (), m_ws_server(new WPNWebSock
     m_settings.extensions.value             = false;
 }
 
-void OSCQueryServer::componentComplete()
+void WPNQueryServer::componentComplete()
 {
     QObject::connect( m_ws_server, SIGNAL(newConnection(WPNWebSocket*)),
                       this, SLOT(onNewConnection(WPNWebSocket*)));
@@ -79,40 +79,45 @@ void OSCQueryServer::componentComplete()
     QObject::connect( m_ws_server, SIGNAL(httpRequestReceived(QTcpSocket*,QString)),
                       this, SLOT(onHttpRequest(QTcpSocket*,QString)));
 
+    QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariantList)),
+                      this, SLOT(onValueUpdate(QString,QVariant)));
+
     m_osc_hdl->setLocalPort     ( m_settings.osc_port );
     m_ws_server->setPort        ( m_settings.tcp_port );
+
     m_ws_server->start          ( );
+    m_osc_hdl->listen           ( );
 }
 
-void OSCQueryServer::setTcpPort(quint16 port)
+void WPNQueryServer::setTcpPort(quint16 port)
 {
     m_settings.tcp_port     = port;
     m_ws_server->setPort    ( port );
 }
 
-void OSCQueryServer::setUdpPort(quint16 port)
+void WPNQueryServer::setUdpPort(quint16 port)
 {
     m_settings.osc_port     = port;
     m_osc_hdl->setLocalPort ( port );
 }
 
-void OSCQueryServer::onNewConnection(WPNWebSocket* con)
+void WPNQueryServer::onNewConnection(WPNWebSocket* con)
 {
-    qDebug () << "new OSCQueryClient";
-    auto client = new OSCQueryClient(con);
+    auto client = new WPNQueryClient(con);
     m_clients.push_back(client);
 
-    QObject::connect ( client, SIGNAL(valueUpdate(QString,QVariantList)),
-                      this, SLOT(onValueUpdate(QString,QVariantList)));
+    QObject::connect ( client, SIGNAL(valueUpdate(QJsonObject)),
+                      this, SLOT(onValueUpdate(QJsonObject)));
 
-    QObject::connect ( client, SIGNAL(command(QString)), this, SLOT(onCommand(QString)));
+    QObject::connect ( client, SIGNAL(command(QJsonObject)),
+                       this, SLOT(onCommand(QJsonObject)));
 
     // send host info and namespace
     client->writeWebSocket(m_settings.toJson());
     client->writeWebSocket(m_root_node->info());
 }
 
-void OSCQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
+void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
 {
     if ( req.contains("HOST_INFO") ) onHostInfoRequest(sender);
     else if ( req.contains("GET /") )
@@ -122,32 +127,44 @@ void OSCQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
     }
 }
 
-void OSCQueryServer::onCommand(QString data)
-{
-
-}
-
-void OSCQueryServer::onHostInfoRequest(QTcpSocket* sender)
+void WPNQueryServer::onHostInfoRequest(QTcpSocket* sender)
 {
     auto resp = HTTP::formatJsonResponse(m_settings.toJson());
     sender->write(resp.toUtf8());
 }
 
-void OSCQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
+void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
 {
     if ( method.contains("?") )
     {
         QJsonObject obj;
-        auto spl = method.split('?');
-        obj.insert(spl[1], m_root_node->subnode(spl[0])->attribute(spl[1]));
 
-        auto resp = HTTP::formatJsonResponse(obj);
-        sender->write(resp.toUtf8());
+        auto spl        = method.split('?');
+        obj.insert      ( spl[1], m_root_node->subnode(spl[0])->attribute(spl[1]) );
+        auto resp       = HTTP::formatJsonResponse(obj);
+        sender->write   ( resp.toUtf8() );
     }
     else
     {
-        QueryNode* node = m_root_node->subnode(method);
-        auto resp = HTTP::formatJsonResponse(node->info());
-        sender->write(resp.toUtf8());
+        WPNNode* node       = m_root_node->subnode(method);
+        auto resp           = HTTP::formatJsonResponse(node->info());
+        sender->write       ( resp.toUtf8() );
     }
+}
+
+void WPNQueryServer::onCommand(QJsonObject command_obj)
+{
+    WPNQueryClient* listener = qobject_cast<WPNQueryClient*>(QObject::sender());
+
+    QString command     = command_obj["COMMAND"].toString();
+    QString method      = command_obj["DATA"].toString();
+
+    auto node = m_root_node->subnode(method);
+
+    node->setListening(command == "LISTEN" ? true : false, listener);
+}
+
+void WPNQueryServer::pushNodeValue(WPNNode* node)
+{
+
 }

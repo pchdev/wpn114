@@ -1,43 +1,35 @@
 #pragma once
+
 #include "node.hpp"
-#include <src/osc/osc.hpp>
+#include <QObject>
 
-class QueryNode;
+class WPNNode;
 
-class OSCQueryDevice : public QObject
+class WPNDevice : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY  ( int oscPort READ oscPort WRITE setOscPort NOTIFY oscPortChanged )
     Q_PROPERTY  ( QString deviceName READ deviceName WRITE setDeviceName )
 
     public:
+    WPNDevice  ( );
+    ~WPNDevice ( );
 
-    OSCQueryDevice      ( );
-    ~OSCQueryDevice     ( );
+    virtual void pushNodeValue(WPNNode* node) = 0;
 
-    void writeOSC ( QString address, QVariantList arguments );
+    static void       addNode           ( WPNDevice* dev, WPNNode* node );
+    static WPNNode*   findOrCreateNode  ( WPNDevice* dev, QString path );
+    static WPNNode*   getNode           ( QString path );
 
-    static void         addNode           ( OSCQueryDevice* dev, QueryNode* node );
-    static QueryNode*   findOrCreateNode  ( OSCQueryDevice* dev, QString path );
-    static QueryNode*   getNode           ( QString path );
-
-    uint16_t oscPort            ( ) const { return m_osc_hdl->localPort(); }
     QString deviceName          ( ) const { return m_name; }
-    QueryNode* rootNode         ( ) { return m_root_node; }
-
-    void setOscPort             ( uint16_t port );
+    WPNNode* rootNode           ( ) { return m_root_node; }
     void setDeviceName          ( QString name );
-
     Q_INVOKABLE void explore    ( ) const;
 
-    signals:
-    void oscPortChanged         ( );
-
     public slots:
-    void onValueUpdate          ( QString method, QVariantList arguments );
+    void onValueUpdate  ( QString method, QVariant arguments );
+    void onValueUpdate  ( QJsonObject obj );
 
     protected:
-    QString             m_name;
-    OSCHandler*         m_osc_hdl;
-    QueryNode*          m_root_node;
+    QString   m_name;
+    WPNNode*  m_root_node;
 };

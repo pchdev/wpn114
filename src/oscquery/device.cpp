@@ -1,21 +1,20 @@
 #include "device.hpp"
 
 
-OSCQueryDevice::OSCQueryDevice()
+WPNDevice::WPNDevice()
 {
-    m_osc_hdl   = new OSCHandler();
-    m_root_node = new QueryNode;
-    m_root_node ->setPath("/");
+    m_root_node = new WPNNode;
 
-    m_root_node->setType(QueryNode::Type::None);
+    m_root_node ->setPath   ( "/" );
+    m_root_node ->setType   ( WPNNode::Type::None );
 }
 
-OSCQueryDevice::~OSCQueryDevice()
+WPNDevice::~WPNDevice()
 {
 
 }
 
-void OSCQueryDevice::addNode(OSCQueryDevice* dev, QueryNode *node)
+void WPNDevice::addNode(WPNDevice* dev, WPNNode *node)
 {
     // get node's parent
 
@@ -27,12 +26,12 @@ void OSCQueryDevice::addNode(OSCQueryDevice* dev, QueryNode *node)
     parent->addSubnode(node);
 }
 
-QueryNode* OSCQueryDevice::findOrCreateNode(OSCQueryDevice* dev, QString path)
+WPNNode* WPNDevice::findOrCreateNode(WPNDevice* dev, QString path)
 {
     QStringList split = path.split('/');
     split.removeFirst(); // first is space
 
-    QueryNode* target = dev->rootNode();
+    WPNNode* target = dev->rootNode();
 
     for ( const auto& node : split )
     {
@@ -53,33 +52,27 @@ QueryNode* OSCQueryDevice::findOrCreateNode(OSCQueryDevice* dev, QString path)
     return target;
 }
 
-QueryNode* OSCQueryDevice::getNode(QString path)
+WPNNode* WPNDevice::getNode(QString path)
 {
     return nullptr;
 }
 
-void OSCQueryDevice::onValueUpdate(QString method, QVariantList arguments)
+void WPNDevice::onValueUpdate(QJsonObject obj)
 {
-    auto node = m_root_node->subnode(method);
-    node->setValue(arguments);
+
 }
 
-void OSCQueryDevice::writeOSC(QString address, QVariantList arguments)
+void WPNDevice::onValueUpdate(QString method, QVariant arguments)
 {
-    m_osc_hdl->sendMessage(address, arguments);
+
 }
 
-void OSCQueryDevice::setOscPort(uint16_t port)
-{
-    m_osc_hdl->setLocalPort(port);
-}
-
-void OSCQueryDevice::setDeviceName(QString name)
+void WPNDevice::setDeviceName(QString name)
 {
     m_name = name;
 }
 
-void OSCQueryDevice::explore() const
+void WPNDevice::explore() const
 {
     m_root_node->post();
 }
