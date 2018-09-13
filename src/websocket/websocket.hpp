@@ -26,7 +26,9 @@ class WPNWebSocket : public QObject
     void connect    ( );
     void disconnect ( );
 
-    void write  ( QString message );
+    void request    ( QString http_req );
+    void write      ( QString message );
+
     QTcpSocket* tcpConnection() { return m_tcp_con; }
 
     signals:
@@ -37,8 +39,9 @@ class WPNWebSocket : public QObject
     void disconnected           ( );
 
     protected slots:
-    void onConnected            ( );
-    void onRawMessageReceived   ( );
+    void onConnected                  ( );
+    void onRawMessageReceived         ( );
+    void onHandshakeResponseReceived  ( QString resp );
 
     protected:
     bool m_mask;

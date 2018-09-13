@@ -3,6 +3,7 @@
 #include <QRandomGenerator>
 #include <QCryptographicHash>
 #include <QDataStream>
+#include <src/http/http.hpp>
 
 WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
 {
@@ -30,7 +31,11 @@ void WPNQueryClient::componentComplete()
 
 void WPNQueryClient::onConnected()
 {
+    // request host info
+    // request namespace
 
+    HTTP::formatRequest("/", "HOST_INFO", m_host_addr);
+    HTTP::formatRequest("/", "", m_host_addr);
 }
 
 void WPNQueryClient::setHostAddr(QString addr)
@@ -63,7 +68,20 @@ void WPNQueryClient::onTextMessageReceived(QString message)
     if ( obj.contains("COMMAND")) emit command(obj);
     else if ( obj.contains("VALUE")) emit valueUpdate(obj);
 
+    else if ( obj.contains("FULL_PATH")) onHostInfoReceived(obj);
+    else if ( obj.contains("OSC_PORT")) onNamespaceReceived(obj);
+
     qDebug() << "WebSocket In:" << message;
+}
+
+void WPNQueryClient::onHostInfoReceived(QJsonObject info)
+{
+
+}
+
+void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
+{
+
 }
 
 void WPNQueryClient::writeOsc(QString method, QVariantList arguments)

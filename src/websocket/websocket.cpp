@@ -146,7 +146,37 @@ void WPNWebSocket::onRawMessageReceived()
     QTcpSocket* sender = qobject_cast<QTcpSocket*>(QObject::sender());
 
     while ( sender->bytesAvailable())
-        decode(sender->readAll());
+    {
+        QByteArray data = sender->readAll();
+        if ( data.contains("HTTP") )
+             ;
+
+        else decode(data);
+    }
+}
+
+void WPNWebSocket::onHandshakeResponseReceived(QString resp)
+{
+    // parse the key
+    QString key;
+    auto spl = resp.split('\n');
+    for ( const auto& line : spl )
+    {
+        if ( line.startsWith("Sec-WebSocket-Accept"))
+        {
+            auto spl2 = line.split(' ');
+            key = spl2[1];
+            key.replace('\r',"");
+        }
+    }
+
+    if ( key != m_accept_key )
+    {
+        qDebug() << "Error: Sec-WebSocket-Accept key is incorrect.";
+        return;
+    }
+
+    emit connected();
 }
 
 QString WPNWebSocket::generateEncryptedSecKey()
@@ -180,6 +210,21 @@ void WPNWebSocket::requestHandshake()
     req.append  ( "User-Agent: Qt/5.1.1\r\n\r\n" );
 
     m_tcp_con->write(req);
+}
+
+void WPNWebSocket::request(QString req)
+{
+    QTcpSocket tmp;
+
+    tmp.connectToHost(m_host_addr, m_host_port);
+
+    if ( tmp.waitForConnected(1000) )
+    {
+        tmp.write(req.toUtf8());
+
+        qDebug() << "HTTP.out:" << req;
+        tmp.disconnectFromHost();
+    }
 }
 
 void WPNWebSocket::write(QString message)

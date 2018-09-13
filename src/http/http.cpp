@@ -21,3 +21,19 @@ QString HTTP::formatJsonResponse(QJsonObject obj)
 {
     return HTTP::formatJsonResponse(QJsonDocument(obj).toJson(QJsonDocument::Compact));
 }
+
+QString HTTP::formatRequest(QString address, QString attr, QString host)
+{
+    QString req = "GET ";
+
+    req.append(address);
+
+    if ( !attr.isEmpty() )
+        req.append("?").append(attr).append("\r\n");
+
+    req.append  ( host.prepend("Host: ")).append("\r\n" );
+    req.append  ( "Accept: */*\r\n" );
+    req.append  ( "Connection: close\r\n\r\n" );
+
+    return req;
+}

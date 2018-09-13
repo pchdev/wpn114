@@ -40,8 +40,11 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void command            ( QJsonObject );
 
     protected slots:
-    void onConnected ( );
-    void onTextMessageReceived(QString message);
+    void onHostInfoReceived     ( QJsonObject host_info );
+    void onNamespaceReceived    ( QJsonObject nspace );
+
+    void onConnected            ( );
+    void onTextMessageReceived  ( QString message );
 
     private:
     OSCHandler* m_osc_hdl;

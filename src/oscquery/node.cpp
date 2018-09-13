@@ -63,7 +63,7 @@ QJsonObject WPNNode::attributeJson(QString attr) const
 {
     QJsonObject obj;
 
-    if ( attr == "VALUE" ) obj.insert("VALUE", jsonValue());
+    if ( attr == "VALUE" ) obj.insert(attr, jsonValue());
     return obj;
 }
 
@@ -71,17 +71,17 @@ QString WPNNode::typeTag() const
 {
     switch ( m_attributes.type )
     {
-    case Type::Bool:         return "T";
-    case Type::Char:         return "c";
-    case Type::Float:        return "f";
-    case Type::Impulse:      return "N";
-    case Type::Int:          return "i";
-    case Type::List:         return "";
-    case Type::None:         return "null";
-    case Type::String:       return "s";
-    case Type::Vec2f:        return "ff";
-    case Type::Vec3f:        return "fff";
-    case Type::Vec4f:        return "ffff";
+    case Type::Values::Bool:         return "T";
+    case Type::Values::Char:         return "c";
+    case Type::Values::Float:        return "f";
+    case Type::Values::Impulse:      return "N";
+    case Type::Values::Int:          return "i";
+    case Type::Values::List:         return "";
+    case Type::Values::None:         return "null";
+    case Type::Values::String:       return "s";
+    case Type::Values::Vec2f:        return "ff";
+    case Type::Values::Vec3f:        return "fff";
+    case Type::Values::Vec4f:        return "ffff";
     }
 }
 
@@ -90,38 +90,18 @@ QJsonValue WPNNode::jsonValue() const
     QJsonValue v;
     switch ( m_attributes.type )
     {
-    case Type::Bool:         v = m_attributes.value.toBool(); break;
-    case Type::Char:         v = m_attributes.value.toString(); break;
-    case Type::Float:        v = m_attributes.value.toDouble(); break;
-    case Type::String:       v = m_attributes.value.toString(); break;
-    case Type::Int:          v = m_attributes.value.toInt(); break;
-    case Type::None:         v = "null"; break;
-    case Type::Impulse:      return v;
+    case Type::Values::Bool:         v = m_attributes.value.toBool(); break;
+    case Type::Values::Char:         v = m_attributes.value.toString(); break;
+    case Type::Values::Float:        v = m_attributes.value.toDouble(); break;
+    case Type::Values::String:       v = m_attributes.value.toString(); break;
+    case Type::Values::Int:          v = m_attributes.value.toInt(); break;
+    case Type::Values::None:         v = "null"; break;
+    case Type::Values::Impulse:      return v;
 
-    case Type::List:
-    {
-        v = QJsonArray::fromVariantList(m_attributes.value.toList());
-        break;
-    }
-
-    case Type::Vec2f:
-    {
-        // value would be a qvector2d
-        v = QJsonArray::fromVariantList(m_attributes.value.toList());
-        break;
-    }
-
-    case Type::Vec3f:
-    {
-        v = QJsonArray::fromVariantList(m_attributes.value.toList());
-        break;
-    }
-
-    case Type::Vec4f:
-    {
-        v = QJsonArray::fromVariantList(m_attributes.value.toList());
-        break;
-    }
+    case Type::Values::List:    v = QJsonArray::fromVariantList(m_attributes.value.toList()); break;
+    case Type::Values::Vec2f:   v = QJsonArray::fromVariantList(m_attributes.value.toList()); break;
+    case Type::Values::Vec3f:   v = QJsonArray::fromVariantList(m_attributes.value.toList()); break;
+    case Type::Values::Vec4f:   v = QJsonArray::fromVariantList(m_attributes.value.toList()); break;
     }
 
     return v;
@@ -143,8 +123,7 @@ QJsonObject WPNNode::toJson() const
 
 void WPNNode::post() const
 {
-    qDebug() << m_attributes.path
-             << typeTag() << m_attributes.value;
+    qDebug() << toJson();
 
     for ( const auto& child : m_children )
         child->post();
@@ -178,15 +157,14 @@ void WPNNode::setType(Type::Values type)
 {
     m_attributes.type = type;
 
-    if ( type == Type::List )
+    if ( type == Type::Values::List )
         m_attributes.extended_type = "list";
 
-    else if ( type == Type::Vec2f ||
-              type == Type::Vec3f ||
-              type == Type::Vec4f )
+    else if ( type == Type::Values::Vec2f ||
+              type == Type::Values::Vec3f ||
+              type == Type::Values::Vec4f )
         m_attributes.extended_type = "vecf";
 }
-
 
 void WPNNode::setListening(bool listen, WPNDevice *target)
 {
@@ -232,7 +210,8 @@ WPNNode* WPNNode::subnode(QString path)
             return child;
 
     for ( const auto& child : m_children )
-        if ( child->subnode(path) ) return child;
+        if ( auto sub = child->subnode(path) )
+            return sub;
 
     if ( path == m_attributes.path ) return this;
 
