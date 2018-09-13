@@ -88,8 +88,6 @@ void WPNQueryClient::writeWebSocket(QJsonObject json)
 
 void WPNQueryClient::pushNodeValue(WPNNode* node)
 {
-    qDebug() << node->value();
-
     if ( node->critical() )
         m_ws_con->write(QJsonDocument(node->attributeJson("VALUE")).toJson(QJsonDocument::Compact));
 

@@ -62,7 +62,6 @@ void OSCHandler::readOSCBundle(QByteArray bundle)
 
 void OSCHandler::readOSCMessage(QByteArray message)
 {
-    qDebug() << message;
     QString         address, typetag;
     QVariantList    arguments;
     QDataStream     stream(message);
@@ -195,8 +194,6 @@ void OSCHandler::sendMessage(QString address, QVariantList arguments)
         }
         }
     }
-
-    qDebug() << "UPP-OSC out:" << data;
 
     datagram.setData            ( data );
     datagram.setDestination     ( QHostAddress(m_remote_address), m_remote_port );

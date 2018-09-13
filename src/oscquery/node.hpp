@@ -81,6 +81,7 @@ struct Attributes
     QStringList         tags;
     bool                critical;
     Clipmode::Values    clipmode;
+    QString             extended_type;
 };
 
 class WPNNode : public QObject, public QQmlParserStatus
@@ -163,8 +164,8 @@ class WPNNode : public QObject, public QQmlParserStatus
     void setListening       ( bool listen, WPNDevice* target );
 
     signals:
-    void valueChanged       ( QVariant );
-    void valueReceived      ( QVariant );
+    void valueChanged       ( QVariant newValue );
+    void valueReceived      ( QVariant newValue );
 
     private:
     Attributes      m_attributes;

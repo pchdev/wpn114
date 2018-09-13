@@ -17,8 +17,7 @@ void WPNNode::componentComplete()
     if ( m_attributes.path.isEmpty() )
          m_attributes.path = "/"+ m_name;
 
-    m_name = m_attributes.path;
-    m_name.remove(0, 1);
+    m_name = m_attributes.path.split('/').last();
 
     if      ( m_device ) m_device->addNode(m_device, this);
     else if ( m_parent )
@@ -50,19 +49,21 @@ QJsonObject WPNNode::attributesJson() const
     obj.insert("DESCRIPTION", m_attributes.description);
     obj.insert("CRITICAL", m_attributes.critical);
 
+    if ( !m_attributes.extended_type.isEmpty() )
+        obj.insert("EXTENDED_TYPE", m_attributes.extended_type );
+
     //obj.insert("TAGS", m_attributes.tags);
     //obj.insert("RANGE");
     // + clipmode todo
 
     return obj;
-
 }
 
 QJsonObject WPNNode::attributeJson(QString attr) const
 {
     QJsonObject obj;
 
-    if ( attr == "VALUE" ) obj.insert("VALUE", QJsonArray { jsonValue() });
+    if ( attr == "VALUE" ) obj.insert("VALUE", jsonValue());
     return obj;
 }
 
@@ -75,7 +76,7 @@ QString WPNNode::typeTag() const
     case Type::Float:        return "f";
     case Type::Impulse:      return "N";
     case Type::Int:          return "i";
-    case Type::List:         return "b";
+    case Type::List:         return "";
     case Type::None:         return "null";
     case Type::String:       return "s";
     case Type::Vec2f:        return "ff";
@@ -97,10 +98,30 @@ QJsonValue WPNNode::jsonValue() const
     case Type::None:         v = "null"; break;
     case Type::Impulse:      return v;
 
-//    case WPNNode::Type::List:       v = m_value.toList(); break;
-//    case WPNNode::Type::Vec2f:      v = m_value.toList(); break;
-//    case WPNNode::Type::Vec3f:      v = m_value.toList(); break;
-//    case WPNNode::Type::Vec4f:      v = m_value.toList(); break;
+    case Type::List:
+    {
+        v = QJsonArray::fromVariantList(m_attributes.value.toList());
+        break;
+    }
+
+    case Type::Vec2f:
+    {
+        // value would be a qvector2d
+        v = QJsonArray::fromVariantList(m_attributes.value.toList());
+        break;
+    }
+
+    case Type::Vec3f:
+    {
+        v = QJsonArray::fromVariantList(m_attributes.value.toList());
+        break;
+    }
+
+    case Type::Vec4f:
+    {
+        v = QJsonArray::fromVariantList(m_attributes.value.toList());
+        break;
+    }
     }
 
     return v;
@@ -147,8 +168,6 @@ void WPNNode::setValueQuiet(QVariant value)
 
 void WPNNode::setValue(QVariant value)
 {
-    qDebug() << "setValue:" << value;
-
     m_attributes.value = value;
 
     for ( const auto& listener : m_listeners )
@@ -158,13 +177,19 @@ void WPNNode::setValue(QVariant value)
 void WPNNode::setType(Type::Values type)
 {
     m_attributes.type = type;
+
+    if ( type == Type::List )
+        m_attributes.extended_type = "list";
+
+    else if ( type == Type::Vec2f ||
+              type == Type::Vec3f ||
+              type == Type::Vec4f )
+        m_attributes.extended_type = "vecf";
 }
 
 
 void WPNNode::setListening(bool listen, WPNDevice *target)
 {
-    qDebug() << "new listener";
-
     if ( listen && !m_listeners.contains(target) )
         m_listeners.push_back(target);
 
