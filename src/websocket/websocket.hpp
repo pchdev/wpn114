@@ -13,6 +13,12 @@ enum class Opcodes
     PONG = 0xa
 };
 
+struct Request
+{
+    QTcpSocket* con;
+    QString req;
+};
+
 class WPNWebSocket : public QObject
 {
     Q_OBJECT
@@ -42,6 +48,7 @@ class WPNWebSocket : public QObject
     void onConnected                  ( );
     void onRawMessageReceived         ( );
     void onHandshakeResponseReceived  ( QString resp );
+    void onRequestReadyWrite          ( );
 
     protected:
     bool m_mask;
@@ -51,8 +58,10 @@ class WPNWebSocket : public QObject
     QTcpSocket* m_tcp_con;
     QByteArray m_sec_key;
     QByteArray m_accept_key;
+    QVector<Request> m_request_queue;
+    quint64 m_seed;
 
-    QString generateEncryptedSecKey  ( );
+    void generateEncryptedSecKey( );
     void decode ( QByteArray data );
 
     void requestHandshake           ( );

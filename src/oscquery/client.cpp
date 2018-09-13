@@ -10,6 +10,7 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
     // direct client
     m_ws_con = new WPNWebSocket("127.0.0.1", 5678);
     QObject::connect(m_ws_con, SIGNAL(connected()), this, SIGNAL(connected()));
+    QObject::connect(m_ws_con, SIGNAL(connected()), this, SLOT(onConnected()));
     QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
 }
@@ -34,8 +35,11 @@ void WPNQueryClient::onConnected()
     // request host info
     // request namespace
 
-    HTTP::formatRequest("/", "HOST_INFO", m_host_addr);
-    HTTP::formatRequest("/", "", m_host_addr);
+    m_ws_con->write("/?HOST_INFO");
+    m_ws_con->write("/");
+
+    //m_ws_con->request   ( HTTP::formatRequest("/", "HOST_INFO", m_host_addr) );
+    //m_ws_con->request   ( HTTP::formatRequest("/", "", m_host_addr) );
 }
 
 void WPNQueryClient::setHostAddr(QString addr)

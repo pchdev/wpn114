@@ -27,9 +27,10 @@ QString HTTP::formatRequest(QString address, QString attr, QString host)
     QString req = "GET ";
 
     req.append(address);
-
     if ( !attr.isEmpty() )
-        req.append("?").append(attr).append("\r\n");
+        req.append("?").append(attr);
+
+    req.append(" HTTP/1.1\r\n");
 
     req.append  ( host.prepend("Host: ")).append("\r\n" );
     req.append  ( "Accept: */*\r\n" );
