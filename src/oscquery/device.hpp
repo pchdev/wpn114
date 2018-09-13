@@ -5,6 +5,38 @@
 
 class WPNNode;
 
+struct HostExtensions
+{
+    bool access;
+    bool value;
+    bool range;
+    bool description;
+    bool tags;
+    bool extended_type;
+    bool unit;
+    bool critical;
+    bool clipmode;
+    bool listen;
+    bool path_changed;
+    bool path_removed;
+    bool path_added;
+    bool path_renamed;
+    bool osc_streaming;
+
+    QJsonObject toJson() const;
+};
+
+struct HostSettings
+{
+    QString name;
+    QString osc_transport;
+    quint16 osc_port;
+    quint16 tcp_port;
+    HostExtensions extensions;
+
+    QJsonObject toJson() const;
+};
+
 class WPNDevice : public QObject
 {
     Q_OBJECT

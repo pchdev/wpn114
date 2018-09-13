@@ -42,6 +42,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     protected slots:
     void onHostInfoReceived     ( QJsonObject host_info );
     void onNamespaceReceived    ( QJsonObject nspace );
+    void requestStreamStart     ( );
 
     void onConnected            ( );
     void onTextMessageReceived  ( QString message );
@@ -51,4 +52,5 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     WPNWebSocket* m_ws_con;
     quint16 m_host_port;
     QString m_host_addr;
+    HostSettings m_settings;
 };

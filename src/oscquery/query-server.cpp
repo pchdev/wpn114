@@ -8,43 +8,6 @@
 #include <QBitArray>
 #include "../http/http.hpp"
 
-QJsonObject HostExtensions::toJson() const
-{
-    QJsonObject ext
-    {
-        { "OSC_STREAMING", osc_streaming },
-        { "ACCESS", access },
-        { "VALUE", value },
-        { "RANGE", range },
-        { "DESCRIPTION", description },
-        { "TAGS", tags },
-        { "EXTENDED_TYPE", extended_type },
-        { "UNIT", unit },
-        { "CRITICAL", critical },
-        { "CLIPMODE", clipmode },
-        { "LISTEN", listen },
-        { "PATH_CHANGED", path_changed },
-        { "PATH_REMOVED", path_removed },
-        { "PATH_ADDED", path_added },
-        { "PATH_RENAMED", path_renamed }
-    };
-
-    return ext;
-}
-
-QJsonObject HostSettings::toJson() const
-{
-    QJsonObject obj
-    {
-        { "NAME", name },
-        { "OSC_PORT", osc_port },
-        { "OSC_TRANSPORT", osc_transport },
-        { "EXTENSIONS", extensions.toJson() }
-    };
-
-    return obj;
-}
-
 WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketServer(5678)),
     m_osc_hdl(new OSCHandler())
 {

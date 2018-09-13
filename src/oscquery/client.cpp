@@ -36,7 +36,6 @@ void WPNQueryClient::onConnected()
     // request namespace
 
     m_ws_con->write("/?HOST_INFO");
-    m_ws_con->write("/");
 
     //m_ws_con->request   ( HTTP::formatRequest("/", "HOST_INFO", m_host_addr) );
     //m_ws_con->request   ( HTTP::formatRequest("/", "", m_host_addr) );
@@ -72,20 +71,67 @@ void WPNQueryClient::onTextMessageReceived(QString message)
     if ( obj.contains("COMMAND")) emit command(obj);
     else if ( obj.contains("VALUE")) emit valueUpdate(obj);
 
-    else if ( obj.contains("FULL_PATH")) onHostInfoReceived(obj);
-    else if ( obj.contains("OSC_PORT")) onNamespaceReceived(obj);
+    else if ( obj.contains("OSC_PORT")) onHostInfoReceived(obj);
+    else if ( obj.contains("FULL_PATH")) onNamespaceReceived(obj);
 
     qDebug() << "WebSocket In:" << message;
 }
 
 void WPNQueryClient::onHostInfoReceived(QJsonObject info)
 {
+    if ( info.contains("NAME" ) )  m_settings.name = info["NAME"].toString();
+    if ( info.contains("OSC_PORT") ) m_settings.osc_port = info["OSC_PORT"].toInt();
+    if ( info.contains("OSC_TRANSPORT")) m_settings.osc_transport = info["OSC_TRANSPORT"].toString();
 
+    QJsonObject ext;
+    if ( info.contains("EXTENSIONS") ) ext = info["EXTENSIONS"].toObject();
+    else return;
+
+    if ( ext.contains("ACCESS")) m_settings.extensions.access = ext["ACCESS"].toBool();
+    if ( ext.contains("VALUE")) m_settings.extensions.value = ext["VALUE"].toBool();
+    if ( ext.contains("RANGE")) m_settings.extensions.range = ext["RANGE"].toBool();
+    if ( ext.contains("TAGS")) m_settings.extensions.tags = ext["TAGS"].toBool();
+    if ( ext.contains("CLIPMODE")) m_settings.extensions.clipmode = ext["CLIPMODE"].toBool();
+    if ( ext.contains("UNIT")) m_settings.extensions.unit = ext["UNIT"].toBool();
+    if ( ext.contains("CRITICAL")) m_settings.extensions.critical = ext["CRITICAL"].toBool();
+    if ( ext.contains("DESCRIPTION")) m_settings.extensions.description = ext["DESCRIPTION"].toBool();
+    if ( ext.contains("OSC_STREAMING")) m_settings.extensions.osc_streaming = ext["OSC_STREAMING"].toBool();
+    if ( ext.contains("LISTEN")) m_settings.extensions.listen = ext["LISTEN"].toBool();
+    if ( ext.contains("PATH_CHANGED")) m_settings.extensions.path_changed = ext["PATH_CHANGED"].toBool();
+    if ( ext.contains("PATH_RENAMED")) m_settings.extensions.path_renamed = ext["PATH_RENAMED"].toBool();
+    if ( ext.contains("PATH_ADDED")) m_settings.extensions.path_added = ext["PATH_ADDED"].toBool();
+    if ( ext.contains("PATH_REMOVED")) m_settings.extensions.path_removed = ext["PATH_REMOVED"].toBool();
+
+    if ( m_settings.extensions.osc_streaming ) requestStreamStart();
+
+    m_ws_con->write("/");
+    m_ws_con->write("/play");
+
+}
+
+void WPNQueryClient::requestStreamStart()
+{
+    QJsonObject command, data;
+
+    command.insert      ( "COMMAND", "START_OSC_STREAMING" );
+    data.insert         ( "LOCAL_SERVER_PORT", m_osc_hdl->localPort() );
+    data.insert         ( "LOCAL_SENDER_PORT", m_osc_hdl->remotePort() );
+    command.insert      ( "DATA", data );
+
+    m_ws_con->write     ( QJsonDocument(command).toJson(QJsonDocument::Compact) );
 }
 
 void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
 {
+    QJsonObject contents = nspace["CONTENTS"].toObject();
 
+    for ( const auto& key : contents.keys() )
+    {
+        QJsonObject jsnode = contents[key].toObject();
+        auto node = WPNNode::fromJson(jsnode);
+
+        m_root_node->addSubnode(node);
+    }
 }
 
 void WPNQueryClient::writeOsc(QString method, QVariantList arguments)

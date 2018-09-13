@@ -106,6 +106,8 @@ class WPNNode : public QObject, public QQmlParserStatus
     WPNNode();
     ~WPNNode();
 
+    static WPNNode* fromJson(QJsonObject);
+
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) { }
 
@@ -149,6 +151,8 @@ class WPNNode : public QObject, public QQmlParserStatus
     void setTags            ( QStringList tags );
     void setCritical        ( bool critical );    
     void setClipmode        ( Clipmode::Values clipmode );
+
+    void setTypeFromTag     ( QString tag );
 
     // tree/hierarchy ----------------------------------------------------
 

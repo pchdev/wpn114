@@ -2,6 +2,30 @@
 #include <QtDebug>
 #include <QJsonArray>
 
+WPNNode* WPNNode::fromJson(QJsonObject obj)
+{
+    WPNNode* node = new WPNNode;
+
+    node->setPath           ( obj["FULL_PATH"].toString() );
+    node->setTypeFromTag    ( obj["TYPE"].toString() );
+    node->setAccess         ( static_cast<Access::Values>(obj["ACCESS"].toInt()) );
+    node->setDescription    ( obj["DESCRIPTION"].toString()) ;
+
+    node->setValue          ( obj["VALUE"].toArray() );
+
+
+    // recursively parse children
+    if ( obj.contains("CONTENTS") )
+    {
+        QJsonObject contents = obj["CONTENTS"].toObject();
+
+        for ( const auto& key : contents.keys() )
+            node->addSubnode(WPNNode::fromJson(contents[key].toObject()));
+    }
+
+    return node;
+}
+
 WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr)
 {
     m_attributes.access         = Access::RW;
@@ -164,6 +188,19 @@ void WPNNode::setType(Type::Values type)
               type == Type::Values::Vec3f ||
               type == Type::Values::Vec4f )
         m_attributes.extended_type = "vecf";
+}
+
+void WPNNode::setTypeFromTag(QString tag)
+{
+    if ( tag == "f" ) m_attributes.type = Type::Float;
+    else if ( tag == "T" || tag == "F" ) m_attributes.type = Type::Bool;
+    else if ( tag == "i" ) m_attributes.type = Type::Int;
+    else if ( tag == "" ) m_attributes.type = Type::List;
+    else if ( tag == "I") m_attributes.type = Type::Impulse;
+    else if ( tag == "s") m_attributes.type = Type::String;
+    else if ( tag == "ff") m_attributes.type = Type::Vec2f;
+    else if ( tag == "fff") m_attributes.type = Type::Vec3f;
+    else if ( tag == "ffff") m_attributes.type = Type::Vec4f;
 }
 
 void WPNNode::setListening(bool listen, WPNDevice *target)
