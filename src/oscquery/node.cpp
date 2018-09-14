@@ -13,7 +13,6 @@ WPNNode* WPNNode::fromJson(QJsonObject obj)
 
     node->setValue          ( obj["VALUE"].toArray() );
 
-
     // recursively parse children
     if ( obj.contains("CONTENTS") )
     {
@@ -49,6 +48,32 @@ void WPNNode::componentComplete()
         m_device = m_parent->device();
         m_device->addNode(m_device, this);
     }
+}
+
+void WPNNode::setTarget(const QQmlProperty& property)
+{
+    m_target_property = property;
+
+    switch ( property.propertyType() )
+    {
+    case QMetaType::Bool: m_attributes.type = Type::Bool; break;
+    case QMetaType::Float: m_attributes.type = Type::Float; break;
+    case QMetaType::Double: m_attributes.type = Type::Float; break;
+    case QMetaType::Int: m_attributes.type = Type::Int; break;
+    case QMetaType::QString: m_attributes.type = Type::String; break;
+    case QMetaType::QVector2D: m_attributes.type = Type::Vec2f; break;
+    case QMetaType::QVector3D: m_attributes.type = Type::Vec3f; break;
+    case QMetaType::QVector4D: m_attributes.type = Type::Vec4f; break;
+    case QMetaType::QVariantList: m_attributes.type = Type::List; break;
+    }
+
+    m_attributes.value = property.read();
+    m_target_property.connectNotifySignal(this, SLOT(propertyChanged()));
+}
+
+void WPNNode::propertyChanged()
+{
+    m_attributes.value = m_target_property.read();
 }
 
 void WPNNode::setAccess         ( Access::Values access ) { m_attributes.access = access; }

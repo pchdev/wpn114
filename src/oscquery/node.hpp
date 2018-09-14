@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QQmlParserStatus>
+#include <QQmlProperty>
+#include <QQmlPropertyValueSource>
 #include <QJsonObject>
 #include <QVariant>
 #include <QVector>
@@ -84,23 +86,25 @@ struct Attributes
     QString             extended_type;
 };
 
-class WPNNode : public QObject, public QQmlParserStatus
+class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValueSource
 {
     Q_OBJECT
 
-    Q_PROPERTY  ( QString name READ name WRITE setName )
-    Q_PROPERTY  ( WPNDevice* device READ device WRITE setDevice )
-    Q_PROPERTY  ( WPNNode* parent READ parent WRITE setParent )
+    Q_INTERFACES    ( QQmlPropertyValueSource )
 
-    Q_PROPERTY  ( QString path READ path WRITE setPath )
-    Q_PROPERTY  ( Type::Values type READ type WRITE setType )
-    Q_PROPERTY  ( Access::Values access READ access WRITE setAccess )
-    Q_PROPERTY  ( QVariant value READ value WRITE setValue NOTIFY valueChanged )
-    Q_PROPERTY  ( Range range READ range WRITE setRange )
-    Q_PROPERTY  ( QString description READ description WRITE setDescription )
-    Q_PROPERTY  ( QStringList tags READ tags WRITE setTags )
-    Q_PROPERTY  ( bool critical READ critical WRITE setCritical )
-    Q_PROPERTY  ( Clipmode::Values clipmode READ clipmode WRITE setClipmode )
+    Q_PROPERTY      ( QString name READ name WRITE setName )
+    Q_PROPERTY      ( WPNDevice* device READ device WRITE setDevice )
+    Q_PROPERTY      ( WPNNode* parent READ parent WRITE setParent )
+
+    Q_PROPERTY      ( QString path READ path WRITE setPath )
+    Q_PROPERTY      ( Type::Values type READ type WRITE setType )
+    Q_PROPERTY      ( Access::Values access READ access WRITE setAccess )
+    Q_PROPERTY      ( QVariant value READ value WRITE setValue NOTIFY valueChanged )
+    Q_PROPERTY      ( Range range READ range WRITE setRange )
+    Q_PROPERTY      ( QString description READ description WRITE setDescription )
+    Q_PROPERTY      ( QStringList tags READ tags WRITE setTags )
+    Q_PROPERTY      ( bool critical READ critical WRITE setCritical )
+    Q_PROPERTY      ( Clipmode::Values clipmode READ clipmode WRITE setClipmode )
 
     public:
     WPNNode();
@@ -110,6 +114,8 @@ class WPNNode : public QObject, public QQmlParserStatus
 
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) { }
+
+    virtual void setTarget(const QQmlProperty& property);
 
     QString name            ( ) const { return m_name; }
     WPNDevice* device       ( ) const { return m_device; }
@@ -171,11 +177,16 @@ class WPNNode : public QObject, public QQmlParserStatus
     void valueChanged       ( QVariant newValue );
     void valueReceived      ( QVariant newValue );
 
+    public slots:
+    void propertyChanged    ( );
+
     private:
     Attributes      m_attributes;
     QString         m_name;
     WPNDevice*      m_device;
     WPNNode*        m_parent;
+
+    QQmlProperty   m_target_property;
 
     bool  m_listening;
 
