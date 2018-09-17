@@ -76,6 +76,11 @@ add_library(${PROJECT_NAME} SHARED ${PROJECT_HDRS} ${PROJECT_SRCS})
 target_link_libraries( ${PROJECT_NAME} Qt5::QuickWidgets Qt5::Multimedia Qt5::Widgets Qt5::WebSockets )
 target_link_libraries( ${PROJECT_NAME} Sndfile )
 
+if ( ZEROCONF )
+    target_include_directories( ${PROJECT_NAME} PUBLIC ${ZEROCONF_INCLUDE_DIR} )
+    target_link_libraries( ${PROJECT_NAME} ${ZEROCONF_LIB})
+endif()
+
 if(APPLE)
     target_link_libraries( ${PROJECT_NAME} "-framework CoreFoundation" )
     target_link_libraries( ${PROJECT_NAME} "-framework CoreAudio" )

@@ -37,6 +37,12 @@ QJsonObject HostSettings::toJson() const
     return obj;
 }
 
+WPNDevice* WPNDevice::m_singleton;
+WPNDevice* WPNDevice::instance()
+{
+    return m_singleton;
+}
+
 WPNDevice::WPNDevice()
 {
     m_root_node = new WPNNode;
@@ -47,6 +53,11 @@ WPNDevice::WPNDevice()
 }
 
 WPNDevice::~WPNDevice() {}
+
+void WPNDevice::setSingleDevice(bool single)
+{
+    if ( single ) m_singleton = this;
+}
 
 void WPNDevice::addNode(WPNDevice* dev, WPNNode *node)
 {

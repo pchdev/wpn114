@@ -8,8 +8,7 @@
 #include <QWebSocket>
 #include "client.hpp"
 #include "../websocket/websocket.hpp"
-
-
+#include <qzeroconf.h>
 
 class WPNQueryServer : public WPNDevice, public QQmlParserStatus
 {
@@ -24,7 +23,7 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
 
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) {}
-    virtual void pushNodeValue    ( WPNNode* node );
+    virtual void pushNodeValue      ( WPNNode* node );
 
     quint16 tcpPort() const { return m_settings.tcp_port; }
     quint16 udpPort() const { return m_settings.osc_port; }
@@ -41,9 +40,10 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     void onHostInfoRequest      ( QTcpSocket* sender );
     void onNamespaceRequest     ( QTcpSocket* sender, QString method );
 
-    private:    
+    private:        
     OSCHandler* m_osc_hdl;
     HostSettings m_settings;
     WPNWebSocketServer* m_ws_server;
     QVector<WPNQueryClient*> m_clients;
+    QZeroConf m_zeroconf;
 };

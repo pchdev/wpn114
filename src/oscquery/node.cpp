@@ -48,6 +48,8 @@ void WPNNode::componentComplete()
         m_device = m_parent->device();
         m_device->addNode(m_device, this);
     }
+    else if ( auto dev = WPNDevice::instance() )
+        m_device = dev;
 }
 
 void WPNNode::setTarget(const QQmlProperty& property)

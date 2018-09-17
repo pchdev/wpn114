@@ -41,10 +41,15 @@ class WPNDevice : public QObject
 {
     Q_OBJECT
     Q_PROPERTY  ( QString deviceName READ deviceName WRITE setDeviceName )
+    Q_PROPERTY ( bool singleDevice READ singleDevice WRITE setSingleDevice )
 
     public:
     WPNDevice  ( );
     ~WPNDevice ( );
+
+    static WPNDevice* instance();
+    bool singleDevice() { return m_singleDevice; }
+    void setSingleDevice(bool single);
 
     virtual void pushNodeValue(WPNNode* node) = 0;
 
@@ -62,6 +67,9 @@ class WPNDevice : public QObject
     void onValueUpdate  ( QJsonObject obj );
 
     protected:
+    bool m_singleDevice;
+    static WPNDevice* m_singleton;
+
     QString   m_name;
     WPNNode*  m_root_node;
 };

@@ -23,7 +23,7 @@ WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketSer
     m_settings.extensions.clipmode          = true;
     m_settings.extensions.critical          = true;
     m_settings.extensions.description       = true;
-    m_settings.extensions.extended_type     = false;
+    m_settings.extensions.extended_type     = true;
     m_settings.extensions.listen            = true;
     m_settings.extensions.path_added        = false;
     m_settings.extensions.path_changed      = false;
@@ -51,6 +51,10 @@ void WPNQueryServer::componentComplete()
 
     m_ws_server->start          ( );
     m_osc_hdl->listen           ( );
+
+    m_zeroconf.startServicePublish(
+                m_settings.name.toStdString().c_str(), "_oscjson._tcp", "local", m_settings.tcp_port);
+
 }
 
 void WPNQueryServer::setTcpPort(quint16 port)
