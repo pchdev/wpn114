@@ -126,6 +126,14 @@ void WPNWebSocket::connect()
     m_tcp_con->connectToHost(m_host_addr, m_host_port);
 }
 
+void WPNWebSocket::connect(QString host, quint16 port)
+{
+    m_host_addr = host;
+    m_host_port = port;
+
+    connect();
+}
+
 void WPNWebSocket::disconnect()
 {
     m_tcp_con->close();

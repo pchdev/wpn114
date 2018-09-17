@@ -27,7 +27,13 @@ WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler())
 void WPNQueryClient::componentComplete()
 {
     // if direct client: reach host
-    m_ws_con->connect();
+    if ( !m_host_addr.isEmpty()) m_ws_con->connect();
+    else if ( !m_zconf_host.isEmpty() )
+    {
+        m_zconf.startBrowser("_oscjson._tcp");
+        QObject::connect( &m_zconf, SIGNAL(onServiceAdded(QZeroConfService)),
+                          this, SLOT(onZeroConfServiceAdded(QZeroConfService)) );
+    }
 }
 
 void WPNQueryClient::onConnected()
@@ -56,6 +62,15 @@ void WPNQueryClient::setOscPort(quint16 port)
 {
     m_osc_hdl->setRemotePort(port);
     //m_osc_hdl->listen();
+}
+
+void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
+{
+    if ( service.name() == m_zconf_host )
+    {
+        m_ws_con->connect   ( service.ip().toString(), service.port() );
+        m_zconf.stopBrowser ( );
+    }
 }
 
 void WPNQueryClient::onTextMessageReceived(QString message)
