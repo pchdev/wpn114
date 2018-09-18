@@ -33,6 +33,9 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     void setUdpPort ( quint16 port );
     void setName    ( QString name ) { m_settings.name = name; }
 
+    signals:
+    void unknownMethodRequested ( QString method );
+
     protected slots:
     void onCommand              ( QJsonObject command_obj );
     void onNewConnection        ( WPNWebSocket* client );

@@ -33,6 +33,8 @@ set( PROJECT_HDRS
     src/oscquery/query-server.hpp
     src/http/http.hpp
     src/websocket/websocket.hpp
+    src/oscquery/file.hpp
+    src/oscquery/folder.hpp
     #src/audio.hpp
  )
 
@@ -57,6 +59,8 @@ set ( PROJECT_SRCS
     src/oscquery/query-server.cpp
     src/http/http.cpp
     src/websocket/websocket.cpp
+    src/oscquery/file.cpp
+    src/oscquery/folder.cpp
 
     #src/audio.cpp
 )

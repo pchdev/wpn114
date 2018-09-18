@@ -38,3 +38,19 @@ QString HTTP::formatRequest(QString address, QString attr, QString host)
 
     return req;
 }
+
+QByteArray HTTP::formatFileResponse(QByteArray file)
+{
+    QByteArray resp ( "HTTP/1.1 200 OK\r\n" );
+    resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
+    resp.append     ( "\r\n" );
+    resp.append     ( "Server: Qt/5.1.1\r\n" );
+    resp.append     ( "Content-Type: text/plain\r\n" );
+    resp.append     ( "Content-Length: " );
+    resp.append     ( QString::number(file.size()) );
+    resp.append     ( "\r\n" );
+    resp.append     ( "\r\n" );
+    resp.append     ( file );
+
+    return resp;
+}

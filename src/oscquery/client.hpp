@@ -22,6 +22,8 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     virtual void classBegin         ( ) {}
     virtual void pushNodeValue    ( WPNNode* node );
 
+    Q_INVOKABLE void requestHttp  ( QString address );
+
     void writeOsc           ( QString method, QVariantList arguments );
     void writeWebSocket     ( QString method, QVariantList arguments );
     void writeWebSocket     ( QString message );

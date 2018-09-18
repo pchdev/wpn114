@@ -7,6 +7,8 @@
 #include <QRegExp>
 #include <QBitArray>
 #include "../http/http.hpp"
+#include "file.hpp"
+#include <QNetworkReply>
 
 WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketServer(5678)),
     m_osc_hdl(new OSCHandler())
@@ -54,7 +56,6 @@ void WPNQueryServer::componentComplete()
 
     m_zeroconf.startServicePublish(
                 m_settings.name.toStdString().c_str(), "_oscjson._tcp", "local", m_settings.tcp_port);
-
 }
 
 void WPNQueryServer::setTcpPort(quint16 port)
@@ -95,31 +96,43 @@ void WPNQueryServer::onHostInfoRequest(QTcpSocket* sender)
 {
     auto resp = HTTP::formatJsonResponse(m_settings.toJson());
     if ( sender ) sender->write(resp.toUtf8());
-
-    for ( const auto& client : m_clients )
-        client->writeWebSocket  ( m_settings.toJson() );
 }
 
 void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
 {
     if ( method.contains("?") )
     {
-        auto spl        = method.split('?');
-        auto obj        = ( spl[1], m_root_node->subnode(spl[0])->attributeJson(spl[1]) );
-        auto resp       = HTTP::formatJsonResponse(obj);
-        sender->write   ( resp.toUtf8() );
+        auto spl   = method.split('?');
+        auto node  = m_root_node->subnode(spl[0]);
 
-        for ( const auto& client : m_clients )
-            client->writeWebSocket(obj);
+        if ( !node ) return;
+
+        auto obj   = node->attributeJson(spl[1]);
+        auto resp  = HTTP::formatJsonResponse(obj);
+
+        sender->write ( resp.toUtf8() );
     }
+
     else
     {
-        WPNNode* node       = m_root_node->subnode(method);
-        auto resp           = HTTP::formatJsonResponse(node->toJson());
-        sender->write       ( resp.toUtf8() );
+        WPNNode* node  = m_root_node->subnode(method);
 
-        for ( const auto& client : m_clients )
-            client->writeWebSocket ( m_root_node->subnode(method)->toJson() );
+        if ( !node )
+        {
+            emit unknownMethodRequested(method);
+            return; // TODO: 404 reply
+        }
+
+        if ( auto file = dynamic_cast<WPNFileNode*>(node) )
+        {
+            // if node is a file
+            // reply with the contents of the file
+            sender->write(HTTP::formatFileResponse(file->data()));
+            return;
+        }
+
+        auto resp = HTTP::formatJsonResponse(node->toJson());
+        sender->write ( resp.toUtf8() );
     }
 }
 

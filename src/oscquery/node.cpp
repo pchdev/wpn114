@@ -37,17 +37,11 @@ WPNNode::~WPNNode() { }
 
 void WPNNode::componentComplete()
 {
-    if ( m_attributes.path.isEmpty() )
-         m_attributes.path = "/"+ m_name;
+    if ( m_name.isEmpty() )
+        m_name = m_attributes.path.split('/').last();
 
-    m_name = m_attributes.path.split('/').last();
+    if ( m_device && !m_parent ) m_device->addNode(m_device, this);
 
-    if      ( m_device ) m_device->addNode(m_device, this);
-    else if ( m_parent )
-    {
-        m_device = m_parent->device();
-        m_device->addNode(m_device, this);
-    }
     else if ( auto dev = WPNDevice::instance() )
         m_device = dev;
 }
@@ -87,7 +81,11 @@ void WPNNode::setRange          ( Range range ) { m_attributes.range = range; }
 
 void WPNNode::setName           ( QString name ) { m_name = name; }
 void WPNNode::setDevice         ( WPNDevice* device) { m_device = device; }
-void WPNNode::setParent         ( WPNNode* parent ) { m_parent = parent; }
+
+void WPNNode::setParent(WPNNode* parent)
+{
+    m_parent = parent;
+}
 
 QJsonObject WPNNode::attributesJson() const
 {
@@ -134,6 +132,8 @@ QString WPNNode::typeTag() const
     case Type::Values::Vec3f:        return "fff";
     case Type::Values::Vec4f:        return "ffff";
     }
+
+    return "";
 }
 
 QJsonValue WPNNode::jsonValue() const
@@ -240,8 +240,9 @@ void WPNNode::setListening(bool listen, WPNDevice *target)
 
 void WPNNode::addSubnode(WPNNode *node)
 {
-    node->setParent(this);
-    m_children.push_back(node);
+    node->setParent         ( this );
+    node->setDevice         ( m_device );
+    m_children.push_back    ( node );
 }
 
 WPNNode* WPNNode::createSubnode(QString name)

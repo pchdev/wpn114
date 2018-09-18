@@ -31,7 +31,7 @@ void WPNQueryClient::componentComplete()
     else if ( !m_zconf_host.isEmpty() )
     {
         m_zconf.startBrowser("_oscjson._tcp");
-        QObject::connect( &m_zconf, SIGNAL(onServiceAdded(QZeroConfService)),
+        QObject::connect( &m_zconf, SIGNAL(serviceAdded(QZeroConfService)),
                           this, SLOT(onZeroConfServiceAdded(QZeroConfService)) );
     }
 }
@@ -42,9 +42,6 @@ void WPNQueryClient::onConnected()
     // request namespace
 
     m_ws_con->write("/?HOST_INFO");
-
-    //m_ws_con->request   ( HTTP::formatRequest("/", "HOST_INFO", m_host_addr) );
-    //m_ws_con->request   ( HTTP::formatRequest("/", "", m_host_addr) );
 }
 
 void WPNQueryClient::setHostAddr(QString addr)
@@ -122,6 +119,11 @@ void WPNQueryClient::onHostInfoReceived(QJsonObject info)
     m_ws_con->write("/");
     m_ws_con->write("/play");
 
+}
+
+void WPNQueryClient::requestHttp(QString address)
+{
+    m_ws_con->request(HTTP::formatRequest(address, "", m_host_addr));
 }
 
 void WPNQueryClient::requestStreamStart()

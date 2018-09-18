@@ -28,6 +28,7 @@ class Type : public QObject
         Vec4f       = 8,
         Char        = 9,
         Impulse     = 10,
+        File        = 11
     };
 
     Q_ENUM ( Values )
@@ -180,7 +181,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     public slots:
     void propertyChanged    ( );
 
-    private:
+    protected:
     Attributes      m_attributes;
     QString         m_name;
     WPNDevice*      m_device;
