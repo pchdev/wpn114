@@ -5,7 +5,7 @@
 
 WPNFolderNode::WPNFolderNode()
 {
-    m_attributes.type       = Type::None;
+    m_attributes.type       = Type::List;
     m_attributes.access     = Access::READ;
 }
 
@@ -17,6 +17,8 @@ void WPNFolderNode::setFolderPath(QString path)
     dir.setNameFilters(QStringList{"*.qml"});
 
     QStringList files = dir.entryList();
+
+    m_attributes.value = files;
 
     for ( const auto& file : files )
     {

@@ -4,8 +4,6 @@
 #include <QTcpSocket>
 #include <QObject>
 #include <QQmlParserStatus>
-#include <QWebSocketServer>
-#include <QWebSocket>
 #include "client.hpp"
 #include "../websocket/websocket.hpp"
 #include <qzeroconf.h>
