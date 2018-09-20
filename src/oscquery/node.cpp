@@ -42,8 +42,15 @@ void WPNNode::componentComplete()
 
     if ( m_device && !m_parent ) m_device->addNode(m_device, this);
 
-    else if ( auto dev = WPNDevice::instance() )
-        m_device = dev;
+    if ( !m_device )
+    {
+        auto dev = WPNDevice::instance();
+        if ( dev )
+        {
+            m_device = dev;
+            m_device->addNode(m_device, this);
+        }
+    }
 }
 
 void WPNNode::setTarget(const QQmlProperty& property)
@@ -249,7 +256,9 @@ WPNNode* WPNNode::createSubnode(QString name)
 {
     auto node = new WPNNode;
 
-    node->setPath       ( path()+"/"+name );
+    if ( !path().endsWith("/") ) node->setPath( path()+"/"+name );
+    else node->setPath( path()+name );
+
     node->setName       ( name );
     node->setParent     ( this );
 

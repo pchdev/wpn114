@@ -168,7 +168,9 @@ void WPNQueryClient::writeWebSocket(QString message)
 
 void WPNQueryClient::writeWebSocket(QJsonObject json)
 {
-    m_ws_con->write(QJsonDocument(json).toJson(QJsonDocument::Compact));
+    auto doc = QJsonDocument(json).toJson(QJsonDocument::Compact);
+    if ( !doc.endsWith('}') ) doc.append('}');
+    m_ws_con->write(doc);
 }
 
 void WPNQueryClient::pushNodeValue(WPNNode* node)

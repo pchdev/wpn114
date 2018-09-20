@@ -111,6 +111,9 @@ void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
         auto resp  = HTTP::formatJsonResponse(obj);
 
         sender->write ( resp.toUtf8() );
+
+        for ( const auto& client : m_clients )
+            client->writeWebSocket(node->attributeJson(spl[1]));
     }
 
     else
@@ -133,6 +136,9 @@ void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
 
         auto resp = HTTP::formatJsonResponse(node->toJson());
         sender->write ( resp.toUtf8() );
+
+        for ( const auto& client : m_clients )
+            client->writeWebSocket(node->toJson());
     }
 }
 

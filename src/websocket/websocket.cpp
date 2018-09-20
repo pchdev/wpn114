@@ -266,7 +266,7 @@ void WPNWebSocket::write(QString message)
 {
     QByteArray data;
     quint8 mask[4], size_mask = m_mask*128;
-    quint64 sz = message.size();
+    quint64 sz = message.size()+ANDROID_JSON;
 
     QDataStream stream ( &data, QIODevice::WriteOnly );
     stream << (quint8) 129;
@@ -275,14 +275,14 @@ void WPNWebSocket::write(QString message)
     if ( sz > 65535 )
     {
         stream << (quint8) (127+size_mask);
-        stream << (quint64) message.size();
+        stream << sz;
     }
     else if ( sz > 125 )
     {
         stream << (quint8) (126+size_mask);
-        stream << (quint16) message.size();
+        stream << (quint16) sz;
     }
-    else stream << (quint8) (message.size() + size_mask);
+    else stream << (quint8) (sz + size_mask);
 
     if ( m_mask )
     {
@@ -295,11 +295,11 @@ void WPNWebSocket::write(QString message)
         }
 
         // ...and encode the message with it
-        for ( quint8 i = 0; i < message.size(); ++i )
+        for ( quint8 i = 0; i < sz; ++i )
             stream << (quint8) ( message[i].toLatin1() ^ mask[i%4]);
     }
 
-    else data.append(message.toLatin1());
+    else data.append(message.toUtf8());
 
     m_tcp_con->write(data);
     qDebug() << "WebSocket Out:" << message;

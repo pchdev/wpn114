@@ -93,7 +93,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
 
     Q_INTERFACES    ( QQmlPropertyValueSource )
 
-    Q_PROPERTY      ( QString name READ name WRITE setName )
+    Q_PROPERTY      ( QString name READ name WRITE setName NOTIFY nameChanged )
     Q_PROPERTY      ( WPNDevice* device READ device WRITE setDevice )
     Q_PROPERTY      ( WPNNode* parent READ parent WRITE setParent )
 
@@ -175,6 +175,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     void setListening       ( bool listen, WPNDevice* target );
 
     signals:
+    void nameChanged        ( );
     void valueChanged       ( QVariant newValue );
     void valueReceived      ( QVariant newValue );
 
