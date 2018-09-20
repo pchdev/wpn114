@@ -73,47 +73,55 @@ void WPNQueryServer::setUdpPort(quint16 port)
 void WPNQueryServer::onNewConnection(WPNWebSocket* con)
 {
     auto client = new WPNQueryClient(con);
-    m_clients.push_back(client);
+    m_clients.push_back(client);   
 
     QObject::connect ( client, SIGNAL(valueUpdate(QJsonObject)),
                       this, SLOT(onValueUpdate(QJsonObject)));
 
     QObject::connect ( client, SIGNAL(command(QJsonObject)),
                        this, SLOT(onCommand(QJsonObject)));
+
+    qDebug() << "[OSCQUERY-SERVER] New client connection";
+    emit newConnection();
+}
+
+void WPNQueryServer::onClientHttpQuery(QString query)
+{
+    WPNQueryClient* sender = qobject_cast<WPNQueryClient*>(QObject::sender());
+    onHttpRequest(sender->tcpConnection(), query);
 }
 
 void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
 {
-    if ( req.contains("HOST_INFO") ) onHostInfoRequest(sender);
+    if ( req.contains("HOST_INFO") )
+        sender->write(hostInfoJson().toUtf8());
+
     else if ( req.contains("GET /") )
     {
         auto spl = req.split(' ');
-        onNamespaceRequest(sender, spl[1]);
+        sender->write(namespaceJson(spl[1]).toUtf8());
     }
 }
 
-void WPNQueryServer::onHostInfoRequest(QTcpSocket* sender)
+QString WPNQueryServer::hostInfoJson()
 {
-    auto resp = HTTP::formatJsonResponse(m_settings.toJson());
-    if ( sender ) sender->write(resp.toUtf8());
+    qDebug() << "[OSCQUERY-SERVER] HOST_INFO requested";
+    return HTTP::formatJsonResponse(m_settings.toJson());
 }
 
-void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
+QString WPNQueryServer::namespaceJson(QString method)
 {
+    qDebug() << "[OSCQUERY-SERVER] NAMESPACE requested for method:" << method ;
+
     if ( method.contains("?") )
     {
         auto spl   = method.split('?');
         auto node  = m_root_node->subnode(spl[0]);
 
-        if ( !node ) return;
+        if ( !node ) return "";
 
         auto obj   = node->attributeJson(spl[1]);
-        auto resp  = HTTP::formatJsonResponse(obj);
-
-        sender->write ( resp.toUtf8() );
-
-        for ( const auto& client : m_clients )
-            client->writeWebSocket(node->attributeJson(spl[1]));
+        return HTTP::formatJsonResponse(obj);
     }
 
     else
@@ -123,22 +131,17 @@ void WPNQueryServer::onNamespaceRequest(QTcpSocket* sender, QString method)
         if ( !node )
         {
             emit unknownMethodRequested(method);
-            return; // TODO: 404 reply
+            return ""; // TODO: 404 reply
         }
 
         if ( auto file = dynamic_cast<WPNFileNode*>(node) )
         {
             // if node is a file
             // reply with the contents of the file
-            sender->write(HTTP::formatFileResponse(file->data()));
-            return;
+            return HTTP::formatFileResponse(file->data());
         }
 
-        auto resp = HTTP::formatJsonResponse(node->toJson());
-        sender->write ( resp.toUtf8() );
-
-        for ( const auto& client : m_clients )
-            client->writeWebSocket(node->toJson());
+        return HTTP::formatJsonResponse(node->toJson());
     }
 }
 

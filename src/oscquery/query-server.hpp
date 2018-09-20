@@ -32,14 +32,16 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     void setName    ( QString name ) { m_settings.name = name; }
 
     signals:
+    void newConnection();
     void unknownMethodRequested ( QString method );
 
     protected slots:
+    void onClientHttpQuery      ( QString query );
     void onCommand              ( QJsonObject command_obj );
     void onNewConnection        ( WPNWebSocket* client );
     void onHttpRequest          ( QTcpSocket* sender, QString req );
-    void onHostInfoRequest      ( QTcpSocket* sender );
-    void onNamespaceRequest     ( QTcpSocket* sender, QString method );
+    QString hostInfoJson        ( );
+    QString namespaceJson       ( QString method );
 
     private:        
     OSCHandler* m_osc_hdl;

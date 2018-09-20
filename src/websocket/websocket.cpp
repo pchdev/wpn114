@@ -143,6 +143,7 @@ void WPNWebSocket::onConnected()
 {
     // tcp-connection established,
     // send http 'handshake' upgrade request to server
+    qDebug() << "[WEBSOCKET] TcpSocket connected, generating Sec-Key and requesting WebSocket-Handshake";
     generateEncryptedSecKey();
     requestHandshake();
 }
@@ -156,9 +157,10 @@ void WPNWebSocket::onRawMessageReceived()
         QByteArray data = sender->readAll();
         if ( data.contains("HTTP") )
         {
-            qDebug() << "HTTP.in:" << data;
              if ( data.contains("Sec-WebSocket-Accept"))
                  onHandshakeResponseReceived(data);
+
+             else emit httpMessageReceived(data);
         }
 
         else decode(data);
@@ -182,10 +184,11 @@ void WPNWebSocket::onHandshakeResponseReceived(QString resp)
 
     if ( key != m_accept_key )
     {
-        qDebug() << "Error: Sec-WebSocket-Accept key is incorrect.";
+        qDebug() << "[WEBSOCKET] Error: Sec-WebSocket-Accept key is incorrect.";
         return;
     }
 
+    qDebug() << "[WEBSOCKET] Handshake Accepted and Validated";
     emit connected();
 }
 
@@ -252,7 +255,6 @@ void WPNWebSocket::onRequestReadyWrite()
 
             delete sreq;
             found = true;
-            qDebug() << "HTTP.out:" << req.req;
             break;
         }
 
@@ -302,7 +304,6 @@ void WPNWebSocket::write(QString message)
     else data.append(message.toUtf8());
 
     m_tcp_con->write(data);
-    qDebug() << "WebSocket Out:" << message;
 }
 
 void WPNWebSocket::decode(QByteArray data)

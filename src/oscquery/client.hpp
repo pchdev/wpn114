@@ -29,6 +29,8 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void writeWebSocket     ( QString message );
     void writeWebSocket     ( QJsonObject message );
 
+    QTcpSocket* tcpConnection ();
+
     quint16 port        ( ) const { return m_host_port; }
     QString hostAddr    ( ) const { return m_host_addr; }
     void setOscPort     ( quint16 port );
@@ -39,21 +41,21 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void setZeroConfHost ( QString host ) { m_zconf_host = host; }
 
     signals:
-    void connected          ( );
-    void disconnected       ( );
-    void hostAddrChanged    ( );
-    void hostInfoRequest    ( );
-    void valueUpdate        ( QJsonObject );
-    void command            ( QJsonObject );
+    void hostAddrChanged        ( );
+    void connected              ( );
+    void disconnected           ( );
+    void valueUpdate            ( QJsonObject );
+    void command                ( QJsonObject );
+    void httpMessageReceived    ( QString message );
 
     protected slots:
-
     void onZeroConfServiceAdded ( QZeroConfService srv );
     void onHostInfoReceived     ( QJsonObject host_info );
     void onNamespaceReceived    ( QJsonObject nspace );
     void requestStreamStart     ( );
 
     void onConnected            ( );
+    void onHttpMessageReceived  ( QString message );
     void onTextMessageReceived  ( QString message );
 
     private:

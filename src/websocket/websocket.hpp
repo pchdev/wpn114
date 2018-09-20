@@ -39,6 +39,7 @@ class WPNWebSocket : public QObject
     QTcpSocket* tcpConnection() { return m_tcp_con; }
 
     signals:
+    void httpMessageReceived    ( QString );
     void textMessageReceived    ( QString );
     void binaryFrameReceived    ( QByteArray );
 

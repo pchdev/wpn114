@@ -15,8 +15,6 @@ QString HTTP::formatJsonResponse( QString response )
     resp.append     ( "\r\n" );
     resp.append     ( response );
 
-    qDebug() << "HTTP.out" << resp;
-
     return resp;
 }
 
@@ -29,9 +27,9 @@ QString HTTP::formatRequest(QString address, QString attr, QString host)
 {
     QString req = "GET ";
 
-    req.append(address);
-    if ( !attr.isEmpty() )
-        req.append("?").append(attr);
+    req.append  ( address );
+
+    if ( !attr.isEmpty() ) req.append("?").append(attr);
 
     req.append(" HTTP/1.1\r\n");
 

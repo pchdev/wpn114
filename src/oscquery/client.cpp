@@ -12,6 +12,7 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
     QObject::connect(m_ws_con, SIGNAL(connected()), this, SIGNAL(connected()));
     QObject::connect(m_ws_con, SIGNAL(connected()), this, SLOT(onConnected()));
     QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
+    QObject::connect(m_ws_con, SIGNAL(httpMessageReceived(QString)), this, SIGNAL(httpMessageReceived(QString)));
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
 }
 
@@ -21,6 +22,7 @@ WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler())
     // no need for a local udp port
     m_ws_con = con;
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
+    QObject::connect(m_ws_con, SIGNAL(httpMessageReceived(QString)), this, SIGNAL(httpMessageReceived(QString)));
     QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
 }
 
@@ -30,6 +32,7 @@ void WPNQueryClient::componentComplete()
     if ( !m_host_addr.isEmpty()) m_ws_con->connect();
     else if ( !m_zconf_host.isEmpty() )
     {
+        qDebug() << "[OSCQUERY-CLIENT] Starting Zeroconf discovery";
         m_zconf.startBrowser("_oscjson._tcp");
         QObject::connect( &m_zconf, SIGNAL(serviceAdded(QZeroConfService)),
                           this, SLOT(onZeroConfServiceAdded(QZeroConfService)) );
@@ -41,7 +44,9 @@ void WPNQueryClient::onConnected()
     // request host info
     // request namespace
 
-    m_ws_con->write("/?HOST_INFO");
+    qDebug() << "[OSCQUERY-CLIENT] Connected to host, requesting info & namespace";
+    m_ws_con->request(HTTP::formatRequest("/", "HOST_INFO", m_host_addr));
+    m_ws_con->request(HTTP::formatRequest("/", "", m_host_addr));
 }
 
 void WPNQueryClient::setHostAddr(QString addr)
@@ -63,9 +68,17 @@ void WPNQueryClient::setOscPort(quint16 port)
 
 void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
 {
+    qDebug() << "[OSCQUERY-CLIENT] ZConf service discovered: " << service.name();
+
     if ( service.name() == m_zconf_host )
-    {
-        m_ws_con->connect   ( service.ip().toString(), service.port() );
+    {        
+        m_host_addr = service.ip().toString();
+        m_host_port = service.port();
+
+        qDebug() << "[OSCQUERY-CLIENT] ZConf target acquired: "
+                 << m_host_addr << m_host_port;
+
+        m_ws_con->connect   ( m_host_addr, m_host_port );
         m_zconf.stopBrowser ( );
     }
 }
@@ -89,8 +102,18 @@ void WPNQueryClient::onTextMessageReceived(QString message)
     qDebug() << "WebSocket In:" << message;
 }
 
+void WPNQueryClient::onHttpMessageReceived(QString message)
+{
+    auto idx = message.indexOf('{');
+
+    if ( idx >= 0 ) message.remove(0, idx);
+    onTextMessageReceived(message);
+}
+
 void WPNQueryClient::onHostInfoReceived(QJsonObject info)
 {
+    qDebug() << "[OSCQUERY-CLIENT] HOST_INFO received";
+
     if ( info.contains("NAME" ) )  m_settings.name = info["NAME"].toString();
     if ( info.contains("OSC_PORT") ) m_settings.osc_port = info["OSC_PORT"].toInt();
     if ( info.contains("OSC_TRANSPORT")) m_settings.osc_transport = info["OSC_TRANSPORT"].toString();
@@ -118,7 +141,6 @@ void WPNQueryClient::onHostInfoReceived(QJsonObject info)
 
     m_ws_con->write("/");
     m_ws_con->write("/play");
-
 }
 
 void WPNQueryClient::requestHttp(QString address)
@@ -179,5 +201,10 @@ void WPNQueryClient::pushNodeValue(WPNNode* node)
         m_ws_con->write(QJsonDocument(node->attributeJson("VALUE")).toJson(QJsonDocument::Compact));
 
     else m_osc_hdl->sendMessage(node->path(), QVariantList{node->value()});
+}
+
+QTcpSocket* WPNQueryClient::tcpConnection()
+{
+    return m_ws_con->tcpConnection();
 }
 
