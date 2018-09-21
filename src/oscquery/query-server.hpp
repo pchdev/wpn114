@@ -6,6 +6,7 @@
 #include <QQmlParserStatus>
 #include "client.hpp"
 #include "../websocket/websocket.hpp"
+#include <src/http/http.hpp>
 #include <qzeroconf.h>
 
 class WPNQueryServer : public WPNDevice, public QQmlParserStatus
@@ -49,4 +50,5 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     WPNWebSocketServer* m_ws_server;
     QVector<WPNQueryClient*> m_clients;
     QZeroConf m_zeroconf;
+    HTTP::ReplyManager m_reply_manager;
 };

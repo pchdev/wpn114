@@ -2,7 +2,9 @@
 #include <QDateTime>
 #include <QtDebug>
 
-QString HTTP::formatJsonResponse( QString response )
+using namespace HTTP;
+
+QString ReplyManager::formatJsonResponse( QString response )
 {
     QString resp    ( "HTTP/1.1 200 OK\r\n" );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
@@ -18,29 +20,12 @@ QString HTTP::formatJsonResponse( QString response )
     return resp;
 }
 
-QString HTTP::formatJsonResponse(QJsonObject obj)
+QString ReplyManager::formatJsonResponse(QJsonObject obj)
 {
-    return HTTP::formatJsonResponse(QJsonDocument(obj).toJson(QJsonDocument::Compact));
+    return ReplyManager::formatJsonResponse(QJsonDocument(obj).toJson(QJsonDocument::Compact));
 }
 
-QString HTTP::formatRequest(QString address, QString attr, QString host)
-{
-    QString req = "GET ";
-
-    req.append  ( address );
-
-    if ( !attr.isEmpty() ) req.append("?").append(attr);
-
-    req.append(" HTTP/1.1\r\n");
-
-    req.append  ( host.prepend("Host: ")).append("\r\n" );
-    req.append  ( "Accept: */*\r\n" );
-    req.append  ( "Connection: close\r\n\r\n" );
-
-    return req;
-}
-
-QByteArray HTTP::formatFileResponse(QByteArray file)
+QByteArray ReplyManager::formatFileResponse(QByteArray file)
 {
     QByteArray resp ( "HTTP/1.1 200 OK\r\n" );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
@@ -55,3 +40,42 @@ QByteArray HTTP::formatFileResponse(QByteArray file)
 
     return resp;
 }
+
+ReplyManager::ReplyManager() : m_free(true)
+{
+
+}
+
+ReplyManager::~ReplyManager() {}
+
+void ReplyManager::enqueue(Reply rep)
+{
+    m_queue.enqueue(rep);
+    if ( m_free ) next();
+}
+
+void ReplyManager::onBytesWritten(qint64 bytes)
+{
+    auto rep = m_queue.head();
+    rep.target->deleteLater();
+
+    QObject::disconnect( rep.target, SIGNAL(bytesWritten(qint64)),
+                         this, SLOT(onBytesWritten(qint64)));
+    m_queue.dequeue();
+    m_free = true;
+
+    if ( !m_queue.isEmpty()) next();
+}
+
+void ReplyManager::next()
+{
+    auto rep = m_queue.head();
+
+    QObject::connect( rep.target, SIGNAL(bytesWritten(qint64)),
+                      this, SLOT(onBytesWritten(qint64)) );
+
+    rep.target->write(rep.reply);
+    m_free = false;
+}
+
+

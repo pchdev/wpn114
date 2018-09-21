@@ -94,7 +94,7 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
 void WPNQueryServer::onClientHttpQuery(QString query)
 {
     WPNQueryClient* sender = qobject_cast<WPNQueryClient*>(QObject::sender());
-        onHttpRequest(sender->tcpConnection(), query);
+    onHttpRequest(sender->tcpConnection(), query);
 }
 
 void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
@@ -105,12 +105,18 @@ void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
     {
         if ( request.contains("HOST_INFO") )
         {
-            sender->write(HTTP::formatJsonResponse(hostInfoJson()).toUtf8());
+            HTTP::Reply rep;
+            rep.target = sender;
+            rep.reply = hostInfoJson().toUtf8();
+            m_reply_manager.enqueue(rep);
         }
         else
         {
-//            auto spl = request.split(' ', QString::SkipEmptyParts);
-//            sender->write(HTTP::formatJsonResponse(namespaceJson(spl[0])).toUtf8());
+            HTTP::Reply rep;
+            rep.target = sender;
+            auto spl2 = request.split(' ', QString::SkipEmptyParts);
+            rep.reply = namespaceJson(spl2[0]).toUtf8();
+            m_reply_manager.enqueue(rep);
         }
     }
 }
@@ -118,7 +124,7 @@ void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
 QString WPNQueryServer::hostInfoJson()
 {
     qDebug() << "[OSCQUERY-SERVER] HOST_INFO requested";
-    return HTTP::formatJsonResponse(m_settings.toJson());
+    return HTTP::ReplyManager::formatJsonResponse(m_settings.toJson());
 }
 
 QString WPNQueryServer::namespaceJson(QString method)
@@ -133,9 +139,8 @@ QString WPNQueryServer::namespaceJson(QString method)
         if ( !node ) return "";
 
         auto obj   = node->attributeJson(spl[1]);
-        return HTTP::formatJsonResponse(obj);
+        return HTTP::ReplyManager::formatJsonResponse(obj);
     }
-
     else
     {
         WPNNode* node  = m_root_node->subnode(method);
@@ -150,10 +155,10 @@ QString WPNQueryServer::namespaceJson(QString method)
         {
             // if node is a file
             // reply with the contents of the file
-            return HTTP::formatFileResponse(file->data());
+            return HTTP::ReplyManager::formatFileResponse(file->data());
         }
 
-        return HTTP::formatJsonResponse(node->toJson());
+        return HTTP::ReplyManager::formatJsonResponse(node->toJson());
     }
 }
 

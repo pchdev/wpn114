@@ -2,14 +2,40 @@
 #include <QString>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QTcpSocket>
+#include <QQueue>
+#include <QObject>
 
 namespace HTTP
 {
-QString formatJsonResponse( QString response );
-QString formatJsonResponse( QJsonObject obj );
+struct Reply
+{
+    QTcpSocket* target;
+    QByteArray reply;
+};
 
-QByteArray formatFileResponse (QByteArray file);
-QString formatRequest(QString address, QString attribute , QString host);
+class ReplyManager : public QObject
+{
+    Q_OBJECT
+
+    public:
+
+    ReplyManager();
+    ~ReplyManager();
+    void enqueue(Reply rep);
+    static QString formatJsonResponse( QString response );
+    static QString formatJsonResponse( QJsonObject obj );
+    static QByteArray formatFileResponse( QByteArray file);
+
+    protected slots:
+    void onBytesWritten(qint64);
+    void next();
+
+    private:
+    bool m_free;
+    QQueue<Reply> m_queue;
+};
+
 }
 
 
