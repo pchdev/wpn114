@@ -147,8 +147,6 @@ void WPNQueryClient::onHostInfoReceived(QJsonObject info)
 
 void WPNQueryClient::requestHttp(QString address)
 {
-//    m_ws_con->request(HTTP::formatRequest(address, "", m_host_addr));
-
     QNetworkRequest req;
 
     req.setUrl( QUrl(m_host_url+address) );
@@ -175,8 +173,15 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
     for ( const auto& key : contents.keys() )
     {
         QJsonObject jsnode = contents[key].toObject();
-        auto node = WPNNode::fromJson(jsnode);
 
+        if ( auto node = m_root_node->subnode(jsnode["FULL_PATH"].toString()))
+        {
+            qDebug() << "updating node:" << key;
+            node->update(jsnode);
+            continue;
+        }
+
+        auto node = WPNNode::fromJson(jsnode);
         m_root_node->addSubnode(node);
     }
 }

@@ -170,6 +170,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     void addSubnode                 ( WPNNode* node );
     void removeSubnode              ( WPNNode* node );
     void removeSubnode              ( QString name );
+    void update                     ( QJsonObject obj );
 
     bool listening          ( ) const { return m_listening; }
     void setListening       ( bool listen, WPNDevice* target );

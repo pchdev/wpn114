@@ -5,13 +5,7 @@
 WPNNode* WPNNode::fromJson(QJsonObject obj)
 {
     WPNNode* node = new WPNNode;
-
-    node->setPath           ( obj["FULL_PATH"].toString() );
-    node->setTypeFromTag    ( obj["TYPE"].toString() );
-    node->setAccess         ( static_cast<Access::Values>(obj["ACCESS"].toInt()) );
-    node->setDescription    ( obj["DESCRIPTION"].toString()) ;
-
-    node->setValue          ( obj["VALUE"].toArray() );
+    node->update(obj);
 
     // recursively parse children
     if ( obj.contains("CONTENTS") )
@@ -23,6 +17,15 @@ WPNNode* WPNNode::fromJson(QJsonObject obj)
     }
 
     return node;
+}
+
+void WPNNode::update(QJsonObject obj)
+{
+    setPath           ( obj["FULL_PATH"].toString() );
+    setTypeFromTag    ( obj["TYPE"].toString() );
+    setAccess         ( static_cast<Access::Values>(obj["ACCESS"].toInt()) );
+    setDescription    ( obj["DESCRIPTION"].toString()) ;
+    setValue          ( obj["VALUE"].toArray() );
 }
 
 WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr)
@@ -204,9 +207,8 @@ void WPNNode::setValueQuiet(QVariant value)
 }
 
 void WPNNode::setValue(QVariant value)
-{
-    m_attributes.value = value;
-
+{    
+    setValueQuiet(value);
     for ( const auto& listener : m_listeners )
          listener->pushNodeValue(this);
 }
