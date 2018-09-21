@@ -4,6 +4,7 @@
 #include <QCryptographicHash>
 #include <QDataStream>
 #include <src/http/http.hpp>
+#include <QNetworkReply>
 
 WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
 {
@@ -12,8 +13,10 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
     QObject::connect(m_ws_con, SIGNAL(connected()), this, SIGNAL(connected()));
     QObject::connect(m_ws_con, SIGNAL(connected()), this, SLOT(onConnected()));
     QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
-    QObject::connect(m_ws_con, SIGNAL(httpMessageReceived(QString)), this, SIGNAL(httpMessageReceived(QString)));
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
+
+    m_http_manager = new QNetworkAccessManager(this);
+    QObject::connect(m_http_manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpReply(QNetworkReply*)));
 }
 
 WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler())
@@ -43,10 +46,11 @@ void WPNQueryClient::onConnected()
 {
     // request host info
     // request namespace
-
     qDebug() << "[OSCQUERY-CLIENT] Connected to host, requesting info & namespace";
-    m_ws_con->request(HTTP::formatRequest("/", "HOST_INFO", m_host_addr));
-    m_ws_con->request(HTTP::formatRequest("/", "", m_host_addr));
+
+    m_host_url = m_host_addr.prepend("http://")+":"+QString::number(m_host_port);
+    requestHttp("/?HOST_INFO");
+    requestHttp("/");
 }
 
 void WPNQueryClient::setHostAddr(QString addr)
@@ -94,20 +98,18 @@ void WPNQueryClient::onTextMessageReceived(QString message)
     auto obj = QJsonDocument::fromJson(message.toUtf8()).object();
 
     if ( obj.contains("COMMAND")) emit command(obj);
-    else if ( obj.contains("VALUE")) emit valueUpdate(obj);
-
-    else if ( obj.contains("OSC_PORT")) onHostInfoReceived(obj);
     else if ( obj.contains("FULL_PATH")) onNamespaceReceived(obj);
+    else if ( obj.contains("OSC_PORT")) onHostInfoReceived(obj);
 
-    qDebug() << "WebSocket In:" << message;
+    qDebug() << "Message In:" << message;
 }
 
-void WPNQueryClient::onHttpMessageReceived(QString message)
+void WPNQueryClient::onHttpReply(QNetworkReply* reply)
 {
-    auto idx = message.indexOf('{');
+    QByteArray data = reply->readAll();
+    onTextMessageReceived(data);
 
-    if ( idx >= 0 ) message.remove(0, idx);
-    onTextMessageReceived(message);
+    reply->deleteLater();
 }
 
 void WPNQueryClient::onHostInfoReceived(QJsonObject info)
@@ -145,7 +147,12 @@ void WPNQueryClient::onHostInfoReceived(QJsonObject info)
 
 void WPNQueryClient::requestHttp(QString address)
 {
-    m_ws_con->request(HTTP::formatRequest(address, "", m_host_addr));
+//    m_ws_con->request(HTTP::formatRequest(address, "", m_host_addr));
+
+    QNetworkRequest req;
+
+    req.setUrl( QUrl(m_host_url+address) );
+    m_http_manager->get(req);
 }
 
 void WPNQueryClient::requestStreamStart()
@@ -162,6 +169,7 @@ void WPNQueryClient::requestStreamStart()
 
 void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
 {
+    qDebug() << "[OSCQUERY-CLIENT] Namespace information received";
     QJsonObject contents = nspace["CONTENTS"].toObject();
 
     for ( const auto& key : contents.keys() )

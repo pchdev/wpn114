@@ -9,6 +9,9 @@
 #include "../http/http.hpp"
 #include "file.hpp"
 #include <QNetworkReply>
+#include <chrono>
+#include <thread>
+
 
 WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketServer(5678)),
     m_osc_hdl(new OSCHandler())
@@ -81,6 +84,9 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
     QObject::connect ( client, SIGNAL(command(QJsonObject)),
                        this, SLOT(onCommand(QJsonObject)));
 
+    QObject::connect ( client, SIGNAL(httpMessageReceived(QString)),
+                       this, SLOT(onClientHttpQuery(QString)));
+
     qDebug() << "[OSCQUERY-SERVER] New client connection";
     emit newConnection();
 }
@@ -88,18 +94,24 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
 void WPNQueryServer::onClientHttpQuery(QString query)
 {
     WPNQueryClient* sender = qobject_cast<WPNQueryClient*>(QObject::sender());
-    onHttpRequest(sender->tcpConnection(), query);
+        onHttpRequest(sender->tcpConnection(), query);
 }
 
 void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
 {
-    if ( req.contains("HOST_INFO") )
-        sender->write(hostInfoJson().toUtf8());
+    auto spl = req.split("GET", QString::SkipEmptyParts);
 
-    else if ( req.contains("GET /") )
+    for ( const auto& request : spl )
     {
-        auto spl = req.split(' ');
-        sender->write(namespaceJson(spl[1]).toUtf8());
+        if ( request.contains("HOST_INFO") )
+        {
+            sender->write(HTTP::formatJsonResponse(hostInfoJson()).toUtf8());
+        }
+        else
+        {
+//            auto spl = request.split(' ', QString::SkipEmptyParts);
+//            sender->write(HTTP::formatJsonResponse(namespaceJson(spl[0])).toUtf8());
+        }
     }
 }
 

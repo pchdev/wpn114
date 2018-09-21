@@ -50,7 +50,6 @@ class WPNWebSocket : public QObject
     void onConnected                  ( );
     void onRawMessageReceived         ( );
     void onHandshakeResponseReceived  ( QString resp );
-    void onRequestReadyWrite          ( );
 
     protected:
     bool m_mask;

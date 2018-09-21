@@ -231,37 +231,7 @@ void WPNWebSocket::requestHandshake()
 
 void WPNWebSocket::request(QString req)
 {
-    QTcpSocket* tmp = new QTcpSocket;
-    Request sreq = { tmp, req };
-
-    m_request_queue.push_back(sreq);
-
-    QObject::connect(tmp, SIGNAL(connected()), this, SLOT(onRequestReadyWrite()));
-    tmp->connectToHost(m_host_addr, m_host_port);
-}
-
-void WPNWebSocket::onRequestReadyWrite()
-{
-    QTcpSocket* sreq = qobject_cast<QTcpSocket*>(QObject::sender());
-
-    int i = 0;
-    bool found = false;
-    for ( const auto& req : m_request_queue )
-    {
-        if ( req.con == sreq )
-        {
-            sreq->write(req.req.toUtf8());
-            sreq->disconnectFromHost();
-
-            delete sreq;
-            found = true;
-            break;
-        }
-
-        ++i;
-    }
-
-    if ( found ) m_request_queue.remove(i);
+    m_tcp_con->write(req.toUtf8());
 }
 
 void WPNWebSocket::write(QString message)

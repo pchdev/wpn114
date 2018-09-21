@@ -6,6 +6,7 @@
 #include <QTcpSocket>
 #include <QQmlParserStatus>
 #include <qzeroconf.h>
+#include <QNetworkAccessManager>
 
 class WPNQueryClient : public WPNDevice, public QQmlParserStatus
 {
@@ -49,21 +50,23 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void httpMessageReceived    ( QString message );
 
     protected slots:
+    void onHttpReply            ( QNetworkReply* );
     void onZeroConfServiceAdded ( QZeroConfService srv );
     void onHostInfoReceived     ( QJsonObject host_info );
     void onNamespaceReceived    ( QJsonObject nspace );
     void requestStreamStart     ( );
 
     void onConnected            ( );
-    void onHttpMessageReceived  ( QString message );
     void onTextMessageReceived  ( QString message );
 
     private:
+    QNetworkAccessManager* m_http_manager;
     QZeroConf m_zconf;
     QString m_zconf_host;
     OSCHandler* m_osc_hdl;
     WPNWebSocket* m_ws_con;
     quint16 m_host_port;
     QString m_host_addr;
+    QString m_host_url;
     HostSettings m_settings;
 };
