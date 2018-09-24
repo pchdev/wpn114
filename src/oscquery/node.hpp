@@ -191,7 +191,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     WPNDevice*      m_device;
     WPNNode*        m_parent;
 
-    QQmlProperty   m_target_property;
+    QQmlProperty    m_target_property;
 
     bool  m_listening;
 

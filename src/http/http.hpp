@@ -25,7 +25,7 @@ class ReplyManager : public QObject
     void enqueue(Reply rep);
     static QString formatJsonResponse( QString response );
     static QString formatJsonResponse( QJsonObject obj );
-    static QByteArray formatFileResponse( QByteArray file);
+    static QByteArray formatFileResponse( QByteArray file, QString MIME);
 
     protected slots:
     void onBytesWritten(qint64);

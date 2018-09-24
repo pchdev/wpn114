@@ -76,7 +76,7 @@ void OSCHandler::readOSCMessage(QByteArray message)
     uint8_t ttpads = 4-((typetag.size()+1)%4);
     uint32_t total = address.size()+adpads+typetag.size()+ttpads+1;
 
-    stream.skipRawData(total);
+    stream.skipRawData(total);   
 
     for ( const QChar& c : typetag )
     {
@@ -105,7 +105,10 @@ void OSCHandler::readOSCMessage(QByteArray message)
     }
 
     qDebug() << "OSCMessage received:" << address << arguments;
-    emit messageReceived(address, arguments);
+
+    if ( arguments.size() == 0 ) emit messageReceived(address, QVariant());
+    if ( arguments.size() == 1 ) emit messageReceived(address, arguments[0]);
+    else emit messageReceived(address, arguments);
 
 }
 

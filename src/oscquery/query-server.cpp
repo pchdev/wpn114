@@ -48,8 +48,8 @@ void WPNQueryServer::componentComplete()
     QObject::connect( m_ws_server, SIGNAL(httpRequestReceived(QTcpSocket*,QString)),
                       this, SLOT(onHttpRequest(QTcpSocket*,QString)));
 
-    QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariantList)),
-                      this, SLOT(onValueUpdate(QString,QVariantList)));
+    QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariant)),
+                      this, SLOT(onValueUpdate(QString,QVariant)));
 
     m_osc_hdl->setLocalPort     ( m_settings.osc_port );
     m_ws_server->setPort        ( m_settings.tcp_port );
@@ -155,7 +155,12 @@ QString WPNQueryServer::namespaceJson(QString method)
         {
             // if node is a file
             // reply with the contents of the file
-            return HTTP::ReplyManager::formatFileResponse(file->data());
+
+            if ( file->path().endsWith(".png"))
+                return HTTP::ReplyManager::formatFileResponse(file->data(), "image/png");
+
+            else if ( file->path().endsWith(".qml"))
+                return HTTP::ReplyManager::formatFileResponse(file->data(), "text/plain");
         }
 
         return HTTP::ReplyManager::formatJsonResponse(node->toJson());

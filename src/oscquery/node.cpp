@@ -41,7 +41,7 @@ void WPNNode::update(QJsonObject obj)
 
 }
 
-WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr)
+WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr), m_target_property(nullptr)
 {
     m_attributes.access         = Access::RW;
     m_attributes.clipmode       = Clipmode::NONE;
@@ -209,7 +209,10 @@ void WPNNode::setPath(QString path)
 }
 
 void WPNNode::setValueQuiet(QVariant value)
-{
+{   
+    if ( m_target_property.isWritable())
+        m_target_property.write(value);
+
     emit valueReceived(value);
 
     if ( m_attributes.value != value )
@@ -222,6 +225,7 @@ void WPNNode::setValueQuiet(QVariant value)
 void WPNNode::setValue(QVariant value)
 {    
     setValueQuiet(value);
+
     for ( const auto& listener : m_listeners )
          listener->pushNodeValue(this);
 }

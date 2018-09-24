@@ -39,7 +39,7 @@ class OSCHandler : public QObject, public QQmlParserStatus
     void localPortChanged       ( );
     void remotePortChanged      ( );
     void remoteAddressChanged   ( );
-    void messageReceived        ( QString address, QVariantList arguments );
+    void messageReceived        ( QString address, QVariant arguments );
 
     private:
     uint16_t m_local_port;

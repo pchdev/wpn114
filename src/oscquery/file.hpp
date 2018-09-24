@@ -2,6 +2,7 @@
 
 #include "node.hpp"
 #include <QFile>
+#include <QImage>
 
 class WPNFileNode : public WPNNode
 {

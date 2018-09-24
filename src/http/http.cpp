@@ -25,13 +25,14 @@ QString ReplyManager::formatJsonResponse(QJsonObject obj)
     return ReplyManager::formatJsonResponse(QJsonDocument(obj).toJson(QJsonDocument::Compact));
 }
 
-QByteArray ReplyManager::formatFileResponse(QByteArray file)
+QByteArray ReplyManager::formatFileResponse(QByteArray file, QString MIME)
 {
     QByteArray resp ( "HTTP/1.1 200 OK\r\n" );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
     resp.append     ( "\r\n" );
     resp.append     ( "Server: Qt/5.1.1\r\n" );
-    resp.append     ( "Content-Type: text/plain\r\n" );
+    resp.append     ( "Content-Type: " );
+    resp.append     ( MIME.append("\r\n"));
     resp.append     ( "Content-Length: " );
     resp.append     ( QString::number(file.size()) );
     resp.append     ( "\r\n" );

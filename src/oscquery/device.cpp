@@ -104,7 +104,7 @@ void WPNDevice::onValueUpdate(QJsonObject obj)
 
 }
 
-void WPNDevice::onValueUpdate(QString method, QVariantList arguments)
+void WPNDevice::onValueUpdate(QString method, QVariant arguments)
 {
     m_root_node->subnode(method)->setValueQuiet(arguments);
 }

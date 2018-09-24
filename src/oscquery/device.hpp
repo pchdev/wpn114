@@ -63,7 +63,7 @@ class WPNDevice : public QObject
     Q_INVOKABLE void explore    ( ) const;
 
     public slots:
-    void onValueUpdate  ( QString method, QVariantList arguments );
+    void onValueUpdate  ( QString method, QVariant arguments );
     void onValueUpdate  ( QJsonObject obj );
 
     protected:
