@@ -3,11 +3,13 @@
 #include <QtDebug>
 #include <QStandardPaths>
 #include <src/oscquery/client.hpp>
+#include <QJsonArray>
 
-WPNFolderNode::WPNFolderNode() : m_recursive(true)
+WPNFolderNode::WPNFolderNode() : m_recursive(true), WPNNode()
 {        
-    m_attributes.type       = Type::List;
-    m_attributes.access     = Access::READ;
+    m_attributes.type           = Type::List;
+    m_attributes.access         = Access::READ;
+    m_attributes.extended_type  = "folder";
 
     m_filters << "*.png" << "*.qml";
 }
@@ -101,23 +103,28 @@ QUrl WPNFolderMirror::toUrl(QString file)
 
 void WPNFolderMirror::onFileListChanged(QVariant list)
 {
-    m_downloads = list.toStringList();
+    for ( const auto& file : list.toList())
+        m_downloads << file.toString();
+
+    qDebug() << "[FOLDER-MIRROR] Setting up downloads: " << m_downloads;
 
     for ( const auto& file : m_downloads )
         m_queue.enqueue(toUrl(file));
 
+    qDebug() << "Url queue complete";
     next();
 }
 
 void WPNFolderMirror::parseChildren()
 {
-    // if child is a list, create another folder mirror
     for ( const auto& child : m_children )
     {
-        if ( child->type() == Type::List )
+        if ( child->extended_type() == "folder" )
         {
             auto mirror = new WPNFolderMirror;
 
+            mirror->setParent       ( this );
+            mirror->setDevice       ( m_device );
             mirror->setRecursive    ( true );
             mirror->setDestination  ( m_destination+"/"+child->name() );
             mirror->setValue        ( child->value() );

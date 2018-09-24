@@ -147,6 +147,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     QStringList tags            ( ) const { return m_attributes.tags; }
     bool critical               ( ) const { return m_attributes.critical; }
     Clipmode::Values clipmode   ( ) const { return m_attributes.clipmode; }
+    QString extended_type       ( ) const { return m_attributes.extended_type; }
 
     void setPath            ( QString path );
     void setType            ( Type::Values type );
@@ -158,6 +159,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     void setTags            ( QStringList tags );
     void setCritical        ( bool critical );    
     void setClipmode        ( Clipmode::Values clipmode );
+    void setExtendedType    ( QString extended_type );
 
     void setTypeFromTag     ( QString tag );
 

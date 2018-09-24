@@ -7,15 +7,6 @@ WPNNode* WPNNode::fromJson(QJsonObject obj)
     WPNNode* node = new WPNNode;
     node->update(obj);
 
-    // recursively parse children
-    if ( obj.contains("CONTENTS") )
-    {
-        QJsonObject contents = obj["CONTENTS"].toObject();
-
-        for ( const auto& key : contents.keys() )
-            node->addSubnode(WPNNode::fromJson(contents[key].toObject()));
-    }
-
     return node;
 }
 
@@ -23,9 +14,20 @@ void WPNNode::update(QJsonObject obj)
 {
     setPath           ( obj["FULL_PATH"].toString() );
     setTypeFromTag    ( obj["TYPE"].toString() );
+
+    // recursively parse children
+    if ( obj.contains("CONTENTS") )
+    {
+        QJsonObject contents = obj["CONTENTS"].toObject();
+
+        for ( const auto& key : contents.keys() )
+            addSubnode(WPNNode::fromJson(contents[key].toObject()));
+    }
+
     setAccess         ( static_cast<Access::Values>(obj["ACCESS"].toInt()) );
     setDescription    ( obj["DESCRIPTION"].toString()) ;
     setValue          ( obj["VALUE"].toArray() );
+    setExtendedType   ( obj["EXTENDED_TYPE"].toString());
 }
 
 WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr)
@@ -237,6 +239,11 @@ void WPNNode::setTypeFromTag(QString tag)
     else if ( tag == "ff") m_attributes.type = Type::Vec2f;
     else if ( tag == "fff") m_attributes.type = Type::Vec3f;
     else if ( tag == "ffff") m_attributes.type = Type::Vec4f;
+}
+
+void WPNNode::setExtendedType(QString type)
+{
+    m_attributes.extended_type = type;
 }
 
 void WPNNode::setListening(bool listen, WPNDevice *target)
