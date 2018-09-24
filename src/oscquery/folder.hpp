@@ -54,7 +54,6 @@ class WPNFolderMirror : public WPNNode
     void setDestination(QString destination);
 
     protected slots:
-    void parseChildren();
     QUrl toUrl(QString file);
     void onFileListChanged(QVariant list);
     void next();

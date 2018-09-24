@@ -1,12 +1,18 @@
 #include "node.hpp"
 #include <QtDebug>
 #include <QJsonArray>
+#include "folder.hpp"
 
-WPNNode* WPNNode::fromJson(QJsonObject obj)
+WPNNode* WPNNode::fromJson(QJsonObject obj, WPNDevice *dev)
 {
-    WPNNode* node = new WPNNode;
-    node->update(obj);
+    WPNNode* node = nullptr;
 
+    if ( obj["EXTENDED_TYPE"].toString() == "folder" )
+         node = new WPNFolderMirror;
+    else node = new WPNNode;
+
+    node->setDevice ( dev );
+    node->update ( obj );
     return node;
 }
 
@@ -21,13 +27,18 @@ void WPNNode::update(QJsonObject obj)
         QJsonObject contents = obj["CONTENTS"].toObject();
 
         for ( const auto& key : contents.keys() )
-            addSubnode(WPNNode::fromJson(contents[key].toObject()));
+        {
+            auto node = WPNNode::fromJson(contents[key].toObject(), m_device);
+            node->setName ( key );
+            addSubnode ( node );
+        }
     }
 
+    setExtendedType   ( obj["EXTENDED_TYPE"].toString());
     setAccess         ( static_cast<Access::Values>(obj["ACCESS"].toInt()) );
     setDescription    ( obj["DESCRIPTION"].toString()) ;
     setValue          ( obj["VALUE"].toArray() );
-    setExtendedType   ( obj["EXTENDED_TYPE"].toString());
+
 }
 
 WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr)

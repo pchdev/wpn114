@@ -22,16 +22,17 @@ void WPNFolderNode::parseDirectory(QDir dir)
     {
         WPNFileNode* node = new WPNFileNode;
 
-        node->setName       ( file );
-        node->setFilePath   ( dir.path()+"/"+file );
-        node->setPath       ( m_attributes.path+"/"+file );
-        addSubnode          ( node );
+        node->setName           ( file );
+        node->setFilePath       ( dir.path()+"/"+file );
+        node->setPath           ( m_attributes.path+"/"+file );
+        node->setExtendedType   ( "file");
+        addSubnode              ( node );
     }
 
     if ( m_recursive )
     {
-        dir.setNameFilters(QStringList{});
-        dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot );
+        dir.setNameFilters  ( QStringList{} );
+        dir.setFilter       ( QDir::Dirs | QDir::NoDotAndDotDot );
 
         for ( const auto& d : dir.entryList() )
         {
@@ -40,6 +41,7 @@ void WPNFolderNode::parseDirectory(QDir dir)
             folder->setName         ( d );
             folder->setPath         ( m_attributes.path+"/"+d );
             folder->setRecursive    ( true );
+            folder->setExtendedType ( "folder" );
             folder->setFilters      ( m_filters );
             folder->setFolderPath   ( dir.path()+"/"+d );
             addSubnode              ( folder );
@@ -73,7 +75,7 @@ void WPNFolderNode::setFilters(QStringList filters)
 
 //---------------------------------------------------------------------------------------------------------
 
-WPNFolderMirror::WPNFolderMirror() : m_recursive(true), m_current_download(nullptr)
+WPNFolderMirror::WPNFolderMirror() : WPNNode(), m_recursive(true), m_current_download(nullptr)
 {
     // whenever value is received, update downloads
     QObject::connect(this, SIGNAL(valueReceived(QVariant)), this, SLOT(onFileListChanged(QVariant)));
@@ -103,6 +105,8 @@ QUrl WPNFolderMirror::toUrl(QString file)
 
 void WPNFolderMirror::onFileListChanged(QVariant list)
 {
+    if ( m_destination.isEmpty() ) setDestination(m_attributes.path);
+
     for ( const auto& file : list.toList())
         m_downloads << file.toString();
 
@@ -111,34 +115,13 @@ void WPNFolderMirror::onFileListChanged(QVariant list)
     for ( const auto& file : m_downloads )
         m_queue.enqueue(toUrl(file));
 
-    qDebug() << "Url queue complete";
     next();
-}
-
-void WPNFolderMirror::parseChildren()
-{
-    for ( const auto& child : m_children )
-    {
-        if ( child->extended_type() == "folder" )
-        {
-            auto mirror = new WPNFolderMirror;
-
-            mirror->setParent       ( this );
-            mirror->setDevice       ( m_device );
-            mirror->setRecursive    ( true );
-            mirror->setDestination  ( m_destination+"/"+child->name() );
-            mirror->setValue        ( child->value() );
-
-            m_children_folders.push_back(mirror);
-        }
-    }
 }
 
 void WPNFolderMirror::next()
 {
     if ( m_queue.isEmpty() )
     {
-        parseChildren();
         emit mirrorComplete();
         return;
     }

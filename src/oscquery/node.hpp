@@ -111,7 +111,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     WPNNode();
     ~WPNNode();
 
-    static WPNNode* fromJson(QJsonObject);
+    static WPNNode* fromJson(QJsonObject, WPNDevice* dev);
 
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) { }

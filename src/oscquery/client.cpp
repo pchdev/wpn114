@@ -176,11 +176,12 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
 
         if ( auto node = m_root_node->subnode(jsnode["FULL_PATH"].toString()))
         {
+            node->setDevice(this);
             node->update(jsnode);
             continue;
         }
 
-        auto node = WPNNode::fromJson(jsnode);
+        auto node = WPNNode::fromJson(jsnode, this);
         m_root_node->addSubnode(node);
     }
 }
