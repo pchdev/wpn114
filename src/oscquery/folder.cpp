@@ -97,8 +97,8 @@ void WPNFolderMirror::setDestination(QString destination)
 QUrl WPNFolderMirror::toUrl(QString file)
 {
     WPNQueryClient* device = qobject_cast<WPNQueryClient*>(m_device);
-    QString root = device->hostAddr().prepend("http://").append(":").append(QString::number(device->port()));
-    root.append(file.prepend(m_destination)+"/");
+    QString root = device->hostAddr().append(":").append(QString::number(device->port()));
+    root.append(file.prepend(m_destination+"/"));
 
     return QUrl(root);
 }
@@ -150,7 +150,8 @@ void WPNFolderMirror::next()
 
 void WPNFolderMirror::onReadyRead()
 {
-    m_output.write(m_current_download->readAll());
+    auto read = m_current_download->readAll();
+    m_output.write(read);
 }
 
 void WPNFolderMirror::onComplete()
@@ -159,7 +160,9 @@ void WPNFolderMirror::onComplete()
     QObject::disconnect(m_current_download, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
     QObject::disconnect(m_current_download, SIGNAL(finished()), this, SLOT(onComplete()));
 
-    qDebug() << "[FOLDER-MIRROR] File download complete:" << m_downloads.first();
+    if  ( m_current_download->error() )
+         qDebug() << "[FOLDER-MIRROR] Error: " << m_current_download->errorString();
+    else qDebug() << "[FOLDER-MIRROR] File download complete:" << m_downloads.first();
 
     m_current_download->deleteLater();
     m_downloads.removeFirst();

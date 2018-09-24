@@ -184,6 +184,8 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
         auto node = WPNNode::fromJson(jsnode, this);
         m_root_node->addSubnode(node);
     }
+
+    emit treeComplete();
 }
 
 void WPNQueryClient::writeOsc(QString method, QVariantList arguments)

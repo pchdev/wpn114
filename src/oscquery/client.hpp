@@ -42,6 +42,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void setZeroConfHost ( QString host ) { m_zconf_host = host; }
 
     signals:
+    void treeComplete           ( );
     void hostAddrChanged        ( );
     void connected              ( );
     void disconnected           ( );
