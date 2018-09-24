@@ -176,7 +176,6 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
 
         if ( auto node = m_root_node->subnode(jsnode["FULL_PATH"].toString()))
         {
-            qDebug() << "updating node:" << key;
             node->update(jsnode);
             continue;
         }
@@ -204,7 +203,6 @@ void WPNQueryClient::writeWebSocket(QString message)
 void WPNQueryClient::writeWebSocket(QJsonObject json)
 {
     auto doc = QJsonDocument(json).toJson(QJsonDocument::Compact);
-    if ( !doc.endsWith('}') ) doc.append('}');
     m_ws_con->write(doc);
 }
 

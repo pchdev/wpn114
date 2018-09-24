@@ -3,6 +3,9 @@
 #include <QObject>
 #include "node.hpp"
 #include <QDir>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QQueue>
 
 class WPNFolderNode : public WPNNode
 {
@@ -32,4 +35,44 @@ class WPNFolderNode : public WPNNode
     QString m_folder_path;
     QString m_extensions;
 
+};
+
+class WPNFolderMirror : public WPNNode
+{
+    Q_OBJECT
+    Q_PROPERTY  ( bool recursive READ recursive WRITE setRecursive )
+    Q_PROPERTY  ( QString destination READ destination WRITE setDestination )
+
+    public:
+    WPNFolderMirror();
+    ~WPNFolderMirror();
+
+    bool recursive() const { return m_recursive; }
+    QString destination() const { return m_destination; }
+
+    void setRecursive(bool recursive) { m_recursive = recursive; }
+    void setDestination(QString destination);
+
+    protected slots:
+    void parseChildren();
+    QUrl toUrl(QString file);
+    void onFileListChanged(QVariant list);
+    void next();
+    void onReadyRead();
+    void onComplete();
+
+    signals:
+    void mirrorComplete();
+
+    private:
+    bool m_recursive;
+    QString m_abs_path;
+    QString m_destination;
+    QStringList m_downloads;
+    QVector<WPNFolderMirror*> m_children_folders;
+
+    QNetworkAccessManager m_netaccess;
+    QQueue<QUrl> m_queue;
+    QFile m_output;
+    QNetworkReply* m_current_download;
 };

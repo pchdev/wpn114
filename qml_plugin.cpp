@@ -22,6 +22,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<WPNNode, 1>           ( "WPN114", 1, 0, "Node" );
     qmlRegisterType<WPNFileNode, 1>       ( "WPN114", 1, 0, "FileNode" );
     qmlRegisterType<WPNFolderNode, 1>     ( "WPN114", 1, 0, "FolderNode" );
+    qmlRegisterType<WPNFolderMirror, 1>   ( "WPN114", 1, 0, "FolderMirror" );
     qmlRegisterType<WPNQueryServer, 1>    ( "WPN114", 1, 0, "OSCQueryServer" );
     qmlRegisterType<WPNQueryClient, 1>    ( "WPN114", 1, 0, "OSCQueryClient" );
 }
