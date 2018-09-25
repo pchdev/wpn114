@@ -1,18 +1,19 @@
 #include "osc.hpp"
 #include <QDataStream>
 #include <QNetworkDatagram>
+#include <QVector2D>
+#include <QVector3D>
+#include <QVector4D>
+#include <QVariant>
 
 OSCHandler::OSCHandler() :
-     m_local_port(8888), m_remote_port(8889),m_remote_address("127.0.0.1"),
-     m_udpsocket(new QUdpSocket(this))
+    m_local_port(8888), m_remote_port(8889),m_remote_address("127.0.0.1"),
+    m_udpsocket(new QUdpSocket(this))
 {
     QObject::connect(m_udpsocket, SIGNAL(readyRead()), this, SLOT(readPendingDatagrams()));
 }
 
-void OSCHandler::componentComplete()
-{    
-
-}
+void OSCHandler::componentComplete() {}
 
 void OSCHandler::listen()
 {
@@ -39,11 +40,6 @@ void OSCHandler::setRemoteAddress(QString address)
     m_remote_address = address;
 }
 
-template<typename T> inline void parseArgumentsFromStream(QVariantList& dest, QDataStream& stream)
-{
-    T value; stream >> value; dest << value;
-}
-
 void OSCHandler::readOSCBundle(QByteArray bundle)
 {
     QDataStream stream(bundle);
@@ -62,38 +58,45 @@ void OSCHandler::readOSCBundle(QByteArray bundle)
     }
 }
 
-void OSCHandler::readOSCMessage(QByteArray message)
+template<typename T>
+inline void parseArgumentsFromStream(QVariantList& dest, QDataStream& stream)
+{
+    T value; stream >> value; dest << value;
+}
+
+OSCMessage OSCHandler::decode(const QByteArray& data)
 {
     QString         address, typetag;
     QVariantList    arguments;
-    QDataStream     stream(message);
+    QDataStream     stream(data);
+    OSCMessage      message;
 
     stream.setFloatingPointPrecision ( QDataStream::SinglePrecision );
-    auto spl = message.split(',');
 
-    address = spl[0];
-    typetag = spl[1].split('\0')[0];
+    auto split  = data.split(',');
+    address     = split[0];
+    typetag     = split[1].split('\0')[0];
 
     uint8_t adpads = 4-(address.size()%4);
     uint8_t ttpads = 4-((typetag.size()+1)%4);
     uint32_t total = address.size()+adpads+typetag.size()+ttpads+1;
 
-    stream.skipRawData(total);   
+    stream.skipRawData(total);
 
-    for ( const QChar& c : typetag )
+    for ( const auto& c : typetag )
     {
-        if        ( c == 'i' ) parseArgumentsFromStream<int>(arguments, stream);
-        else if   ( c == 'f' ) parseArgumentsFromStream<float>(arguments, stream);
-        else if   ( c == 'T' ) arguments << true;
-        else if   ( c == 'F' ) arguments << false;
-        else if   ( c == 's' )
+        if      ( c == 'i' ) parseArgumentsFromStream<int>(arguments, stream);
+        else if ( c == 'f' ) parseArgumentsFromStream<float>(arguments, stream);
+        else if ( c == 'T' ) arguments << true;
+        else if ( c == 'F' ) arguments << false;
+        else if ( c == 's' )
         {
-            quint8 byte, padding;
+            quint8  byte, padding;
             QString res;
+
             stream >> byte;
 
-            while ( byte )
-            {
+            while ( byte ) {
                 res.append(byte);
                 stream >> byte;
             }
@@ -106,12 +109,21 @@ void OSCHandler::readOSCMessage(QByteArray message)
         }
     }
 
-    qDebug() << "OSCMessage received:" << address << arguments;
+    message.address = address;
 
-    if ( arguments.size() == 0 ) emit messageReceived(address, QVariant());
-    if ( arguments.size() == 1 ) emit messageReceived(address, arguments[0]);
-    else emit messageReceived(address, arguments);
+    if ( arguments.size() == 0 ) return message;
+    else if ( arguments.size() == 1 )
+         message.arguments = arguments[0];
+    else message.arguments = arguments;
 
+    return message;
+}
+
+void OSCHandler::readOSCMessage(QByteArray data)
+{
+    OSCMessage message = decode(data);
+    emit messageReceived(message.address, message.arguments);
+    qDebug() << "OSCMessage received:" << message.address << message.arguments;
 }
 
 void OSCHandler::readPendingDatagrams()
@@ -126,82 +138,121 @@ void OSCHandler::readPendingDatagrams()
     }
 }
 
-void OSCHandler::sendMessage(QString address, QVariantList arguments)
+QString OSCHandler::typeTag(const QVariant& argument)
 {
-    QString             typetag;
-    QByteArray          data;
-    QNetworkDatagram    datagram;
-
-    typetag.append(',');
-    for ( const auto& var : arguments )
+    switch(argument.type())
     {
-        switch(var.type())
-        {
-        case QMetaType::Void: typetag.append('N'); break;
-        case QMetaType::Bool:
-        {
-            if ( var.toBool() ) typetag.append('T');
-            else typetag.append('F');
-            break;
-        }
-        case QMetaType::Int:        typetag.append('i'); break;
-        case QMetaType::Float:      typetag.append('f'); break;
-        case QMetaType::Double:     typetag.append('f'); break;
-        case QMetaType::QString:    typetag.append('s'); break;
-        }
+    case QMetaType::Void:         return "N";
+    case QMetaType::Int:          return "i";
+    case QMetaType::Float:        return "f";
+    case QMetaType::Double:       return "f";
+    case QMetaType::QString:      return "s";
+    case QMetaType::QVector2D:    return "ff";
+    case QMetaType::QVector3D:    return "fff";
+    case QMetaType::QVector4D:    return "ffff";
+    case QMetaType::Bool:
+    {
+        if ( argument.toBool() )  return "T";
+        else return "F";
+    }
+    case QMetaType::QVariantList:
+    {
+        QString tt;
+        for ( const auto& sub : argument.toList() )
+            tt.append(typeTag(sub));
+
+        return tt;
+    }
+    }
+}
+
+void OSCHandler::append(QByteArray& data, const QVariant& argument)
+{
+    switch(argument.type())
+    {
+    case QMetaType::Void: return;
+    case QMetaType::Bool: return;
+    case QMetaType::QString:
+    {
+        QString str     = argument.toString();
+        auto pads       = 4-(argument.toString().size() % 4);
+        data.append     ( str );
+        while ( pads--) str.append('\0');
+        return;
+    }
     }
 
-    data.append(address);
+    QDataStream stream(&data, QIODevice::ReadWrite);
+    stream.skipRawData(data.size());
 
-    auto    pads = 4-(address.size() % 4);
+    if ( argument.type() == QMetaType::Int )
+    {
+        stream << (int) argument.toInt(); return;
+    }
+
+    stream.setFloatingPointPrecision ( QDataStream::SinglePrecision );
+
+    switch(argument.type())
+    {
+    case QMetaType::Float:
+    case QMetaType::Double: stream << (float) argument.toFloat(); break;
+    case QMetaType::QVector2D:
+    {
+        auto vec = qvariant_cast<QVector2D>(argument);
+        stream << vec; break;
+    }
+    case QMetaType::QVector3D:
+    {
+        auto vec = qvariant_cast<QVector3D>(argument);
+        stream << vec; break;
+    }
+    case QMetaType::QVector4D:
+    {
+        auto vec = qvariant_cast<QVector4D>(argument);
+        stream << vec; break;
+    }
+    case QMetaType::QVariantList:
+    {
+        for ( const auto& sub : argument.toList() )
+            append(data, sub);
+        break;
+    }
+    }
+}
+
+QByteArray OSCHandler::encode(const OSCMessage& message)
+{
+    QByteArray  data;
+    QString     typetag = typeTag(message.arguments).prepend(',');
+
+    data.append(message.address);
+
+    auto    pads = 4-(message.address.size() % 4);
     while   ( pads-- ) data.append((char)0);
     data.append(typetag);
 
     pads    = 4-(typetag.size() % 4);
     while   ( pads-- ) data.append((char)0);
-    for ( const auto& var : arguments )
-    {
-        switch(var.type())
-        {
-        case QMetaType::Void: break;
-        case QMetaType::Bool: break;
-        case QMetaType::Int:
-        {
-            QDataStream stream(&data, QIODevice::ReadWrite);
-            stream.skipRawData(data.size());
-            stream << var.toInt();
-            break;
-        }
-        case QMetaType::Float:
-        {
-            QDataStream stream(&data, QIODevice::ReadWrite);
-            stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
-            stream.skipRawData(data.size());
-            stream << (float) var.toFloat();
-            break;
-        }
-        case QMetaType::Double:
-        {
-            QDataStream stream ( &data, QIODevice::ReadWrite );
-            stream.setFloatingPointPrecision ( QDataStream::SinglePrecision );
-            stream.skipRawData ( data.size() );
-            stream << (float) var.toFloat();
-            break;
-        }
-        case QMetaType::QString:
-        {
-            QString str = var.toString();
-            pads = 4-(var.toString().size() % 4);
-            while(pads--)
-                str.append('\0');
-            data.append(str);
-            break;
-        }
-        }
-    }
 
-    datagram.setData            ( data );
-    datagram.setDestination     ( QHostAddress(m_remote_address), m_remote_port );
-    m_udpsocket->writeDatagram  ( datagram );
+    append(data, message.arguments);
 
+    return data;
 }
+
+void OSCHandler::sendMessage(const OSCMessage& message)
+{
+    QNetworkDatagram datagram;
+    QByteArray data = encode(message);
+
+    datagram.setData ( data );
+    datagram.setDestination ( QHostAddress(m_remote_address), m_remote_port );
+    m_udpsocket->writeDatagram ( datagram );
+}
+
+void OSCHandler::sendMessage(QString address, QVariant arguments)
+{
+    OSCMessage msg { address, arguments };
+    sendMessage(msg);
+}
+
+

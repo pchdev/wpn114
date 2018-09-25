@@ -73,30 +73,20 @@ void WPNNode::componentComplete()
          m_attributes.access = Access::RW;
 }
 
-void WPNNode::setTarget(const QQmlProperty& property)
-{
-    m_target_property = property;
-
-    switch ( property.propertyType() )
-    {
-    case QMetaType::Bool: m_attributes.type = Type::Bool; break;
-    case QMetaType::Float: m_attributes.type = Type::Float; break;
-    case QMetaType::Double: m_attributes.type = Type::Float; break;
-    case QMetaType::Int: m_attributes.type = Type::Int; break;
-    case QMetaType::QString: m_attributes.type = Type::String; break;
-    case QMetaType::QVector2D: m_attributes.type = Type::Vec2f; break;
-    case QMetaType::QVector3D: m_attributes.type = Type::Vec3f; break;
-    case QMetaType::QVector4D: m_attributes.type = Type::Vec4f; break;
-    case QMetaType::QVariantList: m_attributes.type = Type::List; break;
-    }
-
-    m_attributes.value = property.read();
-    m_target_property.connectNotifySignal(this, SLOT(propertyChanged()));
-}
-
 void WPNNode::propertyChanged()
 {
-    m_attributes.value = m_target_property.read();
+    // no need to push it back to qmlproperty
+    QVariant value = m_target_property.read();
+    emit valueReceived(value);
+
+    if ( value != m_attributes.value )
+    {
+        emit valueChanged(value);
+        m_attributes.value = value;
+    }
+
+    for ( const auto& listener : m_listeners )
+         listener->pushNodeValue(this);
 }
 
 void WPNNode::setAccess         ( Access::Values access ) { m_attributes.access = access; }
@@ -148,6 +138,28 @@ QJsonObject WPNNode::attributeJson(QString attr) const
     return obj;
 }
 
+void WPNNode::setTarget(const QQmlProperty& property)
+{
+    m_target_property = property;
+
+    switch ( property.propertyType() )
+    {
+    case QMetaType::Bool: m_attributes.type = Type::Bool; break;
+    case QMetaType::Float: m_attributes.type = Type::Float; break;
+    case QMetaType::Double: m_attributes.type = Type::Float; break;
+    case QMetaType::Int: m_attributes.type = Type::Int; break;
+    case QMetaType::QString: m_attributes.type = Type::String; break;
+    case QMetaType::QVector2D: m_attributes.type = Type::Vec2f; break;
+    case QMetaType::QVector3D: m_attributes.type = Type::Vec3f; break;
+    case QMetaType::QVector4D: m_attributes.type = Type::Vec4f; break;
+    case QMetaType::QVariantList: m_attributes.type = Type::List; break;
+    }
+
+    m_attributes.value = property.read();
+    m_target_property.connectNotifySignal(this, SLOT(propertyChanged()));
+}
+
+
 QString WPNNode::typeTag() const
 {
     switch ( m_attributes.type )
@@ -168,18 +180,31 @@ QString WPNNode::typeTag() const
     return "";
 }
 
+void WPNNode::setTypeFromTag(QString tag)
+{
+    if ( tag == "f" ) m_attributes.type = Type::Float;
+    else if ( tag == "T" || tag == "F" ) m_attributes.type = Type::Bool;
+    else if ( tag == "i" ) m_attributes.type = Type::Int;
+    else if ( tag == "" ) m_attributes.type = Type::List;
+    else if ( tag == "I") m_attributes.type = Type::Impulse;
+    else if ( tag == "s") m_attributes.type = Type::String;
+    else if ( tag == "ff") m_attributes.type = Type::Vec2f;
+    else if ( tag == "fff") m_attributes.type = Type::Vec3f;
+    else if ( tag == "ffff") m_attributes.type = Type::Vec4f;
+}
+
 QJsonValue WPNNode::jsonValue() const
 {
     QJsonValue v;
     switch ( m_attributes.type )
     {
-    case Type::Values::Bool:         v = m_attributes.value.toBool(); break;
-    case Type::Values::Char:         v = m_attributes.value.toString(); break;
-    case Type::Values::Float:        v = m_attributes.value.toDouble(); break;
-    case Type::Values::String:       v = m_attributes.value.toString(); break;
-    case Type::Values::Int:          v = m_attributes.value.toInt(); break;
-    case Type::Values::None:         return v;
-    case Type::Values::Impulse:      return v;
+    case Type::Values::Bool:      v = m_attributes.value.toBool(); break;
+    case Type::Values::Char:      v = m_attributes.value.toString(); break;
+    case Type::Values::Float:     v = m_attributes.value.toDouble(); break;
+    case Type::Values::String:    v = m_attributes.value.toString(); break;
+    case Type::Values::Int:       v = m_attributes.value.toInt(); break;
+    case Type::Values::None:      return v;
+    case Type::Values::Impulse:   return v;
 
     case Type::Values::List:    v = QJsonArray::fromVariantList(m_attributes.value.toList()); break;
     case Type::Values::Vec2f:   v = QJsonArray::fromVariantList(m_attributes.value.toList()); break;
@@ -250,19 +275,6 @@ void WPNNode::setType(Type::Values type)
               type == Type::Values::Vec3f ||
               type == Type::Values::Vec4f )
         m_attributes.extended_type = "vecf";
-}
-
-void WPNNode::setTypeFromTag(QString tag)
-{
-    if ( tag == "f" ) m_attributes.type = Type::Float;
-    else if ( tag == "T" || tag == "F" ) m_attributes.type = Type::Bool;
-    else if ( tag == "i" ) m_attributes.type = Type::Int;
-    else if ( tag == "" ) m_attributes.type = Type::List;
-    else if ( tag == "I") m_attributes.type = Type::Impulse;
-    else if ( tag == "s") m_attributes.type = Type::String;
-    else if ( tag == "ff") m_attributes.type = Type::Vec2f;
-    else if ( tag == "fff") m_attributes.type = Type::Vec3f;
-    else if ( tag == "ffff") m_attributes.type = Type::Vec4f;
 }
 
 void WPNNode::setExtendedType(QString type)

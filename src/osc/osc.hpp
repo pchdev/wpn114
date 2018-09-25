@@ -5,6 +5,12 @@
 #include <QUdpSocket>
 #include <QQmlParserStatus>
 
+struct OSCMessage
+{
+    QString     address;
+    QVariant    arguments;
+};
+
 class OSCHandler : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
@@ -19,6 +25,9 @@ class OSCHandler : public QObject, public QQmlParserStatus
     virtual void componentComplete();
     virtual void classBegin() {}
 
+    static QByteArray encode(const OSCMessage& message);
+    static OSCMessage decode(const QByteArray& data);
+
     uint16_t localPort() const      { return m_local_port; }
     uint16_t remotePort() const     { return m_remote_port; }
     QString remoteAddress() const   { return m_remote_address; }
@@ -28,9 +37,13 @@ class OSCHandler : public QObject, public QQmlParserStatus
     void setRemoteAddress           ( QString address );
 
     Q_INVOKABLE void listen         ( );
-    Q_INVOKABLE void sendMessage    ( QString address, QVariantList arguments );
+    Q_INVOKABLE void sendMessage    ( QString address, QVariant arguments );
+    void sendMessage                ( const OSCMessage& message );
 
     protected slots:
+    static QString typeTag      ( const QVariant& argument );
+    static void append          ( QByteArray& data, const QVariant& arguments );
+
     void readPendingDatagrams   ( );
     void readOSCMessage         ( QByteArray message );
     void readOSCBundle          ( QByteArray bundle );

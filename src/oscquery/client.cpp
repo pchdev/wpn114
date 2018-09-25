@@ -210,11 +210,11 @@ void WPNQueryClient::writeWebSocket(QJsonObject json)
 }
 
 void WPNQueryClient::pushNodeValue(WPNNode* node)
-{
-    if ( node->critical() )
-        m_ws_con->writeText(QJsonDocument(node->attributeJson("VALUE")).toJson(QJsonDocument::Compact));
+{    
+    OSCMessage message { node->path(), node->value() };
 
-    else m_osc_hdl->sendMessage(node->path(), QVariantList{node->value()});
+    if ( node->critical() ) m_ws_con->writeBinary(OSCHandler::encode(message));
+    else m_osc_hdl->sendMessage(message);
 }
 
 QTcpSocket* WPNQueryClient::tcpConnection()
