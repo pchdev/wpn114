@@ -43,8 +43,9 @@ void WPNNode::update(QJsonObject obj)
 
 WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr), m_target_property(nullptr)
 {
-    m_attributes.access         = Access::RW;
+    m_attributes.access         = Access::NONE;
     m_attributes.clipmode       = Clipmode::NONE;
+    m_attributes.type           = Type::None;
     m_attributes.description    = "No description";
     m_attributes.critical       = false;
 }
@@ -67,6 +68,9 @@ void WPNNode::componentComplete()
             m_device->addNode(m_device, this);
         }
     }
+
+    if ( m_attributes.type != Type::None )
+         m_attributes.access = Access::RW;
 }
 
 void WPNNode::setTarget(const QQmlProperty& property)
@@ -115,14 +119,19 @@ QJsonObject WPNNode::attributesJson() const
     QJsonObject obj;
 
     obj.insert("FULL_PATH", m_attributes.path);
-    obj.insert("TYPE", typeTag());
-    obj.insert("ACCESS", static_cast<quint8>(m_attributes.access));
-    obj.insert("VALUE", jsonValue());
-    obj.insert("DESCRIPTION", m_attributes.description);
-    obj.insert("CRITICAL", m_attributes.critical);
+    obj.insert("ACCESS", static_cast<quint8>(m_attributes.access));    
 
-    if ( !m_attributes.extended_type.isEmpty() )
-        obj.insert("EXTENDED_TYPE", m_attributes.extended_type );
+    if  ( m_attributes.type != Type::None )
+    {
+        obj.insert("DESCRIPTION", m_attributes.description);
+        obj.insert("VALUE", jsonValue());
+        obj.insert("CRITICAL", m_attributes.critical);
+        obj.insert("TYPE", typeTag());
+
+        if ( !m_attributes.extended_type.isEmpty() )
+            obj.insert("EXTENDED_TYPE", m_attributes.extended_type );
+
+    }
 
     //obj.insert("TAGS", m_attributes.tags);
     //obj.insert("RANGE");
@@ -146,7 +155,7 @@ QString WPNNode::typeTag() const
     case Type::Values::Bool:         return "T";
     case Type::Values::Char:         return "c";
     case Type::Values::Float:        return "f";
-    case Type::Values::Impulse:      return "N";
+    case Type::Values::Impulse:      return "I";
     case Type::Values::Int:          return "i";
     case Type::Values::List:         return "";
     case Type::Values::None:         return "null";
@@ -169,7 +178,7 @@ QJsonValue WPNNode::jsonValue() const
     case Type::Values::Float:        v = m_attributes.value.toDouble(); break;
     case Type::Values::String:       v = m_attributes.value.toString(); break;
     case Type::Values::Int:          v = m_attributes.value.toInt(); break;
-    case Type::Values::None:         v = "null"; break;
+    case Type::Values::None:         return v;
     case Type::Values::Impulse:      return v;
 
     case Type::Values::List:    v = QJsonArray::fromVariantList(m_attributes.value.toList()); break;

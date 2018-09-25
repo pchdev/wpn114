@@ -188,12 +188,12 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
     emit treeComplete();
 }
 
-void WPNQueryClient::writeOsc(QString method, QVariantList arguments)
+void WPNQueryClient::writeOsc(QString method, QVariant arguments)
 {
 
 }
 
-void WPNQueryClient::writeWebSocket(QString method, QVariantList arguments)
+void WPNQueryClient::writeWebSocket(QString method, QVariant arguments)
 {
 
 }

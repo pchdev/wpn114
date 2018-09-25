@@ -105,9 +105,7 @@ void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
     {
         if ( request.contains("HOST_INFO") )
         {
-            HTTP::Reply rep;
-            rep.target = sender;
-            rep.reply = hostInfoJson().toUtf8();
+            HTTP::Reply rep { sender, hostInfoJson().toUtf8() };
             m_reply_manager.enqueue(rep);
         }
         else
