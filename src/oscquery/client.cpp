@@ -141,8 +141,8 @@ void WPNQueryClient::onHostInfoReceived(QJsonObject info)
 
     if ( m_settings.extensions.osc_streaming ) requestStreamStart();
 
-    m_ws_con->write("/");
-    m_ws_con->write("/play");
+    m_ws_con->writeText("/");
+    m_ws_con->writeText("/play");
 }
 
 void WPNQueryClient::requestHttp(QString address)
@@ -162,7 +162,7 @@ void WPNQueryClient::requestStreamStart()
     data.insert         ( "LOCAL_SENDER_PORT", m_osc_hdl->remotePort() );
     command.insert      ( "DATA", data );
 
-    m_ws_con->write     ( QJsonDocument(command).toJson(QJsonDocument::Compact) );
+    m_ws_con->writeText     ( QJsonDocument(command).toJson(QJsonDocument::Compact) );
 }
 
 void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
@@ -200,19 +200,19 @@ void WPNQueryClient::writeWebSocket(QString method, QVariant arguments)
 
 void WPNQueryClient::writeWebSocket(QString message)
 {
-    m_ws_con->write(message);
+    m_ws_con->writeText(message);
 }
 
 void WPNQueryClient::writeWebSocket(QJsonObject json)
 {
     auto doc = QJsonDocument(json).toJson(QJsonDocument::Compact);
-    m_ws_con->write(doc);
+    m_ws_con->writeText(doc);
 }
 
 void WPNQueryClient::pushNodeValue(WPNNode* node)
 {
     if ( node->critical() )
-        m_ws_con->write(QJsonDocument(node->attributeJson("VALUE")).toJson(QJsonDocument::Compact));
+        m_ws_con->writeText(QJsonDocument(node->attributeJson("VALUE")).toJson(QJsonDocument::Compact));
 
     else m_osc_hdl->sendMessage(node->path(), QVariantList{node->value()});
 }

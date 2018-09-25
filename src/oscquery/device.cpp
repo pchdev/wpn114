@@ -18,7 +18,9 @@ QJsonObject HostExtensions::toJson() const
         { "PATH_CHANGED", path_changed },
         { "PATH_REMOVED", path_removed },
         { "PATH_ADDED", path_added },
-        { "PATH_RENAMED", path_renamed }
+        { "PATH_RENAMED", path_renamed },
+        { "HTML", html },
+        { "ECHO", echo }
     };
 
     return ext;
@@ -46,10 +48,7 @@ WPNDevice* WPNDevice::instance()
 WPNDevice::WPNDevice()
 {
     m_root_node = new WPNNode;
-
     m_root_node ->setPath   ( "/" );
-    m_root_node ->setType   ( Type::Values::None );
-    m_root_node ->setAccess ( Access::Values::NONE );
 }
 
 WPNDevice::~WPNDevice() {}

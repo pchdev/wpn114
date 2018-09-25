@@ -16,7 +16,8 @@ void OSCHandler::componentComplete()
 
 void OSCHandler::listen()
 {
-    m_udpsocket->bind(QHostAddress::LocalHost, m_local_port);
+    m_udpsocket->bind(QHostAddress::Any, m_local_port);
+    qDebug() << "[UDPSOCKET] Binding on port:" << m_local_port;
 }
 
 void OSCHandler::setLocalPort(uint16_t port)
@@ -24,7 +25,8 @@ void OSCHandler::setLocalPort(uint16_t port)
     m_local_port = port;
     if ( m_udpsocket->isOpen() ) m_udpsocket->close();
 
-    m_udpsocket->bind(QHostAddress::LocalHost, m_local_port);
+    m_udpsocket->bind(QHostAddress::Any, m_local_port);
+    qDebug() << "[UDPSOCKET] Binding on port:" << m_local_port;
 }
 
 void OSCHandler::setRemotePort(uint16_t port)

@@ -62,9 +62,9 @@ void WPNWebSocketServer::onHandshakeRequest(QTcpSocket *sender, QByteArray data)
     {
         if ( line.startsWith ( "Sec-WebSocket-Key" ))
         {
-            auto spl2       = line.split(' ');
-            QString key     = spl2[1];
-            key.replace     ( "\r", "" );
+            auto spl2 = line.split(' ');
+            QString key = spl2[1];
+            key.replace( "\r", "" );
 
             sendHandshakeResponse(sender, key);
         }
@@ -234,7 +234,12 @@ void WPNWebSocket::request(QString req)
     m_tcp_con->write(req.toUtf8());
 }
 
-void WPNWebSocket::write(QString message)
+void WPNWebSocket::writeBinary(QByteArray binary)
+{
+
+}
+
+void WPNWebSocket::writeText(QString message)
 {
     QByteArray data;
     quint8 mask[4], size_mask = m_mask*128;

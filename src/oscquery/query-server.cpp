@@ -14,7 +14,7 @@
 
 
 WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketServer(5678)),
-    m_osc_hdl(new OSCHandler())
+    m_osc_hdl(new OSCHandler)
 {
     // default settings & extensions
 
@@ -38,6 +38,8 @@ WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketSer
     m_settings.extensions.tags              = true;
     m_settings.extensions.unit              = false;
     m_settings.extensions.value             = true;
+    m_settings.extensions.echo              = false;
+    m_settings.extensions.html              = false;
 }
 
 void WPNQueryServer::componentComplete()
@@ -51,11 +53,7 @@ void WPNQueryServer::componentComplete()
     QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariant)),
                       this, SLOT(onValueUpdate(QString,QVariant)));
 
-    m_osc_hdl->setLocalPort     ( m_settings.osc_port );
-    m_ws_server->setPort        ( m_settings.tcp_port );
-
-    m_ws_server->start          ( );
-    m_osc_hdl->listen           ( );
+    m_ws_server->start();
 
     m_zeroconf.startServicePublish(
                 m_settings.name.toStdString().c_str(), "_oscjson._tcp", "local", m_settings.tcp_port);

@@ -124,7 +124,7 @@ QJsonObject WPNNode::attributesJson() const
     if  ( m_attributes.type != Type::None )
     {
         obj.insert("DESCRIPTION", m_attributes.description);
-        obj.insert("VALUE", jsonValue());
+        obj.insert("VALUE", QJsonArray{jsonValue()});
         obj.insert("CRITICAL", m_attributes.critical);
         obj.insert("TYPE", typeTag());
 
@@ -144,7 +144,7 @@ QJsonObject WPNNode::attributeJson(QString attr) const
 {
     QJsonObject obj;
 
-    if ( attr == "VALUE" ) obj.insert(attr, jsonValue());
+    if ( attr == "VALUE" ) obj.insert(attr, QJsonArray{jsonValue()});
     return obj;
 }
 

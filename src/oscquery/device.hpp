@@ -22,6 +22,8 @@ struct HostExtensions
     bool path_added;
     bool path_renamed;
     bool osc_streaming;
+    bool html;
+    bool echo;
 
     QJsonObject toJson() const;
 };

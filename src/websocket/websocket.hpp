@@ -33,8 +33,9 @@ class WPNWebSocket : public QObject
     void connect    ( QString host, quint16 port );
     void disconnect ( );
 
-    void request    ( QString http_req );
-    void write      ( QString message );
+    void request      ( QString http_req );
+    void writeText    ( QString message );
+    void writeBinary  ( QByteArray binary );
 
     QTcpSocket* tcpConnection() { return m_tcp_con; }
 
