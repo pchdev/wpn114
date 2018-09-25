@@ -14,6 +14,7 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
     QObject::connect(m_ws_con, SIGNAL(connected()), this, SLOT(onConnected()));
     QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
+    QObject::connect(m_ws_con, SIGNAL(binaryFrameReceived(QByteArray)), this, SLOT(onBinaryMessageReceived(QByteArray)));
 
     m_http_manager = new QNetworkAccessManager(this);
     QObject::connect(m_http_manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpReply(QNetworkReply*)));
@@ -24,6 +25,7 @@ WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler())
     // indirect client (server image)
     // no need for a local udp port
     m_ws_con = con;
+    QObject::connect(m_ws_con, SIGNAL(binaryFrameReceived(QByteArray)), this, SLOT(onBinaryMessageReceived(QByteArray)));
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
     QObject::connect(m_ws_con, SIGNAL(httpMessageReceived(QString)), this, SIGNAL(httpMessageReceived(QString)));
     QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
@@ -85,6 +87,12 @@ void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
         m_ws_con->connect   ( m_host_addr, m_host_port );
         m_zconf.stopBrowser ( );
     }
+}
+
+void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
+{
+    OSCMessage message = OSCHandler::decode(data);
+    onValueUpdate(message.address, message.arguments);
 }
 
 void WPNQueryClient::onTextMessageReceived(QString message)

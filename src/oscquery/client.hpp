@@ -57,8 +57,9 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void onNamespaceReceived    ( QJsonObject nspace );
     void requestStreamStart     ( );
 
-    void onConnected            ( );
-    void onTextMessageReceived  ( QString message );
+    void onConnected             ( );
+    void onBinaryMessageReceived ( QByteArray message );
+    void onTextMessageReceived   ( QString message );
 
     private:
     QNetworkAccessManager* m_http_manager;
