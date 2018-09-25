@@ -64,7 +64,9 @@ class WPNWebSocket : public QObject
     quint64 m_seed;
 
     void generateEncryptedSecKey( );
+
     void decode ( QByteArray data );
+    void write  ( QByteArray data, Opcodes op);
 
     void requestHandshake           ( );
     bool validateHandshake          ( QByteArray data );

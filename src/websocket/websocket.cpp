@@ -234,29 +234,24 @@ void WPNWebSocket::request(QString req)
     m_tcp_con->write(req.toUtf8());
 }
 
-void WPNWebSocket::writeBinary(QByteArray binary)
-{
-
-}
-
-void WPNWebSocket::writeText(QString message)
+void WPNWebSocket::write(QByteArray message, Opcodes op)
 {
     QByteArray data;
-    quint8 mask[4], size_mask = m_mask*128;
-    quint64 sz = message.size()+ANDROID_JSON;
+    quint8 mask[4], size_mask = m_mask*0x80;
+    quint64 sz = data.size()+ANDROID_JSON;
 
     QDataStream stream ( &data, QIODevice::WriteOnly );
-    stream << (quint8) 129;
+    stream << (quint8) ( 0x80 + static_cast<quint8>(op)) ;
 
     // we have to set the mask bit here
     if ( sz > 65535 )
     {
-        stream << (quint8) (127+size_mask);
+        stream << (quint8) ( 0x7F + size_mask );
         stream << sz;
     }
-    else if ( sz > 125 )
+    else if ( sz > 0x7D )
     {
-        stream << (quint8) (126+size_mask);
+        stream << (quint8) ( 0x7E + size_mask );
         stream << (quint16) sz;
     }
     else stream << (quint8) (sz + size_mask);
@@ -273,12 +268,22 @@ void WPNWebSocket::writeText(QString message)
 
         // ...and encode the message with it
         for ( quint8 i = 0; i < sz; ++i )
-            stream << (quint8) ( message[i].toLatin1() ^ mask[i%4]);
+            stream << (quint8) ( message[i] ^ mask[i%4]);
     }
 
-    else data.append(message.toUtf8());
+    else data.append(message);
 
     m_tcp_con->write(data);
+}
+
+void WPNWebSocket::writeBinary(QByteArray binary)
+{
+    write(binary, Opcodes::BINARY_FRAME);
+}
+
+void WPNWebSocket::writeText(QString message)
+{
+    write(message.toUtf8(), Opcodes::TEXT_FRAME);
 }
 
 void WPNWebSocket::decode(QByteArray data)
@@ -291,19 +296,22 @@ void WPNWebSocket::decode(QByteArray data)
 
     stream >> fbyte >> sbyte;
 
-    if      ( fbyte-128 > 0 ) { fin = true; opcode = fbyte-128; }
+    if      ( fbyte-0x80 > 0 ) { fin = true; opcode = fbyte-0x80; }
     else    { fin = false; opcode = fbyte; }
 
-    if ( sbyte-128 <= 0 )
+    if ( sbyte-0x80 <= 0 )
     {
         maskbit = 0;
-        if ( sbyte <= 125 ) payle = sbyte;
-        else if ( sbyte == 127 ) stream >> payle;
-        else if ( sbyte == 126 ) {
+
+        if      ( sbyte <= 0x7D ) payle = sbyte;
+        else if ( sbyte == 0x7F ) stream >> payle;
+        else if ( sbyte == 0x7E )
+        {
             quint16 payle16;
             stream >> payle16;
             payle = payle16;
         }
+
         for ( quint64 i = 0; i < payle; ++i )
         {
             quint8 byte;
@@ -313,17 +321,19 @@ void WPNWebSocket::decode(QByteArray data)
     }
     else
     {
-        maskbit = 1;
+        maskbit  = 1;
+        sbyte   -= 0x80;
 
-        if      ( sbyte-128 <= 125 ) payle = sbyte-128;
-        else if ( sbyte-128 == 127 ) stream >> payle;
-        else if ( sbyte-128 == 126 ) {
+        if      ( sbyte <= 0x7D ) payle = sbyte;
+        else if ( sbyte == 0x7F ) stream >> payle;
+        else if ( sbyte == 0x7E )
+        {
             quint16 payle16;
             stream >> payle16;
             payle = payle16;
         }
 
-        for ( quint8 i = 0; i < 4; ++i ) stream >> mask[i];
+        for ( quint8  i = 0; i < 4; ++i ) stream >> mask[i];
         for ( quint64 i = 0; i < payle; ++i )
         {
             quint8 byte;
@@ -331,6 +341,11 @@ void WPNWebSocket::decode(QByteArray data)
             decoded.append ( byte^mask[i%4] );
         }
     }
-    emit textMessageReceived(decoded);
+
+    switch(static_cast<Opcodes>(opcode))
+    {
+    case Opcodes::BINARY_FRAME: emit binaryFrameReceived(decoded); break;
+    case Opcodes::TEXT_FRAME: emit textMessageReceived(decoded); break;
+    }
 }
 
