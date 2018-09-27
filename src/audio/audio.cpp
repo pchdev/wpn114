@@ -97,7 +97,7 @@ void OutStreamNode::setParentChannels(QVector<int> pch)
 
 void OutStreamNode::setNumOutputs(uint16_t nout)
 {
-    m_pch = QVector<int>{nout};
+    m_pch = QVector<int>{nout-1};
     m_num_outputs = nout;
 }
 
@@ -160,7 +160,7 @@ float** IOStreamNode::process(float** buf, qint64 le)
 //-----------------------------------------------------------------------------------------------
 
 WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512),
-    m_input(nullptr), m_output(nullptr)
+    m_input(nullptr), m_output(nullptr), m_level(1.0)
 {
 
 }
@@ -344,13 +344,16 @@ qint64 WorldStream::readData(char* data, qint64 maxlen)
                 buf[pch[ch]][s] += ( cdata[ch][s] *level );
     }
 
-    for ( quint16 ch = 0; ch < nout; ++ch )
+
         for ( quint16 s = 0; s < bsize; ++s )
         {
-            // convert to interleaved little endian int16
-            qint16 sdata = static_cast<qint16>(buf[ch][s] * 32767);
-            qToLittleEndian<qint16>(sdata, data);
-            data += 2;
+            for ( quint16 ch = 0; ch < nout; ++ch )
+            {
+                // convert to interleaved little endian int16
+                qint16 sdata = static_cast<qint16>(buf[ch][s] * 32767);
+                qToLittleEndian<qint16>(sdata, data);
+                data += 2;
+            }
         }
 
 
