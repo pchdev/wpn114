@@ -1,6 +1,7 @@
 #include "audio.hpp"
 #include <QtDebug>
 #include <qendian.h>
+#include <cmath>
 
 void StreamNode::setNumInputs(uint16_t num_inputs)
 {
@@ -30,6 +31,13 @@ void StreamNode::setLevel(qreal level)
 {
     if ( level != m_level ) emit levelChanged();
     m_level = level;
+    m_db_level = std::log10(level)*(qreal)20.f;
+}
+
+void StreamNode::setDBlevel(qreal db)
+{
+    m_db_level = db;
+    m_level = std::pow(10.f, db*.05);
 }
 
 inline void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
@@ -85,6 +93,12 @@ const QList<InStreamNode*>& OutStreamNode::getOutputs() const
 void OutStreamNode::setParentChannels(QVector<int> pch)
 {
     m_pch = pch;
+}
+
+void OutStreamNode::setNumOutputs(uint16_t nout)
+{
+    m_pch = QVector<int>{nout};
+    m_num_outputs = nout;
 }
 
 void OutStreamNode::initialize(StreamProperties properties)
@@ -207,12 +221,53 @@ void WorldStream::setOutDevice(QString device)
 
 QQmlListProperty<OutStreamNode>WorldStream::inputs()
 {
-    return QQmlListProperty<OutStreamNode>(this, m_inputs);
+    return QQmlListProperty<OutStreamNode>(this, this,
+                                           &WorldStream::appendInput,
+                                           &WorldStream::inputCount,
+                                           &WorldStream::input,
+                                           &WorldStream::clearInputs);
 }
 
-const QList<OutStreamNode*>& WorldStream::getInputs() const
+OutStreamNode* WorldStream::input(int index) const
 {
-    return m_inputs;
+    return m_inputs.at(index);
+}
+
+void WorldStream::appendInput(OutStreamNode* input)
+{
+    m_inputs.append(input);
+}
+
+int WorldStream::inputCount() const
+{
+    return m_inputs.count();
+}
+
+void WorldStream::clearInputs()
+{
+    m_inputs.clear();
+}
+
+// statics --
+
+void WorldStream::appendInput(QQmlListProperty<OutStreamNode>* list, OutStreamNode* input)
+{
+    reinterpret_cast<WorldStream*>(list->data)->appendInput(input);
+}
+
+void WorldStream::clearInputs(QQmlListProperty<OutStreamNode>* list )
+{
+    reinterpret_cast<WorldStream*>(list->data)->clearInputs();
+}
+
+OutStreamNode* WorldStream::input(QQmlListProperty<OutStreamNode>* list, int i)
+{
+    return reinterpret_cast<WorldStream*>(list->data)->input(i);
+}
+
+int WorldStream::inputCount(QQmlListProperty<OutStreamNode>* list)
+{
+    return reinterpret_cast<WorldStream*>(list->data)->inputCount();
 }
 
 void WorldStream::componentComplete()
@@ -259,6 +314,8 @@ void WorldStream::start()
         input->initialize({m_sample_rate, m_block_size});
 
     StreamNode::allocateBuffer(m_pool, m_num_outputs, m_block_size);
+
+    open(QIODevice::ReadOnly);
     m_output->start(this);
 }
 
@@ -273,6 +330,7 @@ qint64 WorldStream::readData(char* data, qint64 maxlen)
     quint16 nout    = m_num_outputs;
     quint16 bsize   = m_block_size;
     float** buf     = m_pool;
+    qreal level     = m_level;
 
     StreamNode::resetBuffer(m_pool, nout, bsize);
 
@@ -283,7 +341,7 @@ qint64 WorldStream::readData(char* data, qint64 maxlen)
 
         for ( quint16 s = 0; s < bsize; ++s )
             for ( quint16 ch = 0; ch < pch.size(); ++ch )
-                buf[pch[ch]][s] += cdata[ch][s];
+                buf[pch[ch]][s] += ( cdata[ch][s] *level );
     }
 
     for ( quint16 ch = 0; ch < nout; ++ch )

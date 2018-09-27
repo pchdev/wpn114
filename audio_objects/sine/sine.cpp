@@ -2,9 +2,8 @@
 #include <math.h>
 
 SinOsc::SinOsc() : m_frequency(440.f), m_pos(0)
-{    
-    m_num_inputs    = 0;
-    m_num_outputs   = 1;
+{
+    SETN_OUT    ( 1 );
 
     for( quint16 i = 0; i < WT_SIZE; ++i )
         m_wavetable[i] = sin ((float) i/WT_SIZE*M_PI*2 );
