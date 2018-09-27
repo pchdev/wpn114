@@ -13,6 +13,11 @@ void StreamNode::setNumOutputs(uint16_t num_outputs)
 {
     if ( m_num_outputs != num_outputs ) emit numOutputsChanged();
     m_num_outputs = num_outputs;
+
+    QVariantList list;
+    for ( quint16 i = 0; i < m_num_outputs; ++i ) list << i;
+
+    m_parent_channels = list;
 }
 
 void StreamNode::setMute(bool mute)
@@ -40,6 +45,79 @@ void StreamNode::setDBlevel(qreal db)
     m_level = std::pow(10.f, db*.05);
 }
 
+QVector<quint16> StreamNode::parentChannelsVec() const
+{
+    QVector<quint16> res;
+
+    if ( m_parent_channels.type() == QMetaType::QVariantList )
+    {
+        for ( const auto& ch : m_parent_channels.toList() )
+            res << ch.toInt();
+    }
+
+    else if ( m_parent_channels.type() == QMetaType::Int )
+        res << m_parent_channels.toInt();
+
+    return res;
+
+}
+
+void StreamNode::setParentChannels(QVariant pch)
+{
+    m_parent_channels = pch;
+}
+
+QQmlListProperty<StreamNode> StreamNode::subnodes()
+{
+    return QQmlListProperty<StreamNode>( this, this,
+                           &StreamNode::appendSubnode,
+                           &StreamNode::subnodesCount,
+                           &StreamNode::subnode,
+                           &StreamNode::clearSubnodes );
+}
+
+StreamNode* StreamNode::subnode(int index) const
+{
+    return m_subnodes.at(index);
+}
+
+void StreamNode::appendSubnode(StreamNode* subnode)
+{
+    m_subnodes.append(subnode);
+}
+
+int StreamNode::subnodesCount() const
+{
+    return m_subnodes.count();
+}
+
+void StreamNode::clearSubnodes()
+{
+    m_subnodes.clear();
+}
+
+// statics --
+
+void StreamNode::appendSubnode(QQmlListProperty<StreamNode>* list, StreamNode* subnode)
+{
+    reinterpret_cast<StreamNode*>(list->data)->appendSubnode(subnode);
+}
+
+void StreamNode::clearSubnodes(QQmlListProperty<StreamNode>* list )
+{
+    reinterpret_cast<StreamNode*>(list->data)->clearSubnodes();
+}
+
+StreamNode* StreamNode::subnode(QQmlListProperty<StreamNode>* list, int i)
+{
+    return reinterpret_cast<StreamNode*>(list->data)->subnode(i);
+}
+
+int StreamNode::subnodesCount(QQmlListProperty<StreamNode>* list)
+{
+    return reinterpret_cast<StreamNode*>(list->data)->subnodesCount();
+}
+
 inline void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
 {
     buffer = new float* [ nchannels ];
@@ -53,97 +131,7 @@ inline void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 
         std::memset(buffer[ch], 0.f, sizeof(float)*nsamples);
 }
 
-//-----------------------------------------------------------------------------------------------
-
-QQmlListProperty<OutStreamNode>InStreamNode::inputs()
-{
-    return QQmlListProperty<OutStreamNode>(this, m_inputs);
-}
-
-const QList<OutStreamNode*>& InStreamNode::getInputs() const
-{
-    return m_inputs;
-}
-
-void InStreamNode::initialize(StreamProperties properties)
-{
-    m_stream_properties = properties;
-    StreamNode::allocateBuffer(m_in, m_num_inputs, properties.block_size);
-
-    userInitialize(properties.block_size);
-}
-
-float** InStreamNode::process(float** buf, qint64 le)
-{
-    return nullptr;
-}
-
-//-----------------------------------------------------------------------------------------------
-
-QQmlListProperty<InStreamNode> OutStreamNode::outputs()
-{
-    return QQmlListProperty<InStreamNode>(this, m_outputs);
-}
-
-const QList<InStreamNode*>& OutStreamNode::getOutputs() const
-{
-    return m_outputs;
-}
-
-void OutStreamNode::setParentChannels(QVector<int> pch)
-{
-    m_pch = pch;
-}
-
-void OutStreamNode::setNumOutputs(uint16_t nout)
-{
-    m_pch = QVector<int>{nout-1};
-    m_num_outputs = nout;
-}
-
-void OutStreamNode::initialize(StreamProperties properties)
-{
-    m_stream_properties = properties;
-    StreamNode::allocateBuffer(m_out, m_num_outputs, properties.block_size);
-
-    userInitialize(properties.block_size);
-}
-
-float** OutStreamNode::process(float** buf, qint64 le)
-{
-    // process generator unit, pass it to effects
-    float** ubuf = userProcess(nullptr, le);
-    return ubuf;
-}
-
-//-----------------------------------------------------------------------------------------------
-
-QQmlListProperty<OutStreamNode>IOStreamNode::inputs()
-{
-    return QQmlListProperty<OutStreamNode>(this, m_inputs);
-}
-
-const QList<OutStreamNode*>& IOStreamNode::getInputs() const
-{
-    return m_inputs;
-}
-
-QQmlListProperty<InStreamNode> IOStreamNode::outputs()
-{
-    return QQmlListProperty<InStreamNode>(this, m_outputs);
-}
-
-const QList<InStreamNode*>& IOStreamNode::getOutputs() const
-{
-    return m_outputs;
-}
-
-void IOStreamNode::setParentChannels(QVector<int> pch)
-{
-    m_pch = pch;
-}
-
-void IOStreamNode::initialize(StreamProperties properties)
+void StreamNode::initialize(StreamProperties properties)
 {
     m_stream_properties = properties;
     StreamNode::allocateBuffer(m_in, m_num_inputs, properties.block_size);
@@ -152,9 +140,9 @@ void IOStreamNode::initialize(StreamProperties properties)
     userInitialize(properties.block_size);
 }
 
-float** IOStreamNode::process(float** buf, qint64 le)
+float** StreamNode::process(float** buf, qint64 le)
 {
-    return buf;
+    return userProcess(buf, le);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -219,21 +207,21 @@ void WorldStream::setOutDevice(QString device)
     m_out_device = device;
 }
 
-QQmlListProperty<OutStreamNode>WorldStream::inputs()
+QQmlListProperty<StreamNode>WorldStream::inputs()
 {
-    return QQmlListProperty<OutStreamNode>(this, this,
+    return QQmlListProperty<StreamNode>(this, this,
                                            &WorldStream::appendInput,
                                            &WorldStream::inputCount,
                                            &WorldStream::input,
                                            &WorldStream::clearInputs);
 }
 
-OutStreamNode* WorldStream::input(int index) const
+StreamNode* WorldStream::input(int index) const
 {
     return m_inputs.at(index);
 }
 
-void WorldStream::appendInput(OutStreamNode* input)
+void WorldStream::appendInput(StreamNode* input)
 {
     m_inputs.append(input);
 }
@@ -250,22 +238,22 @@ void WorldStream::clearInputs()
 
 // statics --
 
-void WorldStream::appendInput(QQmlListProperty<OutStreamNode>* list, OutStreamNode* input)
+void WorldStream::appendInput(QQmlListProperty<StreamNode>* list, StreamNode* input)
 {
     reinterpret_cast<WorldStream*>(list->data)->appendInput(input);
 }
 
-void WorldStream::clearInputs(QQmlListProperty<OutStreamNode>* list )
+void WorldStream::clearInputs(QQmlListProperty<StreamNode>* list )
 {
     reinterpret_cast<WorldStream*>(list->data)->clearInputs();
 }
 
-OutStreamNode* WorldStream::input(QQmlListProperty<OutStreamNode>* list, int i)
+StreamNode* WorldStream::input(QQmlListProperty<StreamNode>* list, int i)
 {
     return reinterpret_cast<WorldStream*>(list->data)->input(i);
 }
 
-int WorldStream::inputCount(QQmlListProperty<OutStreamNode>* list)
+int WorldStream::inputCount(QQmlListProperty<StreamNode>* list)
 {
     return reinterpret_cast<WorldStream*>(list->data)->inputCount();
 }
@@ -337,13 +325,12 @@ qint64 WorldStream::readData(char* data, qint64 maxlen)
     for ( const auto& input : inputs )
     {
         float** cdata   = input->process ( nullptr, bsize );
-        auto pch        = input->parentChannels();
+        auto pch        = input->parentChannelsVec();
 
         for ( quint16 s = 0; s < bsize; ++s )
             for ( quint16 ch = 0; ch < pch.size(); ++ch )
                 buf[pch[ch]][s] += ( cdata[ch][s] *level );
     }
-
 
         for ( quint16 s = 0; s < bsize; ++s )
         {

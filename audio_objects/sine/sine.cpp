@@ -19,7 +19,7 @@ float** SinOsc::userProcess(float** buf, qint64 nsamples)
 
     for ( quint16 s = 0; s < nsamples; ++s )
     {
-        for(quint16 ch = 0; ch < m_num_outputs; ++ ch)
+        for( quint16 ch = 0; ch < m_num_outputs; ++ ch)
             out[ch][s] = m_wavetable[pos] * level;
 
         pos += incr;

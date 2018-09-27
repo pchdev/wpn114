@@ -6,7 +6,7 @@
 
 #define WT_SIZE 16384
 
-class SinOsc : public OutStreamNode
+class SinOsc : public StreamNode
 {
     Q_OBJECT
     Q_PROPERTY ( qreal frequency READ frequency WRITE setFrequency NOTIFY frequencyChanged )

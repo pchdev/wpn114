@@ -41,7 +41,8 @@ src/oscquery/file.cpp           \
 src/oscquery/folder.cpp         \
 src/oscquery/node.cpp           \
 src/oscquery/query-server.cpp   \
-src/websocket/websocket.cpp
+src/websocket/websocket.cpp \
+    audio_objects/stpanner/stereopanner.cpp
 
 HEADERS +=                      \
 qml_plugin.hpp                  \
@@ -57,7 +58,8 @@ src/oscquery/file.hpp           \
 src/oscquery/folder.hpp         \
 src/oscquery/node.hpp           \
 src/oscquery/query-server.hpp   \
-src/websocket/websocket.hpp
+src/websocket/websocket.hpp \
+    audio_objects/stpanner/stereopanner.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
