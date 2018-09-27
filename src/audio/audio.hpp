@@ -19,7 +19,7 @@ struct StreamProperties
 class StreamNode : public QObject
 {
     Q_OBJECT
-    Q_CLASSINFO ( "DefaultProperty", "inputs" )
+    Q_CLASSINFO ( "DefaultProperty", "subnodes" )
 
     Q_PROPERTY  ( bool mute READ mute WRITE setMute NOTIFY muteChanged )
     Q_PROPERTY  ( bool active READ active WRITE setActive NOTIFY activeChanged )
@@ -31,6 +31,7 @@ class StreamNode : public QObject
     Q_PROPERTY  ( QQmlListProperty<StreamNode> subnodes READ subnodes )
 
     public:
+    StreamNode();
     static void allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples );
     static void resetBuffer(float**& buffer, quint16 nchannels, quint16 nsamples );
 
@@ -50,6 +51,7 @@ class StreamNode : public QObject
 
     uint16_t numInputs   ( ) const { return m_num_inputs; }
     uint16_t numOutputs  ( ) const { return m_num_outputs; }
+    uint16_t maxOutputs  ( ) const { return m_max_outputs; }
     qreal level          ( ) const { return m_level; }
     bool mute            ( ) const { return m_mute; }
     bool active          ( ) const { return m_active; }
@@ -57,6 +59,7 @@ class StreamNode : public QObject
 
     void setNumInputs    ( uint16_t num_inputs );
     void setNumOutputs   ( uint16_t num_outputs );
+    void setMaxOutputs   ( uint16_t max_outputs );
     void setMute         ( bool mute );
     void setActive       ( bool active );
 
@@ -85,6 +88,7 @@ class StreamNode : public QObject
     qreal m_db_level;
     uint16_t m_num_inputs;
     uint16_t m_num_outputs;
+    uint16_t m_max_outputs;
     bool m_mute;
     bool m_active;
 

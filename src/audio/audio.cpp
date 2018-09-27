@@ -3,6 +3,14 @@
 #include <qendian.h>
 #include <cmath>
 
+StreamNode::StreamNode() : m_level(1.0), m_db_level(0.0),
+    m_num_inputs(0), m_num_outputs(0), m_max_outputs(0), m_parent_channels(0),
+    m_mute(false), m_active(false),
+    m_in(nullptr), m_out(nullptr)
+{
+
+}
+
 void StreamNode::setNumInputs(uint16_t num_inputs)
 {
     if ( m_num_inputs != num_inputs ) emit numInputsChanged();
@@ -14,8 +22,15 @@ void StreamNode::setNumOutputs(uint16_t num_outputs)
     if ( m_num_outputs != num_outputs ) emit numOutputsChanged();
     m_num_outputs = num_outputs;
 
+    if ( m_subnodes.isEmpty() ) setMaxOutputs(num_outputs);
+}
+
+void StreamNode::setMaxOutputs(uint16_t max_outputs)
+{
+    m_max_outputs = max_outputs;
+
     QVariantList list;
-    for ( quint16 i = 0; i < m_num_outputs; ++i ) list << i;
+    for ( quint16 i = 0; i < m_max_outputs; ++i ) list << i;
 
     m_parent_channels = list;
 }
@@ -84,6 +99,10 @@ StreamNode* StreamNode::subnode(int index) const
 void StreamNode::appendSubnode(StreamNode* subnode)
 {
     m_subnodes.append(subnode);
+    if ( !m_num_inputs ) setMaxOutputs(subnode->maxOutputs());
+
+    qDebug() << "max outputs: " << m_max_outputs;
+    qDebug() << m_parent_channels;
 }
 
 int StreamNode::subnodesCount() const
@@ -138,11 +157,22 @@ void StreamNode::initialize(StreamProperties properties)
     StreamNode::allocateBuffer(m_out, m_num_outputs, properties.block_size);
 
     userInitialize(properties.block_size);
+
+    for ( const auto& subnode : m_subnodes )
+        subnode->initialize(properties);
 }
 
 float** StreamNode::process(float** buf, qint64 le)
 {
-    return userProcess(buf, le);
+    float** ubuf = userProcess(buf, le);
+    if ( !m_num_inputs )
+    {
+        for ( const auto& subnode : m_subnodes )
+            if ( subnode->numInputs() == m_num_outputs )
+                ubuf = subnode->process(ubuf, le);
+    }
+
+    return ubuf;
 }
 
 //-----------------------------------------------------------------------------------------------

@@ -7,6 +7,7 @@
 #include <src/oscquery/folder.hpp>
 #include <src/audio/audio.hpp>
 #include <audio_objects/sine/sine.hpp>
+#include <audio_objects/stpanner/stereopanner.hpp>
 
 #include <QQmlEngine>
 #include <qqml.h>
@@ -31,4 +32,5 @@ void qml_plugin::registerTypes(const char *uri)
 
     qmlRegisterType<WorldStream, 1>       ( "WPN114", 1, 0, "AudioStream" );
     qmlRegisterType<SinOsc, 1>            ( "WPN114", 1, 0, "SinOsc" );
+    qmlRegisterType<StereoPanner, 1>      ( "WPN114", 1, 0, "StereoPanner" );
 }

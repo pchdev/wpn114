@@ -1,7 +1,7 @@
 #include "sine.hpp"
 #include <math.h>
 
-SinOsc::SinOsc() : m_frequency(440.f), m_pos(0)
+SinOsc::SinOsc() : StreamNode(), m_frequency(440.f), m_pos(0)
 {
     SETN_OUT    ( 1 );
 
