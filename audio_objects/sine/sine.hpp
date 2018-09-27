@@ -2,20 +2,20 @@
 #define QSINE_H
 
 #include <QObject>
-#include <QAudioOutput>
-#include <src/audiobackend.hpp>
+#include <src/audio/audio.hpp>
 
 #define WT_SIZE 16384
 
-class SinOsc : public AudioObject
+class SinOsc : public OutStreamNode
 {
     Q_OBJECT
-    Q_PROPERTY ( qreal frequency READ frequency WRITE setFrequency NOTIFY frequencyChanged)
+    Q_PROPERTY ( qreal frequency READ frequency WRITE setFrequency NOTIFY frequencyChanged )
 
 public:
 
     SinOsc();
-    virtual float** process(const quint16 nsamples) override;
+    virtual float** userProcess(float** buf, qint64 le) override;
+    virtual void userInitialize(qint64 le) override { Q_UNUSED(le); }
 
     qreal frequency() const;
     void setFrequency(const qreal);

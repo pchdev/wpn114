@@ -1,5 +1,5 @@
 TARGET = WPN114
-QT += quick
+QT += quick multimedia
 TEMPLATE = lib
 CONFIG += c++11 dll
 
@@ -29,6 +29,8 @@ include ( external/qtzeroconf/qtzeroconf.pri )
 
 SOURCES +=                      \
 qml_plugin.cpp                  \
+src/audio/audio.cpp             \
+audio_objects/sine/sine.cpp     \
 src/midi/midi.cpp               \
 src/midi/RtMidi.cpp             \
 src/http/http.cpp               \
@@ -43,6 +45,8 @@ src/websocket/websocket.cpp
 
 HEADERS +=                      \
 qml_plugin.hpp                  \
+src/audio/audio.hpp             \
+audio_objects/sine/sine.hpp     \
 src/midi/midi.hpp               \
 src/midi/RtMidi.h               \
 src/http/http.hpp               \

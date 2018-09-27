@@ -2,23 +2,23 @@
 #include <math.h>
 
 SinOsc::SinOsc() : m_frequency(440.f), m_pos(0)
-{
-    SETN_OUT    ( 1 );
-    SET_OFFSET  ( 0 );
+{    
+    m_num_inputs    = 0;
+    m_num_outputs   = 1;
 
     for( quint16 i = 0; i < WT_SIZE; ++i )
         m_wavetable[i] = sin ((float) i/WT_SIZE*M_PI*2 );
 }
 
-float** SinOsc::process(const quint16 nsamples)
+float** SinOsc::userProcess(float** buf, qint64 nsamples)
 {
     float level         = m_level;
     quint16 pos         = m_pos;
     qreal frequency     = m_frequency;
     quint16 incr        = frequency/SAMPLERATE * WT_SIZE;
-    float** out         = OUT;
+    float** out         = m_out;
 
-    for(quint16 s = 0; s < nsamples; ++s)
+    for ( quint16 s = 0; s < nsamples; ++s )
     {
         for(quint16 ch = 0; ch < m_num_outputs; ++ ch)
             out[ch][s] = m_wavetable[pos] * level;

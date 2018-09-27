@@ -5,6 +5,7 @@
 #include <src/oscquery/node.hpp>
 #include <src/oscquery/file.hpp>
 #include <src/oscquery/folder.hpp>
+#include <src/audio/audio.hpp>
 
 #include <QQmlEngine>
 #include <qqml.h>
@@ -24,5 +25,6 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<WPNFolderNode, 1>     ( "WPN114", 1, 0, "FolderNode" );
     qmlRegisterType<WPNFolderMirror, 1>   ( "WPN114", 1, 0, "FolderMirror" );
     qmlRegisterType<WPNQueryServer, 1>    ( "WPN114", 1, 0, "OSCQueryServer" );
-    qmlRegisterType<WPNQueryClient, 1>    ( "WPN114", 1, 0, "OSCQueryClient" );
+    qmlRegisterType<WPNQueryClient, 1>    ( "WPN114", 1, 0, "OSCQueryClient" );   
+    qmlRegisterType<WorldStream, 1>       ( "WPN114", 1, 0, "AudioStream" );
 }

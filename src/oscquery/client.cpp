@@ -93,19 +93,15 @@ void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
 {
     OSCMessage message = OSCHandler::decode(data);
     onValueUpdate(message.address, message.arguments);
+
+    qDebug() << "WS-OSC In:" << message.address << message.arguments;
 }
 
 void WPNQueryClient::onTextMessageReceived(QString message)
 {
-    // - host_info
-    // - namespace
-    // - value updates (criticals)
-    // - ...
-    // - signal chains...
-
     auto obj = QJsonDocument::fromJson(message.toUtf8()).object();
 
-    if ( obj.contains("COMMAND")) emit command(obj);
+    if      ( obj.contains("COMMAND")) emit command(obj);
     else if ( obj.contains("FULL_PATH")) onNamespaceReceived(obj);
     else if ( obj.contains("OSC_PORT")) onHostInfoReceived(obj);
 
@@ -184,8 +180,9 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
 
         if ( auto node = m_root_node->subnode(jsnode["FULL_PATH"].toString()))
         {
-            node->setDevice(this);
-            node->update(jsnode);
+            node->setDevice ( this );
+            node->update    ( jsnode );
+
             continue;
         }
 
@@ -196,16 +193,8 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
     emit treeComplete();
 }
 
-void WPNQueryClient::writeOsc(QString method, QVariant arguments)
-{
-
-}
-
-void WPNQueryClient::writeWebSocket(QString method, QVariant arguments)
-{
-
-}
-
+void WPNQueryClient::writeOsc(QString method, QVariant arguments) { }
+void WPNQueryClient::writeWebSocket(QString method, QVariant arguments) { }
 void WPNQueryClient::writeWebSocket(QString message)
 {
     m_ws_con->writeText(message);
