@@ -40,11 +40,11 @@ class StreamNode : public QObject
 
     public:
     StreamNode();
-    static void allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples );
-    static void resetBuffer(float**& buffer, quint16 nchannels, quint16 nsamples );
+    static void allocateBuffer  ( float**& buffer, quint16 nchannels, quint16 nsamples );
+    static void resetBuffer     ( float**& buffer, quint16 nchannels, quint16 nsamples );
 
     virtual float** userProcess ( float** buf, qint64 le ) = 0;
-    virtual void userInitialize(qint64) = 0;
+    virtual void userInitialize ( qint64 ) = 0;
 
     virtual void initialize     ( StreamProperties properties);
     virtual float** process     ( float** buf, qint64 le );
