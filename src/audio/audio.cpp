@@ -100,9 +100,6 @@ void StreamNode::appendSubnode(StreamNode* subnode)
 {
     m_subnodes.append(subnode);
     if ( !m_num_inputs ) setMaxOutputs(subnode->maxOutputs());
-
-    qDebug() << "max outputs: " << m_max_outputs;
-    qDebug() << m_parent_channels;
 }
 
 int StreamNode::subnodesCount() const
@@ -164,15 +161,35 @@ void StreamNode::initialize(StreamProperties properties)
 
 float** StreamNode::process(float** buf, qint64 le)
 {
-    float** ubuf = userProcess(buf, le);
-    if ( !m_num_inputs )
+    if ( !m_num_inputs ) // if generator, pass the buffer down the chain
     {
+        float** ubuf = userProcess(buf, le);
+
         for ( const auto& subnode : m_subnodes )
             if ( subnode->numInputs() == m_num_outputs )
                 ubuf = subnode->process(ubuf, le);
+
+        return ubuf;
     }
 
-    return ubuf;
+    else
+    {
+        // mix all sources down to an array of channels
+        float** ubuf = inputBuffer();
+
+        for ( const auto& subnode : m_subnodes )
+        {
+            if ( subnode->active() )
+            {
+                auto pch     = subnode->parentChannelsVec();
+                auto genbuf  = subnode->process(nullptr, le);
+
+                for ( quint16 ch = 0; ch < pch.size(); ++ch )
+                    for ( quint16 s = 0; s < le; ++s )
+                        ubuf[pch[ch]][s] += genbuf[ch][s];
+            }
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------------------------

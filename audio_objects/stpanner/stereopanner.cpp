@@ -9,8 +9,8 @@ StereoPanner::StereoPanner() : StreamNode(), m_position(0.5)
 
 float** StereoPanner::userProcess(float** buf, qint64 bsize)
 {
-    qreal position  = (m_position+1.f)/2.f;
     float** out     = m_out;
+    qreal position  = (m_position+1.f)/2.f;
 
     for ( quint16 s = 0; s < bsize; ++s )
     {

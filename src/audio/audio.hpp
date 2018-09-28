@@ -16,6 +16,14 @@ struct StreamProperties
     quint16 block_size;
 };
 
+/*class ControlNode : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY  ( bool audioRate READ audioRate WRITE setAudioRate )
+    Q_PROPERTY  ( qreal from READ from WRITE setFrom )
+
+};*/
+
 class StreamNode : public QObject
 {
     Q_OBJECT
@@ -38,8 +46,8 @@ class StreamNode : public QObject
     virtual float** userProcess ( float** buf, qint64 le ) = 0;
     virtual void userInitialize(qint64) = 0;
 
-    void initialize     ( StreamProperties properties);
-    float** process     ( float** buf, qint64 le );
+    virtual void initialize     ( StreamProperties properties);
+    virtual float** process     ( float** buf, qint64 le );
 
     QQmlListProperty<StreamNode>  subnodes();
     const QVector<StreamNode*>&   getSubnodes() const { return m_subnodes; }
@@ -49,6 +57,7 @@ class StreamNode : public QObject
     StreamNode* subnode     ( int ) const;
     void clearSubnodes      ( );
 
+    float** inputBuffer  ( ) const { return m_in; }
     uint16_t numInputs   ( ) const { return m_num_inputs; }
     uint16_t numOutputs  ( ) const { return m_num_outputs; }
     uint16_t maxOutputs  ( ) const { return m_max_outputs; }
