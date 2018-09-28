@@ -2,7 +2,7 @@
 #define AUDIOPLUGIN_H
 
 #include <QObject>
-#include <src/audiobackend.hpp>
+#include <src/audio/audio.hpp>
 #include "aeffect.h"
 #include "aeffectx.h"
 #include <QMacNativeWidget>
@@ -84,7 +84,7 @@ class vst2x_plugin : public plugin_hdl
 
 // QT INSTANCE --------------------------------------------------------------------
 
-class AudioPlugin : public AudioEffectObject, public QQmlParserStatus
+class AudioPlugin : public StreamNode, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
@@ -97,7 +97,8 @@ public:
     AudioPlugin();
     ~AudioPlugin();
 
-    virtual float** process(const quint16 nsamples) override;
+    virtual float** userProcess(float**, qint64) override;
+    virtual void userInitialize(qint64) override;
 
     virtual void classBegin()           override;
     virtual void componentComplete()    override;

@@ -44,13 +44,10 @@ void AudioPlugin::componentComplete()
         m_programs << str;
     }
 
-    SET_OFFSET      ( 0 );
     SETN_IN         ( m_plugin_hdl->get_ninputs()  );
     SETN_OUT        ( m_plugin_hdl->get_noutputs() );
 
-    m_plugin_hdl->configure ( SAMPLERATE, BLOCKSIZE );
-
-    INITIALIZE_AUDIO_IO;
+    m_plugin_hdl->configure ( SAMPLERATE, m_stream_properties.block_size );
 
 #ifdef __APPLE__ //----------------------------------------------------------
     m_view              = new QMacNativeWidget();
@@ -76,19 +73,13 @@ void AudioPlugin::showEditorWindow()
     m_view_container->show();
 }
 
-float** AudioPlugin::process(const quint16 nsamples)
+float** AudioPlugin::userProcess(float**input, qint64 nsamples)
 {    
     if  ( m_num_inputs )
-    {
-        ZEROBUF(IN, m_num_inputs);
-        get_inputs( nsamples );
+        m_plugin_hdl->process_audio(input, m_out, nsamples);
 
-        m_plugin_hdl->process_audio(IN, OUT, nsamples);
-    }
-
-    else    m_plugin_hdl->process_audio(OUT, nsamples);
-
-    return  OUT;
+    else    m_plugin_hdl->process_audio(m_out, nsamples);
+    return  m_out;
 }
 
 QString AudioPlugin::path() const

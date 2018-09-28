@@ -1,5 +1,5 @@
 TARGET = WPN114
-QT += quick multimedia
+QT += quick multimedia widgets
 TEMPLATE = lib
 CONFIG += c++11 dll
 
@@ -44,7 +44,8 @@ src/oscquery/query-server.cpp   \
 src/websocket/websocket.cpp \
     audio_objects/stpanner/stereopanner.cpp \
     src/audio/soundfile.cpp \
-    audio_objects/sampler/sampler.cpp
+    audio_objects/sampler/sampler.cpp \
+    audio_objects/audioplugin/audioplugin.mm
 
 HEADERS +=                      \
 qml_plugin.hpp                  \
@@ -63,7 +64,10 @@ src/oscquery/query-server.hpp   \
 src/websocket/websocket.hpp \
     audio_objects/stpanner/stereopanner.hpp \
     src/audio/soundfile.hpp \
-    audio_objects/sampler/sampler.hpp
+    audio_objects/sampler/sampler.hpp \
+    audio_objects/audioplugin/aeffect.h \
+    audio_objects/audioplugin/aeffectx.h \
+    audio_objects/audioplugin/audioplugin.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
