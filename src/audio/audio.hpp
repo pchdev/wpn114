@@ -9,6 +9,7 @@
 #include <QAudioOutput>
 #include <QIODevice>
 #include <QVector>
+#include <src/oscquery/device.hpp>
 
 struct StreamProperties
 {
@@ -24,6 +25,8 @@ struct StreamProperties
 
 };*/
 
+class WorldStream;
+
 class StreamNode : public QObject
 {
     Q_OBJECT
@@ -37,6 +40,10 @@ class StreamNode : public QObject
     Q_PROPERTY  ( qreal level READ level WRITE setLevel NOTIFY levelChanged )
     Q_PROPERTY  ( qreal dBlevel READ dBlevel WRITE setDBlevel )
     Q_PROPERTY  ( QQmlListProperty<StreamNode> subnodes READ subnodes )
+    Q_PROPERTY  ( WorldStream* parentStream READ parentStream WRITE setParentStream )
+
+    Q_PROPERTY  ( QString exposePath READ exposePath WRITE setExposePath )
+    Q_PROPERTY  ( WPNDevice* exposeDevice READ exposeDevice WRITE setExposeDevice )
 
     public:
     StreamNode();
@@ -66,11 +73,18 @@ class StreamNode : public QObject
     bool active          ( ) const { return m_active; }
     qreal dBlevel        ( ) const { return m_db_level; }
 
+    QString exposePath          ( ) const { return m_exp_path; }
+    WPNDevice* exposeDevice     ( ) const { return m_exp_device; }
+    WorldStream* parentStream   ( ) const { return m_parent_stream; }
+
     void setNumInputs    ( uint16_t num_inputs );
     void setNumOutputs   ( uint16_t num_outputs );
     void setMaxOutputs   ( uint16_t max_outputs );
     void setMute         ( bool mute );
     void setActive       ( bool active );
+    void setExposePath   ( QString path );
+    void setExposeDevice ( WPNDevice* device );
+    void setParentStream ( WorldStream* stream );
 
     QVector<quint16> parentChannelsVec ( ) const;
     QVariant parentChannels ( ) const { return m_parent_channels; }
@@ -106,6 +120,10 @@ class StreamNode : public QObject
 
     QVariant m_parent_channels;
     QVector<StreamNode*> m_subnodes;
+
+    QString m_exp_path;
+    WPNDevice* m_exp_device;
+    WorldStream* m_parent_stream;
 
     #define SAMPLERATE m_stream_properties.sample_rate
     #define SETN_OUT(n) setNumOutputs(n);

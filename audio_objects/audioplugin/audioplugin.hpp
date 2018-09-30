@@ -98,7 +98,7 @@ public:
     ~AudioPlugin();
 
     virtual float** userProcess(float**, qint64) override;
-    virtual void userInitialize(qint64) override;
+    virtual void userInitialize(qint64) override {};
 
     virtual void classBegin()           override;
     virtual void componentComplete()    override;

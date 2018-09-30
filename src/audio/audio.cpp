@@ -60,6 +60,24 @@ void StreamNode::setDBlevel(qreal db)
     m_level = std::pow(10.f, db*.05);
 }
 
+void StreamNode::setExposePath(QString path)
+{
+    m_exp_path = path;
+}
+
+void StreamNode::setExposeDevice(WPNDevice* device)
+{
+    m_exp_device = device;
+}
+
+void StreamNode::setParentStream(WorldStream* stream)
+{
+    m_parent_stream = stream;
+    m_parent_stream->appendInput(this);
+}
+
+//-------------------------------------------------------------------------------------------
+
 QVector<quint16> StreamNode::parentChannelsVec() const
 {
     QVector<quint16> res;
@@ -133,6 +151,8 @@ int StreamNode::subnodesCount(QQmlListProperty<StreamNode>* list)
 {
     return reinterpret_cast<StreamNode*>(list->data)->subnodesCount();
 }
+
+//-------------------------------------------------------------------------------------------
 
 inline void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
 {

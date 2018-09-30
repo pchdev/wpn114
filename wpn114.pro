@@ -17,6 +17,7 @@ android {
 }
 
 macx {
+    QMAKE_MAC_SDK = macosx10.14
     LIBS +=  \
     -framework CoreFoundation \
     -framework CoreAudio \
@@ -45,7 +46,8 @@ src/websocket/websocket.cpp \
     audio_objects/stpanner/stereopanner.cpp \
     src/audio/soundfile.cpp \
     audio_objects/sampler/sampler.cpp \
-    audio_objects/audioplugin/audioplugin.mm
+    audio_objects/audioplugin/audioplugin.mm \
+    audio_objects/rooms/rooms.cpp
 
 HEADERS +=                      \
 qml_plugin.hpp                  \
@@ -67,7 +69,8 @@ src/websocket/websocket.hpp \
     audio_objects/sampler/sampler.hpp \
     audio_objects/audioplugin/aeffect.h \
     audio_objects/audioplugin/aeffectx.h \
-    audio_objects/audioplugin/audioplugin.hpp
+    audio_objects/audioplugin/audioplugin.hpp \
+    audio_objects/rooms/rooms.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

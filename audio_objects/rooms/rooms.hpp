@@ -1,221 +1,101 @@
 #ifndef ROOMS_H
 #define ROOMS_H
 
-#include <src/audiobackend.hpp>
-#include <array>
+#include <src/audio/audio.hpp>
 
-class RoomsObject : public QObject
+class RoomNode : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY      ( float level READ level WRITE setLevel )
-    Q_PROPERTY      ( QVector<qreal> positions READ positions WRITE setPositions )
-    Q_PROPERTY      ( float influence READ influence WRITE setInfluence )
-
-public:
-    RoomsObject();
-    ~RoomsObject();
-
-    QVector<qreal> positions() const;
-    void setPositions( const QVector<qreal> );
-
-    float level         ( ) const;
-    float influence     ( ) const;
-    void setLevel       ( const float );
-    void setInfluence   ( const float );
-
-protected:
-    float               m_level;
-    float               m_influence;
-    QVector<qreal>      m_positions;
-
-};
-
-class SpeakerObject : public RoomsObject
-{
-    Q_OBJECT
-    Q_PROPERTY      ( int output READ output WRITE setOutput )
-
-public:
-
-    virtual quint16 nspeakers() const = 0;
-
-    enum Axis   { X, Y, BOTH }; Q_ENUM ( Axis )
-    enum Order  { Clockwise, Anticlockwise, Pairing }; Q_ENUM ( Order )
-
-    int     output() const;
-    void    setOutput(const int);
-
-private:
-    quint16 m_output;
-};
-
-class Speaker : public SpeakerObject
-{
-    Q_OBJECT
-
-public:
-    Speaker();
-    virtual quint16 nspeakers() const { return 1; }
-
-};
-
-class SpeakerPair : public Speaker, public QQmlParserStatus
-{
-    Q_OBJECT
-    Q_INTERFACES    ( QQmlParserStatus )
-
-    Q_PROPERTY  ( qreal offset READ offset WRITE setOffset )
-    Q_PROPERTY  ( QVector<qreal> offsets READ offsets WRITE setOffsets )
-    Q_PROPERTY  ( Axis axis READ axis WRITE setAxis )
-
-    public: //------------------------------------------------------------
-    SpeakerPair();
-
-    virtual quint16 nspeakers() const { return 2; }
-
-    virtual void classBegin()           override;
-    virtual void componentComplete()    override;
-
-    Axis            axis        () const;
-    qreal           offset      () const;
-    QVector<qreal>  offsets     () const;
-
-    void setOffset      ( const qreal );
-    void setOffsets     ( const QVector<qreal> );
-    void setAxis        ( const Axis );
-
-    private: //-----------------------------------------------------------
-    Axis            m_axis;
-    qreal           m_offset;
-    QVector<qreal>  m_offsets;
-
-};
-
-class SpeakerRing : public Speaker, public QQmlParserStatus
-{
-    Q_OBJECT
-    Q_INTERFACES    ( QQmlParserStatus )
-
-    Q_PROPERTY      ( qreal offset READ offset WRITE setOffset )
-    Q_PROPERTY      ( Order order READ order WRITE setOrder )
-    Q_PROPERTY      ( int nspeakers READ nspeakers WRITE setNspeakers )
+    Q_PROPERTY  ( int nspeakers READ nspeakers WRITE setNspeakers )
 
     public:
-    SpeakerRing();
+    RoomNode();
+    quint16 nspeakers() const { return m_nspeakers; }
+    void setNspeakers(quint16 nspeakers);
 
-    virtual quint16 nspeakers() const { return m_nspeakers; }
+    QVector<QVector3D> positions() const { return m_positions; }
+    QVector<qreal> influences() const { return m_infuences; }
 
-    virtual void classBegin()           override;
-    virtual void componentComplete()    override;
+    protected:
+    QVector<QVector3D> m_positions;
+    QVector<qreal> m_infuences;
+    quint16 m_nspeakers;
+};
 
-    qreal   offset      () const;
-    Order   order       () const;
+class CircularSetup : public RoomNode
+{
+    Q_OBJECT
+    Q_PROPERTY  ( int offset READ offset WRITE setOffset )
 
-    void setOffset      ( const qreal );
-    void setOrder       ( const Order );
-    void setNspeakers   ( const quint16 );
+    public:
+    CircularSetup();
+    qint16 offset() const { return m_offset; }
+
+    void setOffset(qint16 offset);
 
     private:
-    qreal       m_offset;
-    Order       m_order;
-    quint16     m_nspeakers;
+    qint16 m_offset;
+
 };
 
-class Source : public RoomsObject, public QQmlParserStatus
+class RoomSetup : public QObject
 {
     Q_OBJECT
-    Q_INTERFACES    ( QQmlParserStatus )
-    Q_CLASSINFO     ( "DefaultProperty", "inputs" )
-
-    Q_PROPERTY      ( QQmlListProperty<AudioObject> inputs READ inputs )
-    Q_PROPERTY      ( int nchannels READ nchannels )
 
     public:
+    RoomSetup();
+};
 
-    virtual void classBegin()           override;
-    virtual void componentComplete()    override;
+class RoomSource : public StreamNode
+{
+    Q_OBJECT
 
-    quint16 nchannels() const;
+    Q_PROPERTY  ( QVariant position READ position WRITE setPosition )
+    Q_PROPERTY  ( QVariant diffuse READ diffuse WRITE setDiffuse )
+    Q_PROPERTY  ( QVariant bias READ bias WRITE setBias )
 
-    QQmlListProperty<AudioObject> inputs();
-    QList<AudioObject*> get_inputs();
+    public:
+    RoomSource();
+
+    virtual float** userProcess ( float** buf, qint64 le ) override;
+    virtual void userInitialize ( qint64 ) override;
+
+    QVariant position   ( ) const { return m_position; }
+    QVariant diffuse    ( ) const { return m_diffuse; }
+    QVariant bias       ( ) const { return m_bias; }
+
+    void setPosition    ( QVariant position );
+    void setDiffuse     ( QVariant diffuse );
+    void setBias        ( QVariant bias );
 
     private:
-    QList<AudioObject*> m_inputs;
-    quint16 m_nchannels;
-
+    QVariant m_position;
+    QVariant m_diffuse;
+    QVariant m_bias;
 };
 
-// qt quick gui todo
-class RoomsSetup : public QObject, public QQmlParserStatus
+class Rooms : public StreamNode
 {
     Q_OBJECT
-    Q_INTERFACES    ( QQmlParserStatus )
-    Q_CLASSINFO     ( "DefaultProperty", "speakers" )
 
-    Q_PROPERTY      ( int numOutputs READ numOutputs )
-    Q_PROPERTY      ( QQmlListProperty<SpeakerObject> speakers READ speakers )    
-
-    public:
-
-    struct SpeakerChannel
-    {
-        qreal x;
-        qreal y;
-        qreal r;
-        qreal l;
-    };
-
-    RoomsSetup();
-    ~RoomsSetup();
-
-    virtual void classBegin()           override;
-    virtual void componentComplete()    override;
-
-    QQmlListProperty<SpeakerObject> speakers();
-    QVector<SpeakerChannel> get_channels() const;
-    QList<SpeakerObject*>& get_speakers();
-    void appendSpeaker(SpeakerObject*);
-
-    uint16_t numOutputs() const;
-
-private:    
-    quint16 m_noutputs;
-    QList<SpeakerObject*> m_speakers;
-    QVector<SpeakerChannel> m_channels;
-    static void appendSpeaker( QQmlListProperty<SpeakerObject>*, SpeakerObject* );
-
-};
-
-class Rooms : public AudioEffectObject, public QQmlParserStatus
-{
-    Q_OBJECT
-    Q_INTERFACES    ( QQmlParserStatus )
-    Q_CLASSINFO     ( "DefaultProperty", "sources" )
-
-    Q_PROPERTY      ( RoomsSetup* setup READ setup WRITE setSetup )
-    Q_PROPERTY      ( QQmlListProperty<Source> sources READ sources )
+    Q_PROPERTY  ( RoomSetup* setup READ setup WRITE setSetup )
 
     public:
     Rooms();
-    ~Rooms();
 
-    virtual float** process( const quint16 nsamples ) override;
+    RoomSetup* setup() const { return m_setup; }
+    void setSetup(RoomSetup* setup);
 
-    virtual void classBegin         () override;
-    virtual void componentComplete  () override;
-
-    QQmlListProperty<Source> sources();
-
-    RoomsSetup* setup   () const;
-    void setSetup       (RoomsSetup*);
-
-    protected:
-    float**& get_inputs( const quint64 nsamples ); // override
+    virtual float** process ( float** buf, qint64 le ) override;
+    virtual float** userProcess ( float** buf, qint64 le ) override;
+    virtual void userInitialize ( qint64 ) override;
 
     private:
-    RoomsSetup*     m_setup;
-    QList<Source*>  m_sources;
+    RoomSetup* m_setup;
+
 };
+
+
+
 
 #endif // ROOMS_H

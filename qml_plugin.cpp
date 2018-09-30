@@ -9,6 +9,8 @@
 #include <audio_objects/sine/sine.hpp>
 #include <audio_objects/stpanner/stereopanner.hpp>
 #include <audio_objects/audioplugin/audioplugin.hpp>
+#include <audio_objects/sampler/sampler.hpp>
+#include <audio_objects/rooms/rooms.hpp>
 #include <QQmlEngine>
 #include <qqml.h>
 
@@ -19,7 +21,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<Type, 1>          ( "WPN114", 1, 0, "Type", "Coucou" );
     qmlRegisterUncreatableType<Access, 1>        ( "WPN114", 1, 0, "Access", "Coucou" );
     qmlRegisterUncreatableType<Clipmode, 1>      ( "WPN114", 1, 0, "Clipmode", "Coucou" );
-    qmlRegisterUncreatableType<StreamNode, 1>    ( "WPN114", 1, 0, "OutStreamNode","Coucou");
+    qmlRegisterUncreatableType<StreamNode, 1>    ( "WPN114", 1, 0, "StreamNode","Coucou");
 
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
     qmlRegisterType<OSCHandler, 1>        ( "WPN114", 1, 0, "OSCHandler" );
@@ -34,4 +36,9 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<SinOsc, 1>            ( "WPN114", 1, 0, "SinOsc" );
     qmlRegisterType<StereoPanner, 1>      ( "WPN114", 1, 0, "StereoPanner" );
     qmlRegisterType<AudioPlugin, 1>       ( "WPN114", 1, 0, "AudioPlugin" );
+    qmlRegisterType<Sampler, 1>           ( "WPN114", 1, 0, "Sampler" );
+    qmlRegisterType<RoomSetup, 1>         ( "WPN114", 1, 0, "RoomSetup" );
+    qmlRegisterType<RoomSource, 1>        ( "WPN114", 1, 0, "RoomSource" );
+    qmlRegisterType<Rooms, 1>             ( "WPN114", 1, 0, "Rooms" );
+    qmlRegisterType<CircularSetup, 1>     ( "WPN114", 1, 0, "CircularSetup" );
 }
