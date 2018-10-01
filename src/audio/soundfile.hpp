@@ -4,6 +4,9 @@
 #include <QObject>
 #include <QFile>
 #include <QDataStream>
+#include <QThread>
+
+#define WAVE_METADATA_SIZE 44
 
 struct WavMetadata
 {
@@ -24,15 +27,47 @@ struct WavMetadata
     quint32 subchunk2_size;
 };
 
+class Soundfile;
+
+class SoundfileStreamer : public QObject
+{
+    Q_OBJECT
+
+    public:
+    SoundfileStreamer   ( Soundfile* sfile = 0 );
+    ~SoundfileStreamer  ( );
+
+    void setStartSample ( quint64 index );
+    void setBufferSize  ( quint64 nsamples );
+    void setWrap        ( bool wrap ) { m_wrap = wrap; }
+
+    public slots:
+    void next(float* target);
+
+    signals:
+    void bufferLoaded();
+
+    private:
+    Soundfile* m_soundfile;
+    bool m_wrap;
+    quint64 m_start_byte;
+    quint64 m_bufsize_byte;
+    quint64 m_position_byte;
+    char* m_cbuffer;
+
+};
+
 class Soundfile : public QObject
 {
     Q_OBJECT
+
+    friend class SoundfileStreamer;
 
     Q_PROPERTY  ( QString path READ path WRITE setPath )
     Q_PROPERTY  ( int nchannels READ nchannels )
     Q_PROPERTY  ( int nframes READ nframes )
     Q_PROPERTY  ( int nsamples READ nsamples )
-    Q_PROPERTY  ( int bufSize READ bufSize WRITE setBufSize )
+    Q_PROPERTY  ( int sampleRate READ sampleRate )
 
     public:
     Soundfile   ( );
@@ -42,31 +77,23 @@ class Soundfile : public QObject
     quint8 nchannels    ( ) const { return m_nchannels; }
     quint64 nframes     ( ) const { return m_nframes; }
     quint64 nsamples    ( ) const { return m_nsamples; }
-    quint32 bufSize     ( ) const { return m_buf_size; }
-
-    void setBufSize     ( quint32 size );
-    float* buffer         ( quint32 startframe );
-    float* stream         (  );
-
-    void setPath        ( QString path );
+    quint64 sampleRate  ( ) const { return m_sample_rate; }
     void metadataWav    ( );
 
-    signals:
-    void endOfFile      ( );
+    void setPath      ( QString path );
+    void buffer       ( float* buffer, quint64 start_sample, quint64 len );
 
     protected:
     QFile* m_file;
+    quint64 m_file_size;
     QString m_path;
     quint16 m_nchannels;
     quint32 m_sample_rate;
     quint64 m_nframes;
     quint64 m_nsamples;
-    quint16 m_bits_per_sample;
     quint32 m_nbytes;
-    float* m_buffer;
-    QDataStream* m_stream;
-    quint32 m_buf_size;
-
+    quint16 m_bits_per_sample;
+    quint32 m_metadata_size;
 };
 
 #endif // SOUNDFILE_HPP

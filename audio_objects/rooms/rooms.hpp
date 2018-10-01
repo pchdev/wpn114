@@ -2,6 +2,7 @@
 #define ROOMS_H
 
 #include <src/audio/audio.hpp>
+#include <QVector3D>
 
 class RoomNode : public QObject
 {

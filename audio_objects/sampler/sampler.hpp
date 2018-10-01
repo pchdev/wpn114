@@ -4,6 +4,11 @@
 #include <src/audio/audio.hpp>
 #include <src/audio/soundfile.hpp>
 #include <QQmlParserStatus>
+#include <QThread>
+
+#define ENV_RESOLUTION 32768
+#define BUFSTREAM_NSAMPLES_DEFAULT 524288
+// approx. 10 seconds buffer
 
 class Sampler : public StreamNode, public QQmlParserStatus
 {
@@ -18,6 +23,7 @@ class Sampler : public StreamNode, public QQmlParserStatus
     Q_PROPERTY  ( qreal length READ length WRITE setLength )
     Q_PROPERTY  ( qreal rate READ rate WRITE setRate )
     Q_PROPERTY  ( bool stream READ stream WRITE setStream )
+    Q_PROPERTY  ( qreal fileLength READ fileLength NOTIFY fileLengthChanged )
 
     public:
     Sampler();
@@ -37,6 +43,7 @@ class Sampler : public StreamNode, public QQmlParserStatus
     qreal length        ( ) const { return m_length; }
     qreal rate          ( ) const { return m_rate; }
     bool stream         ( ) const { return m_stream; }
+    qreal fileLength    ( ) const;
 
     void setPath        ( QString path );
     void setLoop        ( bool loop );
@@ -48,12 +55,42 @@ class Sampler : public StreamNode, public QQmlParserStatus
     void setRate        ( qreal rate );
     void setStream      ( bool stream );
 
-    signals:
-    void readyRead ();
+    public slots:
+    void onNextBufferReady();
 
-    private:
+    signals:
+    void next (float*);
+    void fileLengthChanged ();
+
+    private:    
     Soundfile* m_sfile;
-    float* m_buffer;
+    SoundfileStreamer* m_streamer;
+    QThread m_streamer_thread;
+
+    bool m_first_play;
+    bool m_next_buffer_ready;
+    quint64 m_buffer_size;
+    quint64 m_play_size;
+    float* m_current_buffer;
+    float* m_next_buffer;
+
+    float m_attack_phase;
+    quint64 m_attack_end;
+
+    quint64 m_release_phase;
+
+    float m_xfade_phase;
+    quint64 m_xfade_point;
+
+    quint64 m_file_phase;
+    quint64 m_buffer_phase;
+
+    float m_attack_inc;
+    float m_release_inc;
+    float m_xfade_inc;
+
+    float m_attack_env  [ ENV_RESOLUTION ];
+    float m_release_env [ ENV_RESOLUTION ];
 
     QString m_path;
     bool m_loop;
