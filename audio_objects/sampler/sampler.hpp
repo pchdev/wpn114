@@ -116,6 +116,7 @@ class Sampler : public StreamNode, public QQmlParserStatus
 
     public:
     Sampler();
+    ~Sampler() override;
 
     virtual void componentComplete() override;
     virtual void classBegin() override {}

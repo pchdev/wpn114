@@ -1,6 +1,7 @@
 #include "sampler.hpp"
 
 #include <cmath>
+#include <QtDebug>
 
 #define BUFSR m_soundfile->sampleRate()
 
@@ -54,7 +55,7 @@ StreamSampler::~StreamSampler()
 
 inline quint64 ms_to_samples(quint64 x, quint64 sr)
 {
-    return x/1000.f*sr;
+    return (x/1000.f)*sr;
 }
 
 void StreamSampler::setLoop(bool loop)
@@ -319,6 +320,12 @@ Sampler::Sampler()
     }
 }
 
+Sampler::~Sampler()
+{
+    delete m_soundfile;
+    delete m_buffer;
+}
+
 void Sampler::componentComplete()
 {
     if ( m_path.isEmpty() ) return;
@@ -341,10 +348,7 @@ void Sampler::componentComplete()
         m_soundfile->buffer(m_buffer, m_start*srate, len);
     }
 
-    m_xfade_point = m_length*srate-m_xfade_length;
-    m_xfade_inc   = static_cast<float>(ENV_RESOLUTION/ms_to_samples(m_xfade, SAMPLERATE));
-    m_attack_inc  = static_cast<float>(ENV_RESOLUTION/ms_to_samples(m_attack, SAMPLERATE));
-
+    SETN_IN  ( 0 );
     SETN_OUT ( nch );
 
 }
@@ -399,8 +403,12 @@ void Sampler::setRate(qreal rate)
 }
 
 void Sampler::userInitialize(qint64)
-{
-
+{   
+    m_xfade_inc     = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_xfade, SAMPLERATE));
+    m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
+    m_attack_end    = ms_to_samples(m_attack, SAMPLERATE);
+    m_xfade_length  = ms_to_samples(m_xfade, SAMPLERATE);
+    m_xfade_point   = m_length*BUFSR-m_xfade_length;
 }
 
 float** Sampler::userProcess(float**, qint64 le)
@@ -424,6 +432,11 @@ float** Sampler::userProcess(float**, qint64 le)
     auto xfade_len      = m_xfade_length;
 
     if ( loop && spos > attack_end ) m_first_play = false;
+//    if ( first && spos < attack_end ) qDebug() << "attacking" << attack_end;
+
+    bufdata+= spos*nch;
+
+//    qDebug() << *bufdata;
 
     for ( qint64 s = 0; s < le; ++s )
     {
@@ -460,8 +473,10 @@ float** Sampler::userProcess(float**, qint64 le)
 
                 bufdata++;
             }
-
+            spos++;
+            xfade_phase += xfade_inc;
         }
+
         else if ( spos == bufnsamples )
         {
             if ( loop )
@@ -512,5 +527,5 @@ float** Sampler::userProcess(float**, qint64 le)
     m_attack_phase  = attack_phase;
     m_xfade_phase   = xfade_phase;
 
-    return m_out;
+    return out;
 }
