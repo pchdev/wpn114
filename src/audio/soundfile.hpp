@@ -55,7 +55,6 @@ class SoundfileStreamer : public QObject
     quint64 m_end_byte;
     quint64 m_bufsize_byte;
     quint64 m_position_byte;
-    char* m_cbuffer;
 
 };
 

@@ -9,7 +9,6 @@ SoundfileStreamer::SoundfileStreamer(Soundfile* file) : m_soundfile(file)
 
 SoundfileStreamer::~SoundfileStreamer()
 {
-    delete m_cbuffer;
 }
 
 void SoundfileStreamer::setStartSample(quint64 index)
@@ -29,7 +28,6 @@ void SoundfileStreamer::setEndSample(quint64 index)
 void SoundfileStreamer::setBufferSize(quint64 nsamples)
 {
     m_bufsize_byte = nsamples*m_soundfile->m_nchannels*(m_soundfile->m_bits_per_sample/8);
-    m_cbuffer = new char[m_bufsize_byte]();
 }
 
 void SoundfileStreamer::next(float* target)
@@ -41,36 +39,47 @@ void SoundfileStreamer::next(float* target)
     quint64 endframe    = position+nbytes;
     quint64 endbyte     = m_end_byte;
     QFile* file         = m_soundfile->m_file;
-    char* buf           = m_cbuffer;
-    auto div            = (2<<(bps-1))-1;
+    quint32 div         = (2<<(bps-1))-1;
 
-    file->seek(position);
+    QDataStream stream(m_soundfile->m_file);
+
+    stream.setByteOrder(QDataStream::LittleEndian);
+    stream.skipRawData(position);
 
     if ( endframe > endbyte && m_wrap )
     {
         quint64 f   = nbytes-(endframe-endbyte);
         quint64 f2  = endbyte-position;
 
-        file->read  ( buf, f );
-        file->seek  ( m_start_byte );
-        buf += f;
+        for ( quint64 i = 0; i < f; ++i )
+        {
+            qint16 si16; stream >> si16;
+            target[i] = si16/(float)div;
+        }
 
-        file->read  ( buf, f2 );
+        stream.resetStatus();
+        stream.skipRawData(m_start_byte);
+
+        for ( quint64 i = 0; i < f2; ++i )
+        {
+            qint16 si16; stream >> si16;
+            target[i] = si16/(float)div;
+        }
+
         m_position_byte = m_start_byte+f2;
-        buf -= f;
     }
     else
     {
-        // if endframe goes beyond end of file, qfile will fill the rest with zeroes,
+        // if endframe goes beyond end of file, qdatastream will fill the rest with zeroes,
         // which is what we want
-        file->read(buf, nbytes);
-        m_position_byte += nbytes;
-    }
 
-    for ( quint64 i = 0; i < nbytes/byps; ++i )
-    {
-        target[i] = qToLittleEndian<float>(*buf/(float)div);
-        buf += byps;
+        for ( quint64 i = 0; i < nbytes/byps; ++i )
+        {
+            qint16 si16; stream >> si16;
+            target[i] = si16/(float)div;
+        }
+
+        m_position_byte += nbytes;
     }
 
     qDebug() << "[STREAMER] new buffer loaded";
