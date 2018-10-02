@@ -139,7 +139,7 @@ class AudioStream : public QIODevice
 
     public:
     AudioStream(const WorldStream& world, QAudioFormat format, QAudioInput* input, QAudioOutput* output);
-    ~AudioStream();
+    ~AudioStream() override;
 
     virtual qint64 readData ( char*, qint64 )           override;
     virtual qint64 writeData ( const char*, qint64 )    override;

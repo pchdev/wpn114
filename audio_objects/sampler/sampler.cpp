@@ -12,7 +12,7 @@ StreamSampler::StreamSampler()
     m_current_buffer        = nullptr;
     m_next_buffer           = nullptr;
     m_next_buffer_ready     = false;
-    m_first_play            = false;
+    m_first_play            = true;
     m_loop                  = false;
     m_buffer_size           = 0;
     m_play_size             = 0;
@@ -122,16 +122,28 @@ void StreamSampler::componentComplete()
     m_soundfile  = new Soundfile(m_path);
     m_streamer   = new SoundfileStreamer(m_soundfile);
 
-    quint64 nch     = m_soundfile->nchannels();
-    quint64 srate   = m_soundfile->sampleRate();
+    quint64 nch       = m_soundfile->nchannels();
+    quint64 srate     = m_soundfile->sampleRate();
+    quint64 nsamples  = m_soundfile->nsamples();
 
     if ( m_length = 0 ) setLength((qreal) m_soundfile->nsamples()/srate);
 
     SETN_IN  ( 0 );
     SETN_OUT ( nch );
 
+    if ( m_length == 0 )
+    {
+        m_streamer->setEndSample ( nsamples );
+        setLength(nsamples/srate);
+        m_play_size = nsamples-(m_start*srate);
+    }
+    else
+    {
+        m_streamer->setEndSample ( m_end*srate );
+        m_play_size = (m_end-m_start)*srate;
+    }
+
     m_streamer->setStartSample  ( m_start*srate );
-    m_streamer->setEndSample    ( m_end*srate );
     m_streamer->setBufferSize   ( BUFSTREAM_NSAMPLES_DEFAULT );
     m_streamer->setWrap         ( m_loop );
 
@@ -147,10 +159,17 @@ void StreamSampler::componentComplete()
 
     m_streamer_thread.start(QThread::NormalPriority);
 
-    emit next(m_next_buffer);
+    emit next(m_current_buffer);
 }
 
-void StreamSampler::userInitialize(qint64) {}
+void StreamSampler::userInitialize(qint64)
+{
+    m_xfade_inc     = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_xfade, SAMPLERATE));
+    m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
+    m_attack_end    = ms_to_samples(m_attack, SAMPLERATE);
+    m_xfade_length  = ms_to_samples(m_xfade, SAMPLERATE);
+    m_xfade_point   = m_play_size-m_xfade_length;
+}
 
 void StreamSampler::onNextBufferReady()
 {
@@ -183,14 +202,20 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
     auto xfade_inc      = m_xfade_inc;
     auto xfade_length   = m_xfade_length;
 
-
+    bufdata += bpos*nch;
     qDebug() << bpos;
-    // check for attack
+
+    if ( first && spos < attack_end ) qDebug() << "attack";
+    else if ( spos > playnsamples ) qDebug() << "finished";
+    else qDebug() << "normal";
+
     if ( loop && spos > attack_end ) m_first_play = false;
 
     for ( qint64 s = 0; s < nsamples; ++s )
     {
-        if ( bpos == bufnsamples )
+        // if reaching the end of current buffer
+        // swap buffers and request a new one
+        if ( bpos == bufnsamples || bpos == 0 )
         {
             //----------------- swap buffers
             auto tmp            = m_current_buffer;
@@ -204,9 +229,7 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
             bpos = 0;
         }
 
-        else bpos++;
-
-        /*if ( first && spos < attack_end )
+         if ( first && spos < attack_end )
         {
             //          if first play && phase is in the 'attack zone'
             //          get interpolated data from envelope
@@ -225,7 +248,7 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
             attack_phase += attack_inc;
         }
 
-        else if ( loop && spos >= xfade_point && spos < playnsamples )
+       /* else if ( loop && spos >= xfade_point && spos < playnsamples )
         {
             //          if loop mode and if phase is in the 'crossfade zone'
             //          get interpolated data from envelope
@@ -245,11 +268,11 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
             spos++;
             bpos++;
             xfade_phase += xfade_inc;
-        }
+        }*/
 
         else if ( spos == playnsamples )
         {
-            if ( loop )
+            /*if ( loop )
             {
                 // if phase reaches end of 'crossfade zone'
                 // main phase continues from end of 'up' crossfade
@@ -257,7 +280,7 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
                 spos = xfade_length+1;
                 xfade_phase = 0;
             }
-            else
+            else*/
             {
                  // if not looping, stop and set inactive
                 // fill rest of buffer with zeroes
@@ -265,6 +288,8 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
 
                 for ( int ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
+
+                spos++;
             }
         }
 
@@ -274,6 +299,8 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
             // fill rest of buffer with zeroes before going inactive
             for ( int ch = 0; ch < nch; ++ch )
                   out[ch][s] = 0.f;
+
+            spos++;
         }
         else
         {
@@ -283,7 +310,7 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
 
             spos++;
             bpos++;
-        }*/
+        }
     }
 
     m_phase             = spos;
@@ -291,7 +318,7 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
     m_attack_phase      = attack_phase;
     m_xfade_phase       = xfade_phase;
 
-    return m_out;
+    return out;
 }
 
 //-----------------------------------------------------------------------------------
