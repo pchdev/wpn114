@@ -37,9 +37,10 @@ class SoundfileStreamer : public QObject
     SoundfileStreamer   ( Soundfile* sfile = 0 );
     ~SoundfileStreamer  ( );
 
-    void setStartSample ( quint64 index );
-    void setBufferSize  ( quint64 nsamples );
-    void setWrap        ( bool wrap ) { m_wrap = wrap; }
+    void setStartSample     ( quint64 index );
+    void setEndSample       ( quint64 index );
+    void setBufferSize      ( quint64 nsamples );
+    void setWrap            ( bool wrap ) { m_wrap = wrap; }
 
     public slots:
     void next(float* target);
@@ -51,6 +52,7 @@ class SoundfileStreamer : public QObject
     Soundfile* m_soundfile;
     bool m_wrap;
     quint64 m_start_byte;
+    quint64 m_end_byte;
     quint64 m_bufsize_byte;
     quint64 m_position_byte;
     char* m_cbuffer;

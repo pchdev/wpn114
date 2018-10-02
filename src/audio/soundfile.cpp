@@ -20,6 +20,12 @@ void SoundfileStreamer::setStartSample(quint64 index)
     m_position_byte = m_start_byte;
 }
 
+void SoundfileStreamer::setEndSample(quint64 index)
+{
+    quint64 bytes_per_sample = m_soundfile->m_bits_per_sample/8;
+    m_end_byte = index*m_soundfile->m_nchannels*bytes_per_sample+m_soundfile->m_metadata_size;
+}
+
 void SoundfileStreamer::setBufferSize(quint64 nsamples)
 {
     m_bufsize_byte = nsamples*m_soundfile->m_nchannels*(m_soundfile->m_bits_per_sample/8);
@@ -31,16 +37,16 @@ void SoundfileStreamer::next(float* target)
     quint64 nbytes      = m_bufsize_byte;
     quint64 position    = m_position_byte;
     quint64 endframe    = position+nbytes;
-    quint64 file_size   = m_soundfile->m_file_size;
+    quint64 endbyte     = m_end_byte;
     QFile* file         = m_soundfile->m_file;
     char* buf           = m_cbuffer;
 
     file->seek(position);
 
-    if ( endframe > file_size && m_wrap )
+    if ( endframe > endbyte && m_wrap )
     {
-        quint64 f   = nbytes-(endframe-file_size);
-        quint64 f2  = file_size-position;
+        quint64 f   = nbytes-(endframe-endbyte);
+        quint64 f2  = endbyte-position;
 
         file->read  ( buf, f );
         file->seek  ( m_start_byte );
