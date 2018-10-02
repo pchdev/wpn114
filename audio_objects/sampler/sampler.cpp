@@ -203,11 +203,11 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
     auto xfade_length   = m_xfade_length;
 
     bufdata += bpos*nch;
-    //qDebug() << *bufdata;
+//    qDebug() << bpos;
 
-    if ( first && spos < attack_end ) qDebug() << "attack";
-    else if ( spos > playnsamples ) qDebug() << "finished";
-    else qDebug() << "normal";
+//    if ( first && spos < attack_end ) qDebug() << "attack";
+//    else if ( spos > playnsamples ) qDebug() << "finished";
+//    else qDebug() << "normal";
 
     if ( loop && spos > attack_end ) m_first_play = false;
 
@@ -219,8 +219,8 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
         if ( bpos == 0 ) emit next(m_next_buffer);
         else if ( bpos == bufnsamples )
         {
-            //----------------- swap buffers
-            auto tmp            = m_current_buffer;
+            //------------------- swap buffers
+            float* tmp          = m_current_buffer;
             m_current_buffer    = m_next_buffer;
             bufdata             = m_next_buffer;
 
@@ -228,6 +228,7 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
             m_next_buffer_ready = false;
 
             emit next(m_next_buffer);
+            qDebug() << bpos;
             bpos = 0;
         }
 

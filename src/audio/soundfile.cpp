@@ -4,7 +4,6 @@
 
 SoundfileStreamer::SoundfileStreamer(Soundfile* file) : m_soundfile(file)
 {
-
 }
 
 SoundfileStreamer::~SoundfileStreamer()
@@ -38,7 +37,6 @@ void SoundfileStreamer::next(float* target)
     quint64 position    = m_position_byte;
     quint64 endframe    = position+nbytes;
     quint64 endbyte     = m_end_byte;
-    QFile* file         = m_soundfile->m_file;
     quint32 div         = (2<<(bps-1))-1;
 
     QDataStream stream(m_soundfile->m_file);
@@ -46,7 +44,7 @@ void SoundfileStreamer::next(float* target)
     stream.setByteOrder(QDataStream::LittleEndian);
     stream.skipRawData(position);
 
-    if ( endframe > endbyte && m_wrap )
+    if ( m_wrap && endframe > endbyte )
     {
         quint64 f   = nbytes-(endframe-endbyte);
         quint64 f2  = endbyte-position;
@@ -70,10 +68,10 @@ void SoundfileStreamer::next(float* target)
     }
     else
     {
-        // if endframe goes beyond end of file, qdatastream will fill the rest with zeroes,
+        // if endframe goes beyond end of file,
+        // qdatastream will fill the rest with zeroes,
         // which is what we want
-
-        for ( quint64 i = 0; i < nbytes/byps; ++i )
+        for ( quint64 i = 0; i < (nbytes/byps); ++i )
         {
             qint16 si16; stream >> si16;
             target[i] = si16/(float)div;
@@ -82,7 +80,7 @@ void SoundfileStreamer::next(float* target)
         m_position_byte += nbytes;
     }
 
-    qDebug() << "[STREAMER] new buffer loaded";
+    m_soundfile->m_file->reset();
     emit bufferLoaded();
 }
 
@@ -168,6 +166,8 @@ void Soundfile::metadataWav()
 
     qDebug() << "[SOUNDFILE] WAV format, metadata succesfully parsed";
     qDebug() << "[SOUNDFILE]" << m_nframes << "audio frames";
+
+    m_file->reset();
 }
 
 void Soundfile::buffer(float* buffer, quint64 start_sample, quint64 len )
