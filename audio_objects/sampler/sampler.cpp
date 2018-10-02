@@ -327,14 +327,21 @@ void Sampler::componentComplete()
     quint16 nch     = m_soundfile->nchannels();
     quint64 srate   = m_soundfile->sampleRate();
 
-    if ( m_length = 0 ) setLength((qreal) m_soundfile->nsamples()/srate);
+    if ( m_length == 0 )
+    {
+        m_length = (qreal) m_soundfile->nsamples()/srate;
+        m_buffer = new float[m_soundfile->nframes()]();
 
-    quint64 len     = floor ( m_length*srate );
-    m_buffer        = new float[len*nch]();
+        m_soundfile->buffer(m_buffer, m_start*srate, m_soundfile->nsamples());
+    }
+    else
+    {
+        quint64 len = floor ( m_length*srate );
+        m_buffer = new float[len*nch]();
+        m_soundfile->buffer(m_buffer, m_start*srate, len);
+    }
 
-    m_soundfile->buffer ( m_buffer, m_start*srate, len );
-
-    m_xfade_point = len-m_xfade_length;
+    m_xfade_point = m_length*srate-m_xfade_length;
     m_xfade_inc   = static_cast<float>(ENV_RESOLUTION/ms_to_samples(m_xfade, SAMPLERATE));
     m_attack_inc  = static_cast<float>(ENV_RESOLUTION/ms_to_samples(m_attack, SAMPLERATE));
 
@@ -504,4 +511,6 @@ float** Sampler::userProcess(float**, qint64 le)
     m_phase         = spos;
     m_attack_phase  = attack_phase;
     m_xfade_phase   = xfade_phase;
+
+    return m_out;
 }

@@ -10,21 +10,21 @@
 
 struct WavMetadata
 {
-    quint32 chunk_id;
-    quint32 chunk_size;
-    quint32 format;
+    qint32 chunk_id;
+    qint32 chunk_size;
+    qint32 format;
 
-    quint32 subchunk1_id;
-    quint32 subchunk1_size;
-    quint16 audio_format;
-    quint16 nchannels;
-    quint32 sample_rate;
-    quint32 byte_rate;
-    quint16 block_align;
-    quint16 bits_per_sample;
+    qint32 subchunk1_id;
+    qint32 subchunk1_size;
+    qint16 audio_format;
+    qint16 nchannels;
+    qint32 sample_rate;
+    qint32 byte_rate;
+    qint16 block_align;
+    qint16 bits_per_sample;
 
-    quint32 subchunk2_id;
-    quint32 subchunk2_size;
+    qint32 subchunk2_id;
+    qint32 subchunk2_size;
 };
 
 class Soundfile;

@@ -87,6 +87,7 @@ Soundfile::Soundfile(QString path) : m_file(new QFile(path))
 
 void Soundfile::setPath(QString path)
 {
+    m_path = path;
     if ( !m_file->open(QIODevice::ReadOnly) )
     {
         qDebug() << m_file->errorString();
@@ -110,10 +111,10 @@ void Soundfile::metadataWav()
     stream >> data.chunk_size;
 
     stream.setByteOrder(QDataStream::BigEndian);
-    stream >> data.format;
+    stream >> data.format;    
+    stream >> data.subchunk1_id;
 
     stream.setByteOrder(QDataStream::LittleEndian);
-    stream >> data.subchunk1_id;
     stream >> data.subchunk1_size;
     stream >> data.audio_format;
     stream >> data.nchannels;
@@ -122,20 +123,34 @@ void Soundfile::metadataWav()
     stream >> data.block_align;
     stream >> data.bits_per_sample;
 
+    // there might be an extension chunk, if so, ignore it for the moment
+    stream.setByteOrder(QDataStream::BigEndian);
+
+    QByteArray chunk2(4, Qt::Uninitialized);
+    stream.readRawData(chunk2.data(), 4);
+
+    stream.setByteOrder(QDataStream::LittleEndian);
+    qint32 chunk2_sz; stream >> chunk2_sz;
+
+    if ( chunk2 != "data" ) stream.skipRawData(chunk2_sz);
+
     stream.setByteOrder(QDataStream::BigEndian);
     stream >> data.subchunk2_id;
 
     stream.setByteOrder(QDataStream::LittleEndian);
     stream >> data.subchunk2_size;
 
+    m_file_size         = m_file->size();
     m_nchannels         = data.nchannels;
     m_sample_rate       = data.sample_rate;
     m_bits_per_sample   = data.bits_per_sample;
     m_nbytes            = data.subchunk2_size;
     m_nframes           = m_nbytes/(m_bits_per_sample/8);
-    m_nsamples          = m_nframes/m_nchannels;
-    m_file_size         = m_file->size();
+    m_nsamples          = m_nframes/m_nchannels;    
     m_metadata_size     = WAVE_METADATA_SIZE;
+
+    qDebug() << "[SOUNDFILE] WAV format, metadata succesfully parsed";
+    qDebug() << "[SOUNDFILE]" << m_nframes << "audio frames";
 }
 
 void Soundfile::buffer(float* buffer, quint64 start_sample, quint64 len )
@@ -144,6 +159,7 @@ void Soundfile::buffer(float* buffer, quint64 start_sample, quint64 len )
     quint64 length_in_frames = len*m_nchannels;
 
     QDataStream stream  ( m_file );
+    stream.setByteOrder ( QDataStream::LittleEndian );
     stream.skipRawData  ( start );
 
     for ( quint32 f = 0; f < length_in_frames; ++f )
@@ -152,6 +168,11 @@ void Soundfile::buffer(float* buffer, quint64 start_sample, quint64 len )
         qint16 si16; stream >> si16;
         buffer[f] = si16/65535.f;
     }
+
+    qDebug() << "[SOUNDFILE] Buffered" << length_in_frames
+             << "frames ("
+             << len
+             << "samples)";
 }
 
 
