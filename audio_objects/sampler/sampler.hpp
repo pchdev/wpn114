@@ -143,11 +143,11 @@ class Sampler : public StreamNode, public QQmlParserStatus
     void setRate        ( qreal rate );
 
     private:    
-    Soundfile* m_sfile;
+    Soundfile* m_soundfile;
+    float* m_buffer;
 
     bool m_first_play;
     quint64 m_buffer_size;
-    float* m_buffer;
 
     quint64 m_phase;
     float m_attack_phase;

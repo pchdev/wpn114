@@ -283,8 +283,31 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
 
 //-----------------------------------------------------------------------------------
 
-Sampler::Sampler() : m_loop(false)
-{
+Sampler::Sampler()
+{    
+    m_soundfile     = nullptr;
+    m_buffer        = nullptr;
+    m_first_play    = true;
+    m_buffer_size   = 0;
+    m_phase         = 0;
+    m_attack_phase  = 0;
+    m_release_phase = 0;
+    m_xfade_phase   = 0;
+    m_attack_end    = 0;
+    m_xfade_point   = 0;
+    m_xfade_length  = 0;
+    m_attack_inc    = 0;
+    m_release_inc   = 0;
+    m_xfade_inc     = 0;
+    m_loop          = false;
+    m_xfade         = 0;
+    m_attack        = 0;
+    m_release       = 0;
+    m_start         = 0.f;
+    m_end           = 0.f;
+    m_length        = 0.f;
+    m_rate          = 1.f;
+
     // building sin envelopes
     for ( int i = 0; i < ENV_RESOLUTION; ++ i )
     {
@@ -298,14 +321,14 @@ void Sampler::componentComplete()
 {
     if ( m_path.isEmpty() ) return;
 
-    m_sfile         = new Soundfile(m_path);
-    quint16 nch     = m_sfile->nchannels();
-    quint64 srate   = m_sfile->sampleRate();
+    m_soundfile     = new Soundfile(m_path);
+    quint16 nch     = m_soundfile->nchannels();
+    quint64 srate   = m_soundfile->sampleRate();
 
     quint64 len     = floor ( m_length*srate );
     m_buffer        = new float[len*nch]();
 
-    m_sfile->buffer ( m_buffer, m_start*srate, len );
+    m_soundfile->buffer ( m_buffer, m_start*srate, len );
 
     m_xfade_point = len-m_xfade_length;
     m_xfade_inc   = static_cast<float>(ENV_RESOLUTION/ms_to_samples(m_xfade, SAMPLERATE));
@@ -459,6 +482,8 @@ float** Sampler::userProcess(float**, qint64 le)
             // zero out rest of the buffer
             for ( int ch = 0; ch < nch; ++ch )
                 out[ch][s] = 0.f;
+
+            spos++;
         }
 
         else
