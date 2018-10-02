@@ -34,6 +34,7 @@ void SoundfileStreamer::setBufferSize(quint64 nsamples)
 
 void SoundfileStreamer::next(float* target)
 {
+    quint16 bps         = m_soundfile->m_bits_per_sample;
     quint64 nbytes      = m_bufsize_byte;
     quint64 position    = m_position_byte;
     quint64 endframe    = position+nbytes;
@@ -66,8 +67,9 @@ void SoundfileStreamer::next(float* target)
 
     for ( quint64 i = 0; i < nbytes/2; ++i )
     {
-        target[i] = static_cast<float>(*buf/65535.f);
-        buf += 2;
+        auto div = (2<<(bps-1))-1;
+        target[i] = static_cast<float>(*buf/(float)div);
+        buf += bps/8;
     }
 
     emit bufferLoaded();
