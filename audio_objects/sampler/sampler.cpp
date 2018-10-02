@@ -127,6 +127,7 @@ void StreamSampler::componentComplete()
 
     if ( m_length = 0 ) setLength((qreal) m_soundfile->nsamples()/srate);
 
+    SETN_IN  ( 0 );
     SETN_OUT ( nch );
 
     m_streamer->setStartSample  ( m_start*srate );
@@ -135,14 +136,16 @@ void StreamSampler::componentComplete()
     m_streamer->setWrap         ( m_loop );
 
     // allocate buffers (in frames, interleaved)
-    m_current_buffer  = new float[ BUFSTREAM_NSAMPLES_DEFAULT*nch ];
-    m_next_buffer     = new float[ BUFSTREAM_NSAMPLES_DEFAULT*nch ];
+    m_current_buffer  = new float[ BUFSTREAM_NSAMPLES_DEFAULT*nch ]();
+    m_next_buffer     = new float[ BUFSTREAM_NSAMPLES_DEFAULT*nch ]();
     m_buffer_size     = BUFSTREAM_NSAMPLES_DEFAULT;
 
     // load first buffer
     m_streamer->moveToThread(&m_streamer_thread);
-    QObject::connect(this, &StreamSampler::next, m_streamer, &SoundfileStreamer::next);
-    QObject::connect(m_streamer, &SoundfileStreamer::bufferLoaded, this, &StreamSampler::onNextBufferReady);
+    QObject::connect(this, SIGNAL(next(float*)), m_streamer, SLOT(next(float*)));
+    QObject::connect(m_streamer, SIGNAL(bufferLoaded()), this, SLOT(onNextBufferReady()));
+
+    m_streamer_thread.start(QThread::NormalPriority);
 
     emit next(m_next_buffer);
 }
@@ -180,6 +183,8 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
     auto xfade_inc      = m_xfade_inc;
     auto xfade_length   = m_xfade_length;
 
+
+    qDebug() << bpos;
     // check for attack
     if ( loop && spos > attack_end ) m_first_play = false;
 
@@ -196,9 +201,12 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
             m_next_buffer_ready = false;
 
             emit next(m_next_buffer);
+            bpos = 0;
         }
 
-        if ( first && spos < attack_end )
+        else bpos++;
+
+        /*if ( first && spos < attack_end )
         {
             //          if first play && phase is in the 'attack zone'
             //          get interpolated data from envelope
@@ -275,13 +283,15 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
 
             spos++;
             bpos++;
-        }
+        }*/
     }
 
     m_phase             = spos;
     m_stream_phase      = bpos;
     m_attack_phase      = attack_phase;
     m_xfade_phase       = xfade_phase;
+
+    return m_out;
 }
 
 //-----------------------------------------------------------------------------------

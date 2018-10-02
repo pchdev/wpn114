@@ -214,8 +214,7 @@ float** StreamNode::process(float** buf, qint64 le)
 
 //-----------------------------------------------------------------------------------------------
 
-WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512),
-    m_input(nullptr), m_output(nullptr), m_level(1.0)
+WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512), m_level(1.0)
 {
 
 }
@@ -327,12 +326,14 @@ int WorldStream::inputCount(QQmlListProperty<StreamNode>* list)
 
 void WorldStream::componentComplete()
 {
-    m_format.setCodec           ( "audio/pcm" );
-    m_format.setByteOrder       ( QAudioFormat::LittleEndian );
-    m_format.setSampleType      ( QAudioFormat::SignedInt );
-    m_format.setSampleSize      ( 16 );
-    m_format.setSampleRate      ( m_sample_rate );
-    m_format.setChannelCount    ( m_num_outputs );
+    QAudioFormat format;
+
+    format.setCodec           ( "audio/pcm" );
+    format.setByteOrder       ( QAudioFormat::LittleEndian );
+    format.setSampleType      ( QAudioFormat::SignedInt );
+    format.setSampleSize      ( 16 );
+    format.setSampleRate      ( m_sample_rate );
+    format.setChannelCount    ( m_num_outputs );
 
     auto device_info = QAudioDeviceInfo::defaultOutputDevice();
 
@@ -349,13 +350,20 @@ void WorldStream::componentComplete()
         }
     }
 
-    if ( !device_info.isFormatSupported(m_format) )
+    if ( !device_info.isFormatSupported(format) )
         qDebug() << "[AUDIO] Format not supported";
 
-    m_output = new QAudioOutput(device_info, m_format);
+    QAudioOutput* outp = new QAudioOutput(device_info, format);
+    m_stream = new AudioStream(*this, format, nullptr, outp);
 
-    QObject::connect ( m_output, SIGNAL(stateChanged(QAudio::State)),
+    m_stream->moveToThread  ( &m_stream_thread );
+    m_stream_thread.start   ( QThread::TimeCriticalPriority );
+
+    QObject::connect ( outp, SIGNAL(stateChanged(QAudio::State)),
                       this, SLOT(onAudioStateChanged(QAudio::State)));
+
+    QObject::connect ( this, SIGNAL(startStream()), m_stream, SLOT(start()));
+    QObject::connect ( this, SIGNAL(stopStream()), m_stream, SLOT(stop()));
 }
 
 void WorldStream::onAudioStateChanged(QAudio::State state) const
@@ -365,27 +373,53 @@ void WorldStream::onAudioStateChanged(QAudio::State state) const
 
 void WorldStream::start()
 {
-    for ( const auto& input : m_inputs )
-        input->initialize({m_sample_rate, m_block_size});
+    emit startStream();
+}
 
-    StreamNode::allocateBuffer(m_pool, m_num_outputs, m_block_size);
+void WorldStream::stop()
+{
+    emit stopStream();
+}
+
+// -----------------------------------------------------------------------------------------
+
+AudioStream::AudioStream(
+        const WorldStream& world, QAudioFormat format, QAudioInput* input, QAudioOutput* output) :
+    m_world(world), m_format(format), m_input(input), m_output(output)
+{
+
+}
+
+AudioStream::~AudioStream()
+{
+    delete m_input;
+    delete m_output;
+    delete m_pool;
+}
+
+void AudioStream::start()
+{
+    for ( const auto& input : m_world.m_inputs )
+        input->initialize({m_world.m_sample_rate, m_world.m_block_size});
+
+    StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
 
     open(QIODevice::ReadOnly);
     m_output->start(this);
 }
 
-void WorldStream::stop()
+void AudioStream::stop()
 {
     m_output->stop();
 }
 
-qint64 WorldStream::readData(char* data, qint64 maxlen)
+qint64 AudioStream::readData(char* data, qint64 maxlen)
 {
-    auto inputs     = m_inputs;
-    quint16 nout    = m_num_outputs;
-    quint16 bsize   = m_block_size;
+    auto inputs     = m_world.m_inputs;
+    quint16 nout    = m_world.m_num_outputs;
+    quint16 bsize   = m_world.m_block_size;
     float** buf     = m_pool;
-    qreal level     = m_level;
+    qreal level     = m_world.m_level;
 
     StreamNode::resetBuffer(m_pool, nout, bsize);
 
@@ -416,16 +450,15 @@ qint64 WorldStream::readData(char* data, qint64 maxlen)
 
 }
 
-qint64 WorldStream::writeData(const char* data, qint64 len)
+qint64 AudioStream::writeData(const char* data, qint64 len)
 {
     Q_UNUSED ( data );
     Q_UNUSED ( len );
 
     return 0;
-
 }
 
-qint64 WorldStream::bytesAvailable() const
+qint64 AudioStream::bytesAvailable() const
 {
     return 0;
 }

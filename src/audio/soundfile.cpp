@@ -34,6 +34,8 @@ void SoundfileStreamer::setBufferSize(quint64 nsamples)
 
 void SoundfileStreamer::next(float* target)
 {
+    qDebug() << "[STREAMER] Preparing new buffer";
+
     quint16 bps         = m_soundfile->m_bits_per_sample;
     quint64 nbytes      = m_bufsize_byte;
     quint64 position    = m_position_byte;
@@ -72,6 +74,7 @@ void SoundfileStreamer::next(float* target)
         buf += bps/8;
     }
 
+    qDebug() << "[STREAMER] new buffer loaded";
     emit bufferLoaded();
 }
 

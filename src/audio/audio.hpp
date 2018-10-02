@@ -10,6 +10,7 @@
 #include <QIODevice>
 #include <QVector>
 #include <src/oscquery/device.hpp>
+#include <QThread>
 
 struct StreamProperties
 {
@@ -130,7 +131,34 @@ class StreamNode : public QObject
     #define SETN_IN(n) setNumInputs(n);
 };
 
-class WorldStream : public QIODevice, public QQmlParserStatus
+class WorldStream;
+
+class AudioStream : public QIODevice
+{
+     Q_OBJECT
+
+    public:
+    AudioStream(const WorldStream& world, QAudioFormat format, QAudioInput* input, QAudioOutput* output);
+    ~AudioStream();
+
+    virtual qint64 readData ( char*, qint64 )           override;
+    virtual qint64 writeData ( const char*, qint64 )    override;
+    virtual qint64 bytesAvailable ( )                   const override;
+
+    public slots:
+    Q_INVOKABLE void start  ();
+    Q_INVOKABLE void stop   ();
+
+    private:
+    WorldStream const& m_world;
+    QAudioFormat m_format;
+    QAudioInput* m_input;
+    QAudioOutput* m_output;
+    float** m_pool;
+
+};
+
+class WorldStream : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_CLASSINFO     ( "DefaultProperty", "inputs" )
@@ -147,14 +175,13 @@ class WorldStream : public QIODevice, public QQmlParserStatus
     Q_PROPERTY      ( QString outDevice READ outDevice WRITE setOutDevice NOTIFY outDeviceChanged )
     Q_PROPERTY      ( QQmlListProperty<StreamNode> inputs READ inputs )
 
+    friend class AudioStream;
+
     public:    
     WorldStream();
 
     virtual void classBegin()                           override {}
     virtual void componentComplete()                    override;
-    virtual qint64 readData ( char*, qint64 )           override;
-    virtual qint64 writeData ( const char*, qint64 )    override;
-    virtual qint64 bytesAvailable ( )                   const override;
 
     Q_INVOKABLE void start  ();
     Q_INVOKABLE void stop   ();
@@ -191,6 +218,8 @@ class WorldStream : public QIODevice, public QQmlParserStatus
     void onAudioStateChanged ( QAudio::State ) const;
 
     signals:
+    void startStream();
+    void stopStream();
     void sampleRateChanged  ( );
     void blockSizeChanged   ( );
     void inDeviceChanged    ( );
@@ -216,10 +245,8 @@ class WorldStream : public QIODevice, public QQmlParserStatus
     uint16_t m_block_size;
     QString m_in_device;
     QString m_out_device;
-    QAudioFormat m_format;
-    QAudioInput* m_input;
-    QAudioOutput* m_output;
-    float** m_pool;
+    AudioStream* m_stream;
+    QThread m_stream_thread;
 
     QVector<StreamNode*> m_inputs;
 };
