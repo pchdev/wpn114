@@ -124,6 +124,8 @@ void StreamSampler::componentComplete()
     quint64 nch     = m_soundfile->nchannels();
     quint64 srate   = m_soundfile->sampleRate();
 
+    if ( m_length = 0 ) setLength((qreal) m_soundfile->nsamples()/srate);
+
     SETN_OUT ( nch );
 
     m_streamer->setStartSample  ( m_start*srate );
@@ -324,6 +326,8 @@ void Sampler::componentComplete()
     m_soundfile     = new Soundfile(m_path);
     quint16 nch     = m_soundfile->nchannels();
     quint64 srate   = m_soundfile->sampleRate();
+
+    if ( m_length = 0 ) setLength((qreal) m_soundfile->nsamples()/srate);
 
     quint64 len     = floor ( m_length*srate );
     m_buffer        = new float[len*nch]();

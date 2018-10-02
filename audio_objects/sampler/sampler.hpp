@@ -14,17 +14,18 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
 {
     Q_OBJECT
 
-    Q_PROPERTY ( bool loop READ loop WRITE setLoop )
-    Q_PROPERTY ( int xfade READ xfade WRITE setXfade )
-    Q_PROPERTY ( int attack READ attack WRITE setAttack )
-    Q_PROPERTY ( int release READ release WRITE setRelease )
-    Q_PROPERTY ( qreal start READ start WRITE setStart )
-    Q_PROPERTY ( qreal end READ end WRITE setEnd )
-    Q_PROPERTY ( qreal length READ length WRITE setLength )
+    Q_PROPERTY  ( QString path READ path WRITE setPath )
+    Q_PROPERTY  ( bool loop READ loop WRITE setLoop )
+    Q_PROPERTY  ( int xfade READ xfade WRITE setXfade )
+    Q_PROPERTY  ( int attack READ attack WRITE setAttack )
+    Q_PROPERTY  ( int release READ release WRITE setRelease )
+    Q_PROPERTY  ( qreal start READ start WRITE setStart )
+    Q_PROPERTY  ( qreal end READ end WRITE setEnd )
+    Q_PROPERTY  ( qreal length READ length WRITE setLength )
 
     public:
     StreamSampler();
-    ~StreamSampler();
+    ~StreamSampler() override;
 
     virtual void componentComplete() override;
     virtual void classBegin() override {}
