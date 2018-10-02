@@ -134,7 +134,12 @@ void Soundfile::metadataWav()
     stream.setByteOrder(QDataStream::LittleEndian);
     qint32 chunk2_sz; stream >> chunk2_sz;
 
-    if ( chunk2 != "data" ) stream.skipRawData(chunk2_sz);
+    if ( chunk2 != "data" )
+    {
+        m_metadata_size = WAVE_METADATA_SIZE+chunk2_sz+8;
+        stream.skipRawData(chunk2_sz);
+    }
+    else m_metadata_size = WAVE_METADATA_SIZE;
 
     stream.setByteOrder(QDataStream::BigEndian);
     stream >> data.subchunk2_id;
@@ -149,7 +154,6 @@ void Soundfile::metadataWav()
     m_nbytes            = data.subchunk2_size;
     m_nframes           = m_nbytes/(m_bits_per_sample/8);
     m_nsamples          = m_nframes/m_nchannels;    
-    m_metadata_size     = WAVE_METADATA_SIZE;
 
     qDebug() << "[SOUNDFILE] WAV format, metadata succesfully parsed";
     qDebug() << "[SOUNDFILE]" << m_nframes << "audio frames";

@@ -334,17 +334,21 @@ void Sampler::componentComplete()
     quint16 nch     = m_soundfile->nchannels();
     quint64 srate   = m_soundfile->sampleRate();
 
-    if ( m_length == 0 )
+    if ( m_length == 0 ) // if length unspecified take from start to the end of the fle
     {
-        m_length = (qreal) m_soundfile->nsamples()/srate;
-        m_buffer = new float[m_soundfile->nframes()]();
+        quint64 nsamples = m_soundfile->nsamples()-(m_start*srate);
+        m_length = (qreal) nsamples/srate;
+        m_buffer = new float[nsamples*nch]();
+        m_buffer_size = nsamples;
 
-        m_soundfile->buffer(m_buffer, m_start*srate, m_soundfile->nsamples());
+        m_soundfile->buffer(m_buffer, m_start*srate, nsamples);
     }
     else
     {
-        quint64 len = floor ( m_length*srate );
+        quint64 len = (m_end-m_start)*srate;
         m_buffer = new float[len*nch]();
+        m_buffer_size = len;
+
         m_soundfile->buffer(m_buffer, m_start*srate, len);
     }
 
@@ -408,7 +412,7 @@ void Sampler::userInitialize(qint64)
     m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
     m_attack_end    = ms_to_samples(m_attack, SAMPLERATE);
     m_xfade_length  = ms_to_samples(m_xfade, SAMPLERATE);
-    m_xfade_point   = m_length*BUFSR-m_xfade_length;
+    m_xfade_point   = m_buffer_size-m_xfade_length;
 }
 
 float** Sampler::userProcess(float**, qint64 le)
@@ -431,12 +435,14 @@ float** Sampler::userProcess(float**, qint64 le)
     auto xfade_inc      = m_xfade_inc;
     auto xfade_len      = m_xfade_length;
 
-    if ( loop && spos > attack_end ) m_first_play = false;
+//    qDebug() << spos;
+//    if ( loop && spos > attack_end ) m_first_play = false;
 //    if ( first && spos < attack_end ) qDebug() << "attacking" << attack_end;
+//    else if ( loop && spos >= xfade_point && spos < bufnsamples ) qDebug() << "crossfading";
+//    else if ( spos > bufnsamples ) qDebug() << "finished";
+//    else qDebug() << "normal";
 
     bufdata+= spos*nch;
-
-//    qDebug() << *bufdata;
 
     for ( qint64 s = 0; s < le; ++s )
     {
@@ -500,6 +506,8 @@ float** Sampler::userProcess(float**, qint64 le)
 
                 for ( int ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
+
+                spos++;
             }
         }
 
