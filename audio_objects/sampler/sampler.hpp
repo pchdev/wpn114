@@ -7,8 +7,10 @@
 #include <QThread>
 
 #define ENV_RESOLUTION 32768
-#define BUFSTREAM_NSAMPLES_DEFAULT 524288
-// approx. 10 seconds buffer
+#define BUFSTREAM_MAX_XFADELEN 5
+// in seconds
+#define BUFSTREAM_NSAMPLES_DEFAULT 131072
+// approx. 3 seconds buffer
 
 class StreamSampler : public StreamNode, public QQmlParserStatus
 {
@@ -69,11 +71,13 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     bool m_first_play;
     quint64 m_buffer_size;
     quint64 m_play_size;
+    float* m_xfade_buffer;
     float* m_current_buffer;
     float* m_next_buffer;
 
     quint64 m_phase;
     quint64 m_stream_phase;
+    quint64 m_xfade_buf_phase;
     float m_attack_phase;
     float m_release_phase;
     float m_xfade_phase;

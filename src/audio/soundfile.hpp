@@ -49,6 +49,7 @@ class SoundfileStreamer : public QObject
     void bufferLoaded();
 
     private:
+    QFile* m_file;
     Soundfile* m_soundfile;
     bool m_wrap;
     quint64 m_start_byte;

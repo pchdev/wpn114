@@ -4,10 +4,13 @@
 
 SoundfileStreamer::SoundfileStreamer(Soundfile* file) : m_soundfile(file)
 {
+    m_file = new QFile(m_soundfile->path());
+    m_file->open(QIODevice::ReadOnly);
 }
 
 SoundfileStreamer::~SoundfileStreamer()
 {
+    delete m_file;
 }
 
 void SoundfileStreamer::setStartSample(quint64 index)
@@ -39,7 +42,7 @@ void SoundfileStreamer::next(float* target)
     quint64 endbyte     = m_end_byte;
     quint32 div         = (2<<(bps-1))-1;
 
-    QDataStream stream(m_soundfile->m_file);
+    QDataStream stream(m_file);
 
     stream.setByteOrder(QDataStream::LittleEndian);
     stream.skipRawData(position);
@@ -80,7 +83,7 @@ void SoundfileStreamer::next(float* target)
         m_position_byte += nbytes;
     }
 
-    m_soundfile->m_file->reset();
+    m_file->reset();
     emit bufferLoaded();
 }
 
@@ -185,6 +188,8 @@ void Soundfile::buffer(float* buffer, quint64 start_sample, quint64 len )
         qint16 si16; stream >> si16;
         buffer[f] = si16/65535.f;
     }
+
+    m_file->reset();
 
     qDebug() << "[SOUNDFILE] Buffered" << length_in_frames
              << "frames ("
