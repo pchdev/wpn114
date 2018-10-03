@@ -16,6 +16,8 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
 {
     Q_OBJECT
 
+    Q_INTERFACES ( QQmlParserStatus )
+
     Q_PROPERTY  ( QString path READ path WRITE setPath )
     Q_PROPERTY  ( bool loop READ loop WRITE setLoop )
     Q_PROPERTY  ( int xfade READ xfade WRITE setXfade )
@@ -35,7 +37,7 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     virtual float** userProcess(float**, qint64 le) override;
     virtual void userInitialize(qint64) override;
 
-    Q_INVOKABLE void start  ( );
+    Q_INVOKABLE void play   ( );
     Q_INVOKABLE void stop   ( );
 
     QString path        ( ) const { return m_path; }
@@ -114,6 +116,8 @@ class Sampler : public StreamNode, public QQmlParserStatus
 {
     Q_OBJECT
 
+    Q_INTERFACES ( QQmlParserStatus )
+
     Q_PROPERTY  ( QString path READ path WRITE setPath )
     Q_PROPERTY  ( bool loop READ loop WRITE setLoop )
     Q_PROPERTY  ( int xfade READ xfade WRITE setXfade )
@@ -134,7 +138,7 @@ class Sampler : public StreamNode, public QQmlParserStatus
     virtual float** userProcess(float**, qint64 le) override;
     virtual void userInitialize(qint64) override;
 
-    Q_INVOKABLE void start  ( );
+    Q_INVOKABLE void play   ( );
     Q_INVOKABLE void stop   ( );
 
     QString path        ( ) const { return m_path; }

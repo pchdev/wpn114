@@ -188,7 +188,7 @@ void StreamSampler::onNextBufferReady()
     m_next_buffer_ready = true;
 }
 
-void StreamSampler::start()
+void StreamSampler::play()
 {
     m_playing = true;
 }
@@ -495,7 +495,7 @@ void Sampler::setRate(qreal rate)
     m_rate = rate;
 }
 
-void Sampler::start()
+void Sampler::play()
 {
     m_playing = true;
 }
@@ -557,7 +557,6 @@ float** Sampler::userProcess(float**, qint64 le)
         {
             for ( int ch = 0; ch < nch; ++ch )
                 out[ch][s] = 0.f;
-
             return out;
         }
 
