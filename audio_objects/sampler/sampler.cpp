@@ -217,6 +217,11 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
     auto nch            = m_num_outputs;
     auto loop           = m_loop;
 
+    auto release        = m_release_env;
+    auto release_end    = ENV_RESOLUTION;
+    auto release_phase  = m_release_phase;
+    auto release_inc    = m_release_inc;
+
     auto attack         = m_attack_env;
     auto attack_end     = m_attack_end;
     auto attack_phase   = m_attack_phase;
@@ -254,7 +259,14 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
             bpos = 0;
         }
 
-        if ( first && spos < attack_end )
+        if ( !m_playing )
+        {
+            for ( quint16 ch = 0; ch < nch; ++ch )
+                out[ch][s] = 0.f;
+            return out;
+        }
+
+        else if ( first && spos < attack_end )
         {
             //          if first play && phase is in the 'attack zone'
             //          get interpolated data from envelope
@@ -332,23 +344,19 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
             {
                 // if not looping, stop and set inactive
                 // fill rest of buffer with zeroes
-                m_active = false;
-
                 for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
 
-                spos++;
+                m_playing     = false;
+                m_active      = false;
+                m_releasing   = false;
+                attack_phase  = 0;
+                release_phase = 0;
+                xfade_phase   = 0;
+                spos          = 0;
+                bpos          = 0;
+                xpos          = 0;
             }
-        }
-
-        else if ( spos > playnsamples )
-        {
-            // it would mean that loop is off
-            // fill rest of buffer with zeroes before going inactive
-            for ( quint16 ch = 0; ch < nch; ++ch )
-                out[ch][s] = 0.f;
-
-            spos++;
         }
         else
         {
@@ -358,6 +366,38 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
 
             spos++;
             bpos++;
+        }
+
+        if ( m_releasing )
+        {
+            // if reaching end of release envelope
+            if ( release_phase >= release_end )
+            {
+                m_playing       = false;
+                m_active        = false;
+                m_releasing     = false;
+                spos            = 0;
+                xpos            = 0;
+                bpos            = 0;
+                attack_phase    = 0;
+                xfade_phase     = 0;
+                release_phase   = 0;
+
+                for ( int ch = 0; ch < nch; ++ch )
+                    out[ch][s] = 0.f;
+            }
+
+            else
+            {
+                int y       = floor ( release_phase );
+                float x     = (float) release_phase-y;
+                float rel   = lininterp(x, release[y], release[y+1]);
+
+                for ( int ch = 0; ch < nch; ++ch )
+                    out[ch][s] *= rel;
+
+                release_phase += release_inc;
+            }
         }
     }
 
