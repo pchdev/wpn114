@@ -12,6 +12,8 @@ StreamSampler::StreamSampler()
     m_current_buffer        = nullptr;
     m_next_buffer           = nullptr;
     m_xfade_buffer          = nullptr;
+    m_playing               = false;
+    m_releasing             = false;
     m_next_buffer_ready     = false;
     m_first_play            = true;
     m_loop                  = false;
@@ -184,7 +186,16 @@ void StreamSampler::userInitialize(qint64)
 void StreamSampler::onNextBufferReady()
 {
     m_next_buffer_ready = true;
-    qDebug() << "new buffer";
+}
+
+void StreamSampler::start()
+{
+    m_playing = true;
+}
+
+void StreamSampler::stop()
+{
+    m_releasing = true;
 }
 
 inline float lininterp(float x, float a, float b)
@@ -219,7 +230,12 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
     bufdata  += bpos*nch;
     xfdata   += xpos*nch;
 
-    if ( loop && spos > attack_end ) m_first_play = false;
+    if ( loop && spos > attack_end )
+    {
+        first        = false;
+        m_first_play = first;
+    }
+
     for ( qint64 s = 0; s < nsamples; ++s )
     {
         if ( spos >= xfade_length && bpos == 0 ) emit next(m_next_buffer);
@@ -361,6 +377,8 @@ Sampler::Sampler()
     m_soundfile     = nullptr;
     m_buffer        = nullptr;
     m_first_play    = true;
+    m_releasing     = false;
+    m_playing       = false;
     m_buffer_size   = 0;
     m_phase         = 0;
     m_attack_phase  = 0;
@@ -371,6 +389,7 @@ Sampler::Sampler()
     m_xfade_length  = 0;
     m_attack_inc    = 0;
     m_release_inc   = 0;
+    m_release_end   = 0;
     m_xfade_inc     = 0;
     m_loop          = false;
     m_xfade         = 0;
@@ -476,11 +495,25 @@ void Sampler::setRate(qreal rate)
     m_rate = rate;
 }
 
+void Sampler::start()
+{
+    m_playing = true;
+}
+
+void Sampler::stop()
+{
+    m_releasing = true;
+}
+
 void Sampler::userInitialize(qint64)
 {   
     m_xfade_inc     = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_xfade, SAMPLERATE));
     m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
-    m_attack_end    = ms_to_samples(m_attack, SAMPLERATE);
+    m_release_inc   = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_release, SAMPLERATE));
+
+    m_release_end   = ENV_RESOLUTION;
+    m_attack_end    = ENV_RESOLUTION;
+
     m_xfade_length  = ms_to_samples(m_xfade, SAMPLERATE);
     m_xfade_point   = m_buffer_size-m_xfade_length;
 }
@@ -499,24 +532,36 @@ float** Sampler::userProcess(float**, qint64 le)
     auto attack_end     = m_attack_end;
     auto attack_phase   = m_attack_phase;
     auto attack_inc     = m_attack_inc;
+    auto release_phase  = m_release_phase;
+
+    auto release        = m_release_env;
+    auto release_inc    = m_release_inc;
+    auto release_end    = m_release_end;
 
     auto xfade_point    = m_xfade_point;
     auto xfade_phase    = m_xfade_phase;
     auto xfade_inc      = m_xfade_inc;
     auto xfade_len      = m_xfade_length;
 
-    //    qDebug() << spos;
-    //    if ( loop && spos > attack_end ) m_first_play = false;
-    //    if ( first && spos < attack_end ) qDebug() << "attacking" << attack_end;
-    //    else if ( loop && spos >= xfade_point && spos < bufnsamples ) qDebug() << "crossfading";
-    //    else if ( spos > bufnsamples ) qDebug() << "finished";
-    //    else qDebug() << "normal";
-
     bufdata+= spos*nch;
+
+    if ( loop && spos > attack_end )
+    {
+        first        = false;
+        m_first_play = first;
+    }
 
     for ( qint64 s = 0; s < le; ++s )
     {
-        if ( first && spos < attack_end )
+        if ( !m_playing )
+        {
+            for ( int ch = 0; ch < nch; ++ch )
+                out[ch][s] = 0.f;
+
+            return out;
+        }
+
+        else if ( first && spos < attack_end )
         {
             //          if first play && phase is in the 'attack zone'
             //          get interpolated data from envelope
@@ -572,24 +617,18 @@ float** Sampler::userProcess(float**, qint64 le)
             {
                 // if not looping, stop and set inactive
                 // zero out rest of the buffer
-                m_active = false;
-
                 for ( int ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
 
-                spos++;
+                m_playing       = false;
+                m_active        = false;
+                m_releasing     = false;
+                spos            = 0;
+                attack_phase    = 0;
+                xfade_phase     = 0;
+                release_phase   = 0;
             }
         }
-
-        else if ( spos > bufnsamples )
-        {
-            // zero out rest of the buffer
-            for ( int ch = 0; ch < nch; ++ch )
-                out[ch][s] = 0.f;
-
-            spos++;
-        }
-
         else
         {
             // normal behaviour
@@ -598,12 +637,43 @@ float** Sampler::userProcess(float**, qint64 le)
 
             spos++;
         }
+
+        if ( m_releasing )
+        {
+            // if reaching end of release envelope
+            if ( release_phase >= release_end )
+            {
+                m_playing       = false;
+                m_active        = false;
+                m_releasing     = false;
+                spos            = 0;
+                attack_phase    = 0;
+                xfade_phase     = 0;
+                release_phase   = 0;
+
+                for ( int ch = 0; ch < nch; ++ch )
+                    out[ch][s] = 0.f;
+            }
+
+            else
+            {
+                int y       = floor ( release_phase );
+                float x     = (float) release_phase-y;
+                float rel   = lininterp(x, release[y], release[y+1]);
+
+                for ( int ch = 0; ch < nch; ++ch )
+                    out[ch][s] *= rel;
+
+                release_phase += release_inc;
+            }
+        }
     }
 
     // update member values
-    m_phase         = spos;
-    m_attack_phase  = attack_phase;
-    m_xfade_phase   = xfade_phase;
+    m_phase             = spos;
+    m_attack_phase      = attack_phase;
+    m_xfade_phase       = xfade_phase;
+    m_release_phase     = release_phase;
 
     return out;
 }

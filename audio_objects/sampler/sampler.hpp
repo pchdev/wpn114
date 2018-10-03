@@ -35,6 +35,9 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     virtual float** userProcess(float**, qint64 le) override;
     virtual void userInitialize(qint64) override;
 
+    Q_INVOKABLE void start  ( );
+    Q_INVOKABLE void stop   ( );
+
     QString path        ( ) const { return m_path; }
     bool loop           ( ) const { return m_loop; }
     quint32 xfade       ( ) const { return m_xfade; }
@@ -66,9 +69,12 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     Soundfile* m_soundfile;
     SoundfileStreamer* m_streamer;
     QThread m_streamer_thread;
-    bool m_next_buffer_ready;
 
+    bool m_next_buffer_ready;
     bool m_first_play;
+    bool m_releasing;
+    bool m_playing;
+
     quint64 m_buffer_size;
     quint64 m_play_size;
     float* m_xfade_buffer;
@@ -81,13 +87,13 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     float m_attack_phase;
     float m_release_phase;
     float m_xfade_phase;
-    quint64 m_attack_end;
-    quint64 m_xfade_point;
-    quint64 m_xfade_length;
-
     float m_attack_inc;
     float m_release_inc;
     float m_xfade_inc;
+
+    quint64 m_attack_end;
+    quint64 m_xfade_point;
+    quint64 m_xfade_length;
 
     float m_attack_env  [ ENV_RESOLUTION ];
     float m_release_env [ ENV_RESOLUTION ];
@@ -128,6 +134,9 @@ class Sampler : public StreamNode, public QQmlParserStatus
     virtual float** userProcess(float**, qint64 le) override;
     virtual void userInitialize(qint64) override;
 
+    Q_INVOKABLE void start  ( );
+    Q_INVOKABLE void stop   ( );
+
     QString path        ( ) const { return m_path; }
     bool loop           ( ) const { return m_loop; }
     quint32 xfade       ( ) const { return m_xfade; }
@@ -151,15 +160,18 @@ class Sampler : public StreamNode, public QQmlParserStatus
     private:    
     Soundfile* m_soundfile;
     float* m_buffer;
+    quint64 m_buffer_size;
 
     bool m_first_play;
-    quint64 m_buffer_size;
+    bool m_releasing;
+    bool m_playing;
 
     quint64 m_phase;
     float m_attack_phase;
     float m_release_phase;
     float m_xfade_phase;
     quint64 m_attack_end;
+    quint64 m_release_end;
     quint64 m_xfade_point;
     quint64 m_xfade_length;
 
