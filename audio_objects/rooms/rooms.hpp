@@ -2,7 +2,9 @@
 #define ROOMS_H
 
 #include <src/audio/audio.hpp>
+#include <QVector2D>
 #include <QVector3D>
+#include <QVector4D>
 #include <QQmlListProperty>
 
 class RoomNode : public QObject
@@ -23,14 +25,16 @@ class RoomNode : public QObject
     virtual void setInfluence   ( QVariant influence );
     virtual void setPosition    ( QVariant position );
 
-    QVector<QVector3D> positions() const { return m_positions; }
-    QVector<qreal> influences() const { return m_influences; }
+    QVector<QVector3D> positions () const { return m_positions; }
+    QVector<qreal> influences    () const { return m_influences; }
+
+    QVector4D speakerData(quint16 index) const;
 
     protected:
     QVariant m_influence;
     QVariant m_position;
     QVector<qreal> m_influences;
-    QVector<QVector3D> m_positions;    
+    QVector<QVector3D> m_positions;
     quint16 m_nspeakers;
 };
 
@@ -82,8 +86,9 @@ class RoomSetup : public QObject, public QQmlParserStatus
     virtual void classBegin() override {}
     virtual void componentComplete() override;
 
-    QQmlListProperty<RoomNode> nodes();
-    const QVector<RoomNode*>& getNodes() const { return m_nodes; }
+    QQmlListProperty<RoomNode> nodes        ( );
+    const QVector<RoomNode*>& getNodes      ( ) const { return m_nodes; }
+    const QVector<QVector4D> speakers       ( ) const;
 
     void appendNode     ( RoomNode* );
     int nodeCount       ( ) const;
@@ -110,6 +115,7 @@ class RoomSource : public StreamNode
     Q_PROPERTY  ( QVariant diffuse READ diffuse WRITE setDiffuse )
     Q_PROPERTY  ( QVariant bias READ bias WRITE setBias )
     Q_PROPERTY  ( QVariant rotate READ rotate WRITE setRotate )
+    Q_PROPERTY  ( bool fixed READ fixed WRITE setFixed )
     Q_PROPERTY  ( int nchannels READ nchannels )
 
     public:
@@ -123,17 +129,25 @@ class RoomSource : public StreamNode
     QVariant bias       ( ) const { return m_bias; }
     QVariant rotate     ( ) const { return m_rotate; }
     quint16 nchannels   ( ) const { return m_nchannels; }
+    bool fixed          ( ) const { return m_fixed; }
 
     QVector<RoomChannel> const& channels() const { return m_channels; }
+    QVector<QVector<qreal>>& coeffs() { return m_coeffs; }
 
-    void setPosition    ( QVariant position );
-    void setDiffuse     ( QVariant diffuse );
-    void setRotate      ( QVariant rotate );
-    void setBias        ( QVariant bias );
+    void setCoeffs          ( QVector<QVector<qreal>> coeffs );
+    void setPosition        ( QVariant position );
+    void setDiffuse         ( QVariant diffuse );
+    void setRotate          ( QVariant rotate );
+    void setBias            ( QVariant bias );
+    void setFixed           ( bool fixed );
+
+    void allocateCoeffVector ( quint16 size );
 
     private:    
     void update();
 
+    bool m_fixed;
+    QVector<QVector<qreal>> m_coeffs;
     QVector<RoomChannel> m_channels;
     quint16 m_nchannels;
     QVariant m_position;
@@ -159,6 +173,10 @@ class Rooms : public StreamNode
     virtual void userInitialize ( qint64 ) override;
 
     private:
+    void computeCoeffs(RoomSource& source);
+    qreal spgain (QVector3D src, QVector4D ls);
+
+    QVector<QVector4D> m_speakers;
     RoomSetup* m_setup;
 
 };
