@@ -11,6 +11,8 @@
 #include <audio_objects/audioplugin/audioplugin.hpp>
 #include <audio_objects/sampler/sampler.hpp>
 #include <audio_objects/rooms/rooms.hpp>
+#include <audio_objects/mangler/mangler.hpp>
+#include <audio_objects/sharpen/sharpen.hpp>
 #include <QQmlEngine>
 #include <qqml.h>
 
@@ -44,4 +46,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<RoomSource, 1>        ( "WPN114", 1, 0, "RoomSource" );
     qmlRegisterType<Rooms, 1>             ( "WPN114", 1, 0, "Rooms" );
     qmlRegisterType<SpeakerRing, 1>       ( "WPN114", 1, 0, "SpeakerRing" );
+
+    qmlRegisterType<Sharpen, 1>           ( "WPN114", 1, 0, "Sharpen" );
+    qmlRegisterType<Mangler, 1>           ( "WPN114", 1, 0, "Mangler" );
 }

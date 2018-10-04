@@ -1,26 +1,23 @@
 #pragma once
 
-#include <src/audiobackend.hpp>
+#include <src/audio/audio.hpp>
 
-class Sharpen : public AudioEffectObject, public QQmlParserStatus
+class Sharpen : public StreamNode
 {
     Q_OBJECT
-    Q_INTERFACES    ( QQmlParserStatus )
-    Q_PROPERTY      ( qreal depth READ depth WRITE setDepth )
+    Q_PROPERTY      ( qreal distortion READ distortion WRITE setDistortion )
 
 public:
     Sharpen();
 
-    virtual void classBegin() override;
-    virtual void componentComplete() override;
-    virtual float** process(const quint16 nsamples) override;
+    virtual void userInitialize(qint64) override;
+    virtual float** userProcess(float**, qint64) override;
 
-    qreal   depth() const;
-    void    setDepth(const qreal);
+    qreal   distortion() const { return m_distortion; }
+    void    setDistortion(qreal dist) { m_distortion = dist; }
 
-private:
-    qreal*  m_ssd;
-    qreal   m_depth;
+    private:
+    qreal   m_distortion;
 
 };
 

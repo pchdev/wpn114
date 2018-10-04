@@ -1,24 +1,33 @@
 #include "sharpen.hpp"
+#include <algorithm>
+#include <cmath>
 
-Sharpen::Sharpen() : m_depth(0) {}
-
-ON_COMPONENT_COMPLETED( Sharpen )
+Sharpen::Sharpen() : m_distortion(0)
 {
-    INITIALIZE_AUDIO_IO;
-    //std::calloc( m_ssd, sizeof(qreal)*m_num_inputs );
+    SETN_IN     ( 2 );
+    SETN_OUT    ( 2 );
 }
 
-float** Sharpen::process(const quint16 nsamples)
+void Sharpen::userInitialize(qint64 dist)
 {
-
-    qreal depth = m_depth*2/(1-qMin(m_depth, 0.999));
-
-
-
-
 
 }
 
-void Sharpen::setDepth(const qreal) {}
-qreal Sharpen::depth() const {}
+float** Sharpen::userProcess(float** in, qint64 nsamples)
+{
+    auto dist   = std::min(m_distortion/100.f, 0.999);
+    auto coeff  = 2.f*dist/(1.f-dist);
+    auto nout   = m_num_outputs;
+    auto out    = m_out;
 
+    for ( quint16 s = 0; s < nsamples; ++s)
+    {
+        for ( quint16 ch = 0; ch < nout; ++ch )
+        {
+            float m     = std::min(std::max(in[ch][s], -1.f),1.f);
+            out[ch][s]  = (1.f+coeff)*m/(1.f+coeff*fabs(m));
+        }
+    }
+
+    return out;
+}

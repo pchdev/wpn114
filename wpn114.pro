@@ -47,7 +47,9 @@ src/websocket/websocket.cpp \
     src/audio/soundfile.cpp \
     audio_objects/sampler/sampler.cpp \
     audio_objects/audioplugin/audioplugin.mm \
-    audio_objects/rooms/rooms.cpp
+    audio_objects/rooms/rooms.cpp \
+    audio_objects/mangler/mangler.cpp \
+    audio_objects/sharpen/sharpen.cpp
 
 HEADERS +=                      \
 qml_plugin.hpp                  \
@@ -70,7 +72,9 @@ src/websocket/websocket.hpp \
     audio_objects/audioplugin/aeffect.h \
     audio_objects/audioplugin/aeffectx.h \
     audio_objects/audioplugin/audioplugin.hpp \
-    audio_objects/rooms/rooms.hpp
+    audio_objects/rooms/rooms.hpp \
+    audio_objects/mangler/mangler.hpp \
+    audio_objects/sharpen/sharpen.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
