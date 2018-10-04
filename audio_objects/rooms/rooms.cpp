@@ -6,7 +6,7 @@ SpeakerRing::SpeakerRing()
 
 }
 
-void SpeakerRing::setOffset(qint16 offset)
+void SpeakerRing::setOffset(qreal offset)
 {
     m_offset = offset;
 }
@@ -29,6 +29,8 @@ void SpeakerRing::setWidth(qreal width)
 void SpeakerRing::componentComplete()
 {
     // TODO: elliptic form with width&height
+    QVariantList list;
+
     for ( quint16 ls = 0; ls < m_nspeakers; ++ls )
     {
         QVector3D position;
@@ -38,7 +40,11 @@ void SpeakerRing::componentComplete()
         position.setX ( x );
         position.setY ( y );
         position.setZ ( m_elevation );
+
+        list << position;
     }
+
+    m_position = list;
 }
 
 //---------------------------------------------------------------------------------------------------------

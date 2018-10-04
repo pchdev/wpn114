@@ -38,7 +38,7 @@ class SpeakerRing : public RoomNode, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
-    Q_PROPERTY      ( int offset READ offset WRITE setOffset )
+    Q_PROPERTY      ( qreal offset READ offset WRITE setOffset )
     Q_PROPERTY      ( qreal elevation READ elevation WRITE setElevation )
 
     Q_PROPERTY      ( qreal width READ width WRITE setWidth )
@@ -50,12 +50,12 @@ class SpeakerRing : public RoomNode, public QQmlParserStatus
     virtual void classBegin() override {}
     virtual void componentComplete() override;
 
-    qint16 offset    ( ) const { return m_offset; }
+    qreal offset    ( ) const { return m_offset; }
     qreal elevation  ( ) const { return m_elevation; }
     qreal width      ( ) const { return m_width; }
     qreal height     ( ) const { return m_height; }
 
-    void setOffset      ( qint16 offset );
+    void setOffset      ( qreal offset );
     void setElevation   ( qreal elevation );
     void setWidth       ( qreal width );
     void setHeight      ( qreal height );
@@ -64,7 +64,7 @@ class SpeakerRing : public RoomNode, public QQmlParserStatus
     qreal m_width       = 1.f;
     qreal m_height      = 1.f;
     qreal m_elevation   = 0.f;
-    qint16 m_offset     = 0;
+    qreal m_offset      = 0.f;
 };
 
 // x, y, z, w = influence
