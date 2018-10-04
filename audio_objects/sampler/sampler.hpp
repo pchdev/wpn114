@@ -68,48 +68,48 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     void fileLengthChanged ();
 
     private:
-    Soundfile* m_soundfile;
-    SoundfileStreamer* m_streamer;
+    Soundfile* m_soundfile          = nullptr;
+    SoundfileStreamer* m_streamer   = nullptr;
     QThread m_streamer_thread;
 
-    bool m_next_buffer_ready;
-    bool m_first_play;
-    bool m_releasing;
-    bool m_playing;
+    bool m_next_buffer_ready    = false;
+    bool m_first_play           = true;
+    bool m_releasing            = false;
+    bool m_playing              = false;
 
-    quint64 m_buffer_size;
-    quint64 m_play_size;
-    float* m_xfade_buffer;
-    float* m_current_buffer;
-    float* m_next_buffer;
+    quint64 m_buffer_size       = 0;
+    quint64 m_play_size         = 0;
+    float* m_xfade_buffer       = nullptr;
+    float* m_current_buffer     = nullptr;
+    float* m_next_buffer        = nullptr;
 
-    quint64 m_phase;
-    quint64 m_stream_phase;
-    quint64 m_xfade_buf_phase;
-    float m_attack_phase;
-    float m_release_phase;
-    float m_xfade_phase;
-    float m_attack_inc;
-    float m_release_inc;
-    float m_xfade_inc;
+    quint64 m_phase             = 0;
+    quint64 m_stream_phase      = 0;
+    quint64 m_xfade_buf_phase   = 0;
+    float m_attack_phase        = 0.f;
+    float m_release_phase       = 0.f;
+    float m_xfade_phase         = 0.f;
+    float m_attack_inc          = 0.f;
+    float m_release_inc         = 0.f;
+    float m_xfade_inc           = 0.f;
 
-    quint64 m_attack_end;
-    quint64 m_xfade_point;
-    quint64 m_xfade_length;
+    quint64 m_attack_end        = 0;
+    quint64 m_xfade_point       = 0;
+    quint64 m_xfade_length      = 0;
 
     float m_attack_env  [ ENV_RESOLUTION ];
     float m_release_env [ ENV_RESOLUTION ];
 
     // properties
     QString m_path;
-    bool m_loop;
-    quint32 m_xfade;
-    quint32 m_attack;
-    quint32 m_release;
-    qreal m_start;
-    qreal m_end;
-    qreal m_length;
-    qreal m_rate;
+    bool m_loop         = false;
+    quint32 m_xfade     = 0;
+    quint32 m_attack    = 0;
+    quint32 m_release   = 0;
+    qreal m_start       = 0.f;
+    qreal m_end         = 0.f;
+    qreal m_length      = 0.f;
+    qreal m_rate        = 1.f;
 };
 
 class Sampler : public StreamNode, public QQmlParserStatus
@@ -162,40 +162,40 @@ class Sampler : public StreamNode, public QQmlParserStatus
     void setRate        ( qreal rate );
 
     private:    
-    Soundfile* m_soundfile;
-    float* m_buffer;
-    quint64 m_buffer_size;
+    Soundfile* m_soundfile  = nullptr;
+    float* m_buffer         = nullptr;
+    quint64 m_buffer_size   = 0;
 
-    bool m_first_play;
-    bool m_releasing;
-    bool m_playing;
+    bool m_first_play   = true;
+    bool m_releasing    = false;
+    bool m_playing      = false;
 
-    quint64 m_phase;
-    float m_attack_phase;
-    float m_release_phase;
-    float m_xfade_phase;
-    quint64 m_attack_end;
-    quint64 m_release_end;
-    quint64 m_xfade_point;
-    quint64 m_xfade_length;
+    quint64 m_phase         = 0;
+    float m_attack_phase    = 0.f;
+    float m_release_phase   = 0.f;
+    float m_xfade_phase     = 0.f;
+    quint64 m_attack_end    = 0;
+    quint64 m_release_end   = 0;
+    quint64 m_xfade_point   = 0;
+    quint64 m_xfade_length  = 0;
 
-    float m_attack_inc;
-    float m_release_inc;
-    float m_xfade_inc;
+    float m_attack_inc      = 0.f;
+    float m_release_inc     = 0.f;
+    float m_xfade_inc       = 0.f;
 
     float m_attack_env  [ ENV_RESOLUTION ];
     float m_release_env [ ENV_RESOLUTION ];
 
     // properties
     QString m_path;
-    bool m_loop;
-    quint32 m_xfade;
-    quint32 m_attack;
-    quint32 m_release;
-    qreal m_start;
-    qreal m_end;
-    qreal m_length;
-    qreal m_rate;
+    bool m_loop         = false;
+    quint32 m_xfade     = 0;
+    quint32 m_attack    = 0;
+    quint32 m_release   = 0;
+    qreal m_start       = 0.f;
+    qreal m_end         = 0.f;
+    qreal m_length      = 0.f;
+    qreal m_rate        = 1.f;
 };
 
 #endif // SAMPLER_HPP

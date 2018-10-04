@@ -38,8 +38,9 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<AudioPlugin, 1>       ( "WPN114", 1, 0, "AudioPlugin" );
     qmlRegisterType<Sampler, 1>           ( "WPN114", 1, 0, "Sampler" );
     qmlRegisterType<StreamSampler, 1>     ( "WPN114", 1, 0, "StreamSampler" );
+
     qmlRegisterType<RoomSetup, 1>         ( "WPN114", 1, 0, "RoomSetup" );
     qmlRegisterType<RoomSource, 1>        ( "WPN114", 1, 0, "RoomSource" );
     qmlRegisterType<Rooms, 1>             ( "WPN114", 1, 0, "Rooms" );
-    qmlRegisterType<CircularSetup, 1>     ( "WPN114", 1, 0, "CircularSetup" );
+    qmlRegisterType<SpeakerRing, 1>       ( "WPN114", 1, 0, "SpeakerRing" );
 }

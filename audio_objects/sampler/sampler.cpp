@@ -7,39 +7,6 @@
 
 StreamSampler::StreamSampler()
 {
-    m_soundfile             = nullptr;
-    m_streamer              = nullptr;
-    m_current_buffer        = nullptr;
-    m_next_buffer           = nullptr;
-    m_xfade_buffer          = nullptr;
-    m_playing               = false;
-    m_releasing             = false;
-    m_next_buffer_ready     = false;
-    m_first_play            = true;
-    m_loop                  = false;
-    m_buffer_size           = 0;
-    m_play_size             = 0;
-    m_phase                 = 0;
-    m_stream_phase          = 0;
-    m_attack_phase          = 0;
-    m_release_phase         = 0;
-    m_xfade_buf_phase       = 0;
-    m_xfade_phase           = 0;
-    m_attack_end            = 0;
-    m_xfade_point           = 0;
-    m_xfade_length          = 0;
-    m_attack_inc            = 0;
-    m_release_inc           = 0;
-    m_xfade_inc             = 0;
-
-    m_xfade                 = 0;
-    m_attack                = 0;
-    m_release               = 0;
-    m_start                 = 0.f;
-    m_end                   = 0.f;
-    m_length                = 0.f;
-    m_rate                  = 1.f;
-
     // building sin envelopes
     for ( int i = 0; i < ENV_RESOLUTION; ++ i )
     {
@@ -66,7 +33,6 @@ inline quint64 ms_to_samples(quint64 x, quint64 sr)
 void StreamSampler::setLoop(bool loop)
 {
     m_loop = loop;
-
     if ( m_streamer ) m_streamer->setWrap(loop);
 }
 
@@ -383,17 +349,16 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
                 xfade_phase     = 0;
                 release_phase   = 0;
 
-                for ( int ch = 0; ch < nch; ++ch )
+                for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
             }
-
             else
             {
                 int y       = floor ( release_phase );
                 float x     = (float) release_phase-y;
                 float rel   = lininterp(x, release[y], release[y+1]);
 
-                for ( int ch = 0; ch < nch; ++ch )
+                for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] *= rel;
 
                 release_phase += release_inc;
@@ -414,32 +379,6 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
 
 Sampler::Sampler()
 {    
-    m_soundfile     = nullptr;
-    m_buffer        = nullptr;
-    m_first_play    = true;
-    m_releasing     = false;
-    m_playing       = false;
-    m_buffer_size   = 0;
-    m_phase         = 0;
-    m_attack_phase  = 0;
-    m_release_phase = 0;
-    m_xfade_phase   = 0;
-    m_attack_end    = 0;
-    m_xfade_point   = 0;
-    m_xfade_length  = 0;
-    m_attack_inc    = 0;
-    m_release_inc   = 0;
-    m_release_end   = 0;
-    m_xfade_inc     = 0;
-    m_loop          = false;
-    m_xfade         = 0;
-    m_attack        = 0;
-    m_release       = 0;
-    m_start         = 0.f;
-    m_end           = 0.f;
-    m_length        = 0.f;
-    m_rate          = 1.f;
-
     // building sin envelopes
     for ( int i = 0; i < ENV_RESOLUTION; ++ i )
     {
@@ -595,7 +534,7 @@ float** Sampler::userProcess(float**, qint64 le)
     {
         if ( !m_playing )
         {
-            for ( int ch = 0; ch < nch; ++ch )
+            for ( quint16 ch = 0; ch < nch; ++ch )
                 out[ch][s] = 0.f;
             return out;
         }
@@ -608,7 +547,7 @@ float** Sampler::userProcess(float**, qint64 le)
             float x     = (float) attack_phase-y;
             float e     = lininterp(x, attack[y], attack[y+1]);
 
-            for ( int ch = 0; ch < nch; ++ch )
+            for ( quint16 ch = 0; ch < nch; ++ch )
             {
                 out[ch][s] = *bufdata*e;
                 bufdata++;
@@ -626,7 +565,7 @@ float** Sampler::userProcess(float**, qint64 le)
             float xfu   = lininterp(x, attack[y], attack[y+1]);
             float xfd   = 1.f - xfu;
 
-            for ( int ch = 0; ch < nch; ++ch )
+            for ( quint16 ch = 0; ch < nch; ++ch )
             {
                 float* rphs = bufdata-xfade_point*nch;
                 out[ch][s]  = *bufdata*xfd + *rphs*xfu;
@@ -647,7 +586,7 @@ float** Sampler::userProcess(float**, qint64 le)
                 bufdata         = &m_buffer[xfade_len*nch];
                 xfade_phase     = 0;
 
-                for ( int ch = 0; ch < nch; ++ch )
+                for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = *bufdata++;
 
                 spos = xfade_len+1;
@@ -656,7 +595,7 @@ float** Sampler::userProcess(float**, qint64 le)
             {
                 // if not looping, stop and set inactive
                 // zero out rest of the buffer
-                for ( int ch = 0; ch < nch; ++ch )
+                for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
 
                 m_playing       = false;
@@ -671,7 +610,7 @@ float** Sampler::userProcess(float**, qint64 le)
         else
         {
             // normal behaviour
-            for ( int ch = 0; ch < nch; ++ch )
+            for ( quint16 ch = 0; ch < nch; ++ch )
                 out[ch][s] = *bufdata++;
 
             spos++;
@@ -690,7 +629,7 @@ float** Sampler::userProcess(float**, qint64 le)
                 xfade_phase     = 0;
                 release_phase   = 0;
 
-                for ( int ch = 0; ch < nch; ++ch )
+                for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
             }
 
@@ -700,7 +639,7 @@ float** Sampler::userProcess(float**, qint64 le)
                 float x     = (float) release_phase-y;
                 float rel   = lininterp(x, release[y], release[y+1]);
 
-                for ( int ch = 0; ch < nch; ++ch )
+                for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] *= rel;
 
                 release_phase += release_inc;
