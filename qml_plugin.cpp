@@ -22,6 +22,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<Access, 1>        ( "WPN114", 1, 0, "Access", "Coucou" );
     qmlRegisterUncreatableType<Clipmode, 1>      ( "WPN114", 1, 0, "Clipmode", "Coucou" );
     qmlRegisterUncreatableType<StreamNode, 1>    ( "WPN114", 1, 0, "StreamNode","Coucou");
+    qmlRegisterUncreatableType<RoomNode, 1>      ( "WPN114", 1, 0, "RoomNode", "Coucou" );
 
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
     qmlRegisterType<OSCHandler, 1>        ( "WPN114", 1, 0, "OSCHandler" );

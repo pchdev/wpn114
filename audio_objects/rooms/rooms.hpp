@@ -71,6 +71,7 @@ class SpeakerRing : public RoomNode, public QQmlParserStatus
 class RoomSetup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_CLASSINFO ( "DefaultProperty", "nodes" )
     Q_PROPERTY  ( int nspeakers READ nspeakers )
     Q_PROPERTY  ( QQmlListProperty<RoomNode> nodes READ nodes )
 
@@ -89,13 +90,12 @@ class RoomSetup : public QObject, public QQmlParserStatus
     RoomNode* node      ( int ) const;
     void clearNodes     ( );
 
-    protected:
+    private:
     static void appendNode  ( QQmlListProperty<RoomNode>*, RoomNode*);
     static int nodeCount    ( QQmlListProperty<RoomNode>* );
     static RoomNode* node   ( QQmlListProperty<RoomNode>*, int );
     static void clearNodes  ( QQmlListProperty<RoomNode>* );
 
-    private:
     QVector<RoomNode*> m_nodes;
     quint16 m_nspeakers;
 };

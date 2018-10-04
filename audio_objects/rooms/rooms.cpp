@@ -107,7 +107,8 @@ RoomSetup::RoomSetup() : m_nspeakers(0)
 
 void RoomSetup::componentComplete()
 {
-    m_nspeakers = m_nodes.count();
+    for ( const auto& node : m_nodes )
+        m_nspeakers += node->nspeakers();
 }
 
 QQmlListProperty<RoomNode> RoomSetup::nodes()
