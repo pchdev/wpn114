@@ -2,11 +2,13 @@
 #include <QtDebug>
 #include <qendian.h>
 #include <cmath>
+#include <src/oscquery/node.hpp>
 
 StreamNode::StreamNode() : m_level(1.0), m_db_level(0.0),
     m_num_inputs(0), m_num_outputs(0), m_max_outputs(0), m_parent_channels(0),
     m_mute(false), m_active(false),
-    m_in(nullptr), m_out(nullptr)
+    m_in(nullptr), m_out(nullptr),
+    m_exp_device(nullptr), m_parent_stream(nullptr)
 {
 
 }
@@ -63,6 +65,17 @@ void StreamNode::setDBlevel(qreal db)
 void StreamNode::setExposePath(QString path)
 {
     m_exp_path = path;
+
+    if ( m_exp_device )
+    {
+        m_exp_node = WPNDevice::findOrCreateNode(m_exp_device, path);
+    }
+
+    else if ( auto dev = WPNDevice::instance() )
+    {
+        m_exp_device = dev;
+        m_exp_node = WPNDevice::findOrCreateNode(dev, path);
+    }
 }
 
 void StreamNode::setExposeDevice(WPNDevice* device)
@@ -70,10 +83,10 @@ void StreamNode::setExposeDevice(WPNDevice* device)
     m_exp_device = device;
 }
 
-void StreamNode::setParentStream(WorldStream* stream)
+void StreamNode::setParentStream(StreamNode* stream)
 {
     m_parent_stream = stream;
-    m_parent_stream->appendInput(this);
+    m_parent_stream->appendSubnode(this);
 }
 
 //-------------------------------------------------------------------------------------------
@@ -214,39 +227,9 @@ float** StreamNode::process(float** buf, qint64 le)
 
 //-----------------------------------------------------------------------------------------------
 
-WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512), m_level(1.0)
+WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512)
 {
 
-}
-
-void WorldStream::setNumInputs(uint16_t num_inputs)
-{
-    if ( m_num_inputs != num_inputs ) emit numInputsChanged();
-    m_num_inputs = num_inputs;
-}
-
-void WorldStream::setNumOutputs(uint16_t num_outputs)
-{
-    if ( m_num_outputs != num_outputs ) emit numOutputsChanged();
-    m_num_outputs = num_outputs;
-}
-
-void WorldStream::setMute(bool mute)
-{
-    if ( mute != m_mute ) emit muteChanged();
-    m_mute = mute;
-}
-
-void WorldStream::setActive(bool active)
-{
-    if ( active != m_active ) emit activeChanged();
-    m_active = active;
-}
-
-void WorldStream::setLevel(qreal level)
-{
-    if ( level != m_level ) emit levelChanged();
-    m_level = level;
 }
 
 void WorldStream::setSampleRate(uint32_t sample_rate)
@@ -271,57 +254,6 @@ void WorldStream::setOutDevice(QString device)
 {
     if ( device != m_out_device ) emit outDeviceChanged();
     m_out_device = device;
-}
-
-QQmlListProperty<StreamNode>WorldStream::inputs()
-{
-    return QQmlListProperty<StreamNode>(this, this,
-                                           &WorldStream::appendInput,
-                                           &WorldStream::inputCount,
-                                           &WorldStream::input,
-                                           &WorldStream::clearInputs);
-}
-
-StreamNode* WorldStream::input(int index) const
-{
-    return m_inputs.at(index);
-}
-
-void WorldStream::appendInput(StreamNode* input)
-{
-    m_inputs.append(input);
-}
-
-int WorldStream::inputCount() const
-{
-    return m_inputs.count();
-}
-
-void WorldStream::clearInputs()
-{
-    m_inputs.clear();
-}
-
-// statics --
-
-void WorldStream::appendInput(QQmlListProperty<StreamNode>* list, StreamNode* input)
-{
-    reinterpret_cast<WorldStream*>(list->data)->appendInput(input);
-}
-
-void WorldStream::clearInputs(QQmlListProperty<StreamNode>* list )
-{
-    reinterpret_cast<WorldStream*>(list->data)->clearInputs();
-}
-
-StreamNode* WorldStream::input(QQmlListProperty<StreamNode>* list, int i)
-{
-    return reinterpret_cast<WorldStream*>(list->data)->input(i);
-}
-
-int WorldStream::inputCount(QQmlListProperty<StreamNode>* list)
-{
-    return reinterpret_cast<WorldStream*>(list->data)->inputCount();
 }
 
 void WorldStream::componentComplete()
@@ -399,7 +331,7 @@ AudioStream::~AudioStream()
 
 void AudioStream::start()
 {
-    for ( const auto& input : m_world.m_inputs )
+    for ( const auto& input : m_world.m_subnodes )
         input->initialize({m_world.m_sample_rate, m_world.m_block_size});
 
     StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
@@ -415,7 +347,7 @@ void AudioStream::stop()
 
 qint64 AudioStream::readData(char* data, qint64 maxlen)
 {
-    auto inputs     = m_world.m_inputs;
+    auto inputs     = m_world.m_subnodes;
     quint16 nout    = m_world.m_num_outputs;
     quint16 bsize   = m_world.m_block_size;
     float** buf     = m_pool;

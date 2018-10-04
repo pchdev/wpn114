@@ -41,7 +41,7 @@ class StreamNode : public QObject
     Q_PROPERTY  ( qreal level READ level WRITE setLevel NOTIFY levelChanged )
     Q_PROPERTY  ( qreal dBlevel READ dBlevel WRITE setDBlevel )
     Q_PROPERTY  ( QQmlListProperty<StreamNode> subnodes READ subnodes )
-    Q_PROPERTY  ( WorldStream* parentStream READ parentStream WRITE setParentStream )
+    Q_PROPERTY  ( StreamNode* parentStream READ parentStream WRITE setParentStream )
 
     Q_PROPERTY  ( QString exposePath READ exposePath WRITE setExposePath )
     Q_PROPERTY  ( WPNDevice* exposeDevice READ exposeDevice WRITE setExposeDevice )
@@ -76,7 +76,7 @@ class StreamNode : public QObject
 
     QString exposePath          ( ) const { return m_exp_path; }
     WPNDevice* exposeDevice     ( ) const { return m_exp_device; }
-    WorldStream* parentStream   ( ) const { return m_parent_stream; }
+    StreamNode* parentStream   ( ) const { return m_parent_stream; }
 
     void setNumInputs    ( uint16_t num_inputs );
     void setNumOutputs   ( uint16_t num_outputs );
@@ -85,7 +85,7 @@ class StreamNode : public QObject
     void setActive       ( bool active );
     void setExposePath   ( QString path );
     void setExposeDevice ( WPNDevice* device );
-    void setParentStream ( WorldStream* stream );
+    void setParentStream ( StreamNode* stream );
 
     QVector<quint16> parentChannelsVec ( ) const;
     QVariant parentChannels ( ) const { return m_parent_channels; }
@@ -124,7 +124,8 @@ class StreamNode : public QObject
 
     QString m_exp_path;
     WPNDevice* m_exp_device;
-    WorldStream* m_parent_stream;
+    WPNNode* m_exp_node;
+    StreamNode* m_parent_stream;
 
     #define SAMPLERATE m_stream_properties.sample_rate
     #define SETN_OUT(n) setNumOutputs(n);
@@ -158,47 +159,30 @@ class AudioStream : public QIODevice
 
 };
 
-class WorldStream : public QObject, public QQmlParserStatus
+class WorldStream : public StreamNode, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_CLASSINFO     ( "DefaultProperty", "inputs" )
     Q_INTERFACES    ( QQmlParserStatus )
 
-    Q_PROPERTY      ( bool mute READ mute WRITE setMute NOTIFY muteChanged )
-    Q_PROPERTY      ( bool active READ active WRITE setActive NOTIFY activeChanged )
-    Q_PROPERTY      ( int numInputs READ numInputs WRITE setNumInputs NOTIFY numInputsChanged )
-    Q_PROPERTY      ( int numOutputs READ numOutputs WRITE setNumOutputs NOTIFY numOutputsChanged )
-    Q_PROPERTY      ( qreal level READ level WRITE setLevel NOTIFY levelChanged )
     Q_PROPERTY      ( int sampleRate READ sampleRate WRITE setSampleRate NOTIFY sampleRateChanged )
     Q_PROPERTY      ( int blockSize READ blockSize WRITE setBlockSize NOTIFY blockSizeChanged )
     Q_PROPERTY      ( QString inDevice READ inDevice WRITE setInDevice NOTIFY inDeviceChanged )
     Q_PROPERTY      ( QString outDevice READ outDevice WRITE setOutDevice NOTIFY outDeviceChanged )
-    Q_PROPERTY      ( QQmlListProperty<StreamNode> inputs READ inputs )
 
     friend class AudioStream;
 
     public:    
     WorldStream();
 
-    virtual void classBegin()                           override {}
-    virtual void componentComplete()                    override;
+    virtual void userInitialize(qint64) override {}
+    virtual float** userProcess(float**, qint64) override {}
+
+    virtual void classBegin()           override {}
+    virtual void componentComplete()    override;
 
     Q_INVOKABLE void start  ();
     Q_INVOKABLE void stop   ();
 
-    QQmlListProperty<StreamNode>  inputs();
-    const QVector<StreamNode*>&   getInputs() const { return m_inputs; }
-
-    void appendInput        ( StreamNode* );
-    int inputCount          ( ) const;
-    StreamNode* input       ( int ) const;
-    void clearInputs        ( );
-
-    uint16_t numInputs      ( ) const { return m_num_inputs; }
-    uint16_t numOutputs     ( ) const { return m_num_outputs; }
-    qreal level             ( ) const { return m_level; }
-    bool mute               ( ) const { return m_mute; }
-    bool active             ( ) const { return m_active; }
     uint32_t sampleRate     ( ) const { return m_sample_rate; }
     uint16_t blockSize      ( ) const { return m_block_size; }
     QString inDevice        ( ) const { return m_in_device; }
@@ -208,11 +192,6 @@ class WorldStream : public QObject, public QQmlParserStatus
     void setBlockSize    ( uint16_t block_size );
     void setInDevice     ( QString device );
     void setOutDevice    ( QString device );
-    void setNumInputs    ( uint16_t num_inputs );
-    void setNumOutputs   ( uint16_t num_outputs );
-    void setMute         ( bool mute );
-    void setActive       ( bool active );
-    void setLevel        ( qreal level );
 
     protected slots:
     void onAudioStateChanged ( QAudio::State ) const;
@@ -224,29 +203,12 @@ class WorldStream : public QObject, public QQmlParserStatus
     void blockSizeChanged   ( );
     void inDeviceChanged    ( );
     void outDeviceChanged   ( );
-    void muteChanged        ( );
-    void activeChanged      ( );
-    void numInputsChanged   ( );
-    void numOutputsChanged  ( );
-    void levelChanged       ( );
 
     private:
-    static void appendInput     ( QQmlListProperty<StreamNode>*, StreamNode* );
-    static int inputCount       ( QQmlListProperty<StreamNode>* );
-    static StreamNode* input    ( QQmlListProperty<StreamNode>*, int );
-    static void clearInputs     ( QQmlListProperty<StreamNode>* );
-
-    qreal m_level;
-    uint16_t m_num_inputs;
-    uint16_t m_num_outputs;
-    bool m_mute;
-    bool m_active;
     uint32_t m_sample_rate;
     uint16_t m_block_size;
     QString m_in_device;
     QString m_out_device;
     AudioStream* m_stream;
     QThread m_stream_thread;
-
-    QVector<StreamNode*> m_inputs;
 };
