@@ -44,6 +44,7 @@ class SoundfileStreamer : public QObject
 
     public slots:
     void next(float* target);
+    void reset(float* target);
 
     signals:
     void bufferLoaded();

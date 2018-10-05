@@ -64,7 +64,8 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     void onNextBufferReady();
 
     signals:
-    void next (float*);
+    void reset  (float*);
+    void next   (float*);
     void fileLengthChanged ();
 
     private:
@@ -106,10 +107,10 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     quint32 m_xfade     = 0;
     quint32 m_attack    = 0;
     quint32 m_release   = 0;
-    qreal m_start       = 0.f;
-    qreal m_end         = 0.f;
-    qreal m_length      = 0.f;
-    qreal m_rate        = 1.f;
+    qreal m_start       = 0;
+    qreal m_end         = 0;
+    qreal m_length      = 0;
+    qreal m_rate        = 1;
 };
 
 class Sampler : public StreamNode, public QQmlParserStatus

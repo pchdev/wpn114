@@ -32,6 +32,12 @@ void SoundfileStreamer::setBufferSize(quint64 nsamples)
     m_bufsize_byte = nsamples*m_soundfile->m_nchannels*(m_soundfile->m_bits_per_sample/8);
 }
 
+void SoundfileStreamer::reset(float* target)
+{
+    m_position_byte = m_start_byte;
+    next(target);
+}
+
 void SoundfileStreamer::next(float* target)
 {
     quint16 bps         = m_soundfile->m_bits_per_sample;

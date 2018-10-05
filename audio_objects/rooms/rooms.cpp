@@ -402,7 +402,7 @@ float** Rooms::process(float** buf, qint64 nsamples)
     for ( const auto& node : m_subnodes )
     {
         auto source = qobject_cast<RoomSource*>(node);
-        if ( ! source ) continue;
+        if ( !source ) continue;
 
         quint16 snch = source->numOutputs();
         float** in  = source->process(buf, nsamples);
@@ -411,6 +411,8 @@ float** Rooms::process(float** buf, qint64 nsamples)
         if ( !source->fixed() ) computeCoeffs(*source);
 
         auto stc = source->coeffs();
+
+        qDebug() << in[0][0];
 
         for ( quint16 ch = 0; ch < snch; ++ch )
             for ( quint16 o = 0; o < nout; ++o )

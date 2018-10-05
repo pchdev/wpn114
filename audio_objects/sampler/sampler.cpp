@@ -124,6 +124,7 @@ void StreamSampler::componentComplete()
 
     m_streamer->moveToThread(&m_streamer_thread);
     QObject::connect(this, SIGNAL(next(float*)), m_streamer, SLOT(next(float*)));
+    QObject::connect(this, SIGNAL(reset(float*)), m_streamer, SLOT(reset(float*)));
     QObject::connect(m_streamer, SIGNAL(bufferLoaded()), this, SLOT(onNextBufferReady()));
 }
 
@@ -157,6 +158,7 @@ void StreamSampler::onNextBufferReady()
 void StreamSampler::play()
 {
     m_playing = true;
+    if ( !m_active ) m_active = true;
 }
 
 void StreamSampler::stop()
@@ -208,9 +210,16 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
     }
 
     for ( qint64 s = 0; s < nsamples; ++s )
-    {
-        if ( spos >= xfade_length && bpos == 0 ) emit next(m_next_buffer);
-        else if ( bpos == bufnsamples )
+    {        
+        if ( !m_playing )
+        {
+            for ( quint16 ch = 0; ch < nch; ++ch )
+                out[ch][s] = 0.f;
+            return out;
+        }
+
+        if ( spos == xfade_length && bpos == 0 ) emit next(m_next_buffer);
+        if ( bpos == bufnsamples )
         {
             // if reaching the end of current buffer
             // swap buffers and request a new one (asynchronous)
@@ -223,13 +232,6 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
 
             emit next(m_next_buffer);
             bpos = 0;
-        }
-
-        if ( !m_playing )
-        {
-            for ( quint16 ch = 0; ch < nch; ++ch )
-                out[ch][s] = 0.f;
-            return out;
         }
 
         else if ( first && spos < attack_end )
@@ -298,7 +300,6 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
                 // if phase reaches end of 'crossfade zone'
                 // main phase continues from end of 'up' crossfade
                 // reset envelope phase
-
                 for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = *bufdata++;
 
@@ -313,15 +314,18 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
                 for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
 
-                m_playing     = false;
-                m_active      = false;
-                m_releasing   = false;
-                attack_phase  = 0;
-                release_phase = 0;
-                xfade_phase   = 0;
-                spos          = 0;
-                bpos          = 0;
-                xpos          = 0;
+                m_phase             = 0;
+                m_stream_phase      = 0;
+                m_xfade_buf_phase   = 0;
+                m_attack_phase      = 0;
+                m_xfade_phase       = 0;
+                m_release_phase     = 0;
+                m_playing           = false;
+                m_first_play        = true;
+                m_active            = false;
+                m_releasing         = false;
+
+                emit reset(m_current_buffer);
             }
         }
         else
@@ -342,12 +346,14 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
                 m_playing       = false;
                 m_active        = false;
                 m_releasing     = false;
-                spos            = 0;
-                xpos            = 0;
-                bpos            = 0;
-                attack_phase    = 0;
-                xfade_phase     = 0;
-                release_phase   = 0;
+                m_phase             = 0;
+                m_stream_phase      = 0;
+                m_xfade_buf_phase   = 0;
+                m_attack_phase      = 0;
+                m_xfade_phase       = 0;
+                m_release_phase     = 0;
+
+                emit reset(m_current_buffer);
 
                 for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
@@ -371,6 +377,7 @@ float** StreamSampler::userProcess(float** buf, qint64 nsamples)
     m_xfade_buf_phase   = xpos;
     m_attack_phase      = attack_phase;
     m_xfade_phase       = xfade_phase;
+    m_release_phase     = release_phase;
 
     return out;
 }
