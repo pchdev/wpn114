@@ -214,7 +214,9 @@ void RoomSource::update()
         RoomChannel channel;
 
         auto l = m_position.toList();
-        QVector3D position(l[0].toDouble(), l[1].toDouble(), l[2].toDouble());
+        auto chl = l[ch].toList();
+
+        QVector3D position(chl[0].toDouble(), chl[1].toDouble(), chl[2].toDouble());
 
         qreal diffuse   = extractPropertyValueForChannel(m_diffuse, ch);
         qreal bias      = extractPropertyValueForChannel(m_bias, ch);
@@ -254,6 +256,12 @@ void RoomSource::update()
 
 void RoomSource::componentComplete()
 {
+    // TODO: we shouldn't have to do this
+    // this should be handled directly by StreamNode
+    for ( const auto& subn : m_subnodes )
+        if ( subn->numOutputs() > m_max_outputs )
+            m_max_outputs = subn->numOutputs();
+
     SETN_OUT ( m_max_outputs );
     update();
 }
@@ -289,10 +297,11 @@ void RoomSource::setFixed(bool fixed)
 
 void RoomSource::allocateCoeffVector(quint16 size)
 {
-    m_coeffs.reserve(m_nchannels);
+    m_coeffs.clear();
+    m_coeffs.fill(QVector<qreal>(), m_num_outputs);
 
     for ( auto& ch : m_coeffs )
-        ch.reserve(size);
+        ch.fill(0.0, size);
 }
 
 void RoomSource::setCoeffs(QVector<QVector<qreal>> coeffs)
@@ -312,10 +321,7 @@ float** RoomSource::userProcess(float**buf, qint64 nsamples)
 
 //---------------------------------------------------------------------------------------------------------
 
-Rooms::Rooms()
-{
-
-}
+Rooms::Rooms() {}
 
 void Rooms::setSetup(RoomSetup* setup)
 {
@@ -341,18 +347,18 @@ qreal Rooms::spgain(QVector3D src, QVector4D ls)
     float d = sqrt((dx*dx)+(dy*dy));
     if ( d/lr > 1 ) return 0;
     else return (1.f - d/lr);
-
 }
 
 void Rooms::computeCoeffs(RoomSource& source)
 {
-    auto schs    = source.channels();
-    auto& coeffs = source.coeffs();
-    quint16 ch  = 0;
+    auto schs       = source.channels();
+    auto& coeffs    = source.coeffs();
+    quint16 ch      = 0;
 
     for ( const auto& sch : schs )
     {
         auto& channel_coeffs = coeffs[ch];
+
         for ( quint16 sp = 0; sp < m_speakers.size(); ++sp)
         {
             qreal maxgain = 0;
@@ -398,15 +404,15 @@ float** Rooms::process(float** buf, qint64 nsamples)
         auto source = qobject_cast<RoomSource*>(node);
         if ( ! source ) continue;
 
-        quint16 nch = source->numOutputs();
+        quint16 snch = source->numOutputs();
         float** in  = source->process(buf, nsamples);
 
+        // if source's not supposed to move, dont re-calculate the coeffs
         if ( !source->fixed() ) computeCoeffs(*source);
 
         auto stc = source->coeffs();
-        qDebug() << stc;
 
-        for ( quint16 ch = 0; ch < nch; ++ch )
+        for ( quint16 ch = 0; ch < snch; ++ch )
             for ( quint16 o = 0; o < nout; ++o )
                 for (quint16 s = 0; s < nsamples; ++s)
                     out[o][s] += in[ch][s] * stc[ch][o];
