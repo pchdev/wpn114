@@ -61,6 +61,7 @@ void RoomNode::setNspeakers(quint16 nspeakers)
 
 QVector4D RoomNode::speakerData(quint16 index) const
 {
+    if ( !m_positions.size() ) return QVector4D();
     QVector4D res(m_positions[index], m_influences[index]);
     return res;
 }

@@ -71,6 +71,14 @@ void WPNNode::componentComplete()
 
     if ( m_attributes.type != Type::None )
          m_attributes.access = Access::RW;
+
+    if ( m_target_property.isValid() )
+    {
+        // workaround for incorrect initialization of some js 'array' properties
+        QVariant v = m_target_property.read();
+        if ( QString(v.typeName()) == "QJSValue")
+            propertyChanged();
+    }
 }
 
 void WPNNode::propertyChanged()
@@ -114,7 +122,7 @@ QJsonObject WPNNode::attributesJson() const
     if  ( m_attributes.type != Type::None )
     {
         obj.insert("DESCRIPTION", m_attributes.description);
-        obj.insert("VALUE", QJsonArray{jsonValue()});
+        obj.insert("VALUE", jsonValue());
         obj.insert("CRITICAL", m_attributes.critical);
         obj.insert("TYPE", typeTag());
 
@@ -153,12 +161,12 @@ void WPNNode::setTarget(const QQmlProperty& property)
     case QMetaType::QVector3D: m_attributes.type = Type::Vec3f; break;
     case QMetaType::QVector4D: m_attributes.type = Type::Vec4f; break;
     case QMetaType::QVariantList: m_attributes.type = Type::List; break;
+    case QMetaType::QVariant: m_attributes.type = Type::List; break;
     }
 
     m_attributes.value = property.read();
     m_target_property.connectNotifySignal(this, SLOT(propertyChanged()));
 }
-
 
 QString WPNNode::typeTag() const
 {
