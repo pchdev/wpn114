@@ -109,7 +109,6 @@ void Soundfile::setPath(QString path)
     }
 
     qDebug() << "[SOUNDFILE]" << m_path << "successfully opened";
-
     if ( m_path.endsWith(".wav") ) metadataWav();
 }
 
@@ -167,9 +166,6 @@ void Soundfile::metadataWav()
     m_nframes           = m_nbytes/(m_bits_per_sample/8);
     m_nsamples          = m_nframes/m_nchannels;    
 
-    qDebug() << "[SOUNDFILE] WAV format, metadata succesfully parsed";
-    qDebug() << "[SOUNDFILE]" << m_nframes << "audio frames";
-
     m_file->reset();
 }
 
@@ -190,11 +186,6 @@ void Soundfile::buffer(float* buffer, quint64 start_sample, quint64 len )
     }
 
     m_file->reset();
-
-    qDebug() << "[SOUNDFILE] Buffered" << length_in_frames
-             << "frames ("
-             << len
-             << "samples)";
 }
 
 

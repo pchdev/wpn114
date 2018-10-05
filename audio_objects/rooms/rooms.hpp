@@ -107,7 +107,7 @@ class RoomSetup : public QObject, public QQmlParserStatus
 
 using RoomChannel = QVector<QVector3D>;
 
-class RoomSource : public StreamNode
+class RoomSource : public StreamNode, public QQmlParserStatus
 {
     Q_OBJECT
 
@@ -120,6 +120,9 @@ class RoomSource : public StreamNode
 
     public:
     RoomSource();
+
+    virtual void componentComplete() override;
+    virtual void classBegin() override {}
 
     virtual float** userProcess ( float** buf, qint64 le ) override;
     virtual void userInitialize ( qint64 ) override;

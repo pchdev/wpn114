@@ -1,5 +1,6 @@
 #include "rooms.hpp"
 #include <cmath>
+#include <QtDebug>
 
 SpeakerRing::SpeakerRing()
 {
@@ -42,6 +43,7 @@ void SpeakerRing::componentComplete()
         position.setZ ( m_elevation );
 
         list << position;
+        m_positions << position;
     }
 
     m_position = list;
@@ -57,6 +59,7 @@ RoomNode::RoomNode() : m_nspeakers(0)
 void RoomNode::setNspeakers(quint16 nspeakers)
 {
     m_nspeakers = nspeakers;
+    setInfluence(m_influence);
 }
 
 QVector4D RoomNode::speakerData(quint16 index) const
@@ -191,6 +194,70 @@ RoomSource::RoomSource()
     SETN_IN ( 0 );
 }
 
+inline qreal extractPropertyValueForChannel(QVariant& target, quint16 ch)
+{
+    if ( target.type() == QMetaType::Double )
+        return target.toDouble();
+
+    else if ( target.type() == QMetaType::QVariantList )
+        return target.toList()[ch].toDouble();
+
+    return 0;
+}
+
+void RoomSource::update()
+{
+    m_channels.clear();
+
+    for ( quint16 ch = 0; ch < m_num_outputs; ++ch )
+    {
+        RoomChannel channel;
+
+        auto l = m_position.toList();
+        QVector3D position(l[0].toDouble(), l[1].toDouble(), l[2].toDouble());
+
+        qreal diffuse   = extractPropertyValueForChannel(m_diffuse, ch);
+        qreal bias      = extractPropertyValueForChannel(m_bias, ch);
+        qreal rotate    = extractPropertyValueForChannel(m_rotate, ch);
+
+        if ( diffuse > 0)
+        {
+            // compute ellipse width & height
+            // and the four highest axis point positions
+            qreal ellwidth = 0, ellheight = 0;
+            QVector3D elltop, ellbottom, ellleft, ellright;
+
+            if ( bias == 0.5 )
+            {
+                // ellipse is a perfect squared circle
+                ellwidth    = diffuse;
+                ellheight   = diffuse;
+            }
+            else
+            {
+                ellwidth    = diffuse*(bias/0.5);
+                ellheight   = diffuse*(0.5/bias);
+            }
+
+            elltop      = QVector3D(position.x(), position.y()+ellheight/2.0, position.z());
+            ellbottom   = QVector3D(position.x(), position.y()-ellheight/2.0, position.z());
+            ellleft     = QVector3D(position.x()-ellwidth/2.0, position.y(), position.z());
+            ellright    = QVector3D(position.x()+ellwidth/2.0, position.y(), position.z());
+
+            channel << elltop << ellbottom << ellleft << ellright;
+        }
+
+        else channel << position;
+        m_channels << channel;
+    }
+}
+
+void RoomSource::componentComplete()
+{
+    SETN_OUT ( m_max_outputs );
+    update();
+}
+
 void RoomSource::setBias(QVariant bias)
 {
     m_bias = bias;
@@ -218,11 +285,6 @@ void RoomSource::setRotate(QVariant rotate)
 void RoomSource::setFixed(bool fixed)
 {
     m_fixed = fixed;
-}
-
-void RoomSource::update()
-{
-
 }
 
 void RoomSource::allocateCoeffVector(quint16 size)
@@ -284,13 +346,13 @@ qreal Rooms::spgain(QVector3D src, QVector4D ls)
 
 void Rooms::computeCoeffs(RoomSource& source)
 {
-    auto schs   = source.channels();
-    auto coeffs = source.coeffs();
+    auto schs    = source.channels();
+    auto& coeffs = source.coeffs();
     quint16 ch  = 0;
 
     for ( const auto& sch : schs )
     {
-        auto channel_coeffs = coeffs[ch];
+        auto& channel_coeffs = coeffs[ch];
         for ( quint16 sp = 0; sp < m_speakers.size(); ++sp)
         {
             qreal maxgain = 0;
@@ -305,10 +367,12 @@ void Rooms::computeCoeffs(RoomSource& source)
         }
         ++ch;
     }
+
+    qDebug() << "[ROOMS] Setting coeffs" << coeffs;
 }
 
 void Rooms::userInitialize(qint64 nsamples)
-{
+{        
     for ( const auto& node : m_subnodes )
     {
         auto source = qobject_cast<RoomSource*>(node);
@@ -327,6 +391,8 @@ float** Rooms::process(float** buf, qint64 nsamples)
     auto out        = m_out;
     auto nout       = m_num_outputs;
 
+    StreamNode::resetBuffer(out, nout, nsamples);
+
     for ( const auto& node : m_subnodes )
     {
         auto source = qobject_cast<RoomSource*>(node);
@@ -338,11 +404,12 @@ float** Rooms::process(float** buf, qint64 nsamples)
         if ( !source->fixed() ) computeCoeffs(*source);
 
         auto stc = source->coeffs();
+        qDebug() << stc;
 
         for ( quint16 ch = 0; ch < nch; ++ch )
             for ( quint16 o = 0; o < nout; ++o )
                 for (quint16 s = 0; s < nsamples; ++s)
-                    out[o][s] += in[ch][s];
+                    out[o][s] += in[ch][s] * stc[ch][o];
     }
 
     return out;
