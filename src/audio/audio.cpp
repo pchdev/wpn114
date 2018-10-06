@@ -24,6 +24,14 @@ void StreamNode::setNumOutputs(uint16_t num_outputs)
     if ( m_num_outputs != num_outputs ) emit numOutputsChanged();
     m_num_outputs = num_outputs;
 
+    QVariantList list;
+
+    for ( quint16 ch = 0; ch < num_outputs; ++ch)
+    {
+        list.push_back(QVariant(ch));
+        m_parent_channels = list;
+    }
+
     if ( m_subnodes.isEmpty() ) setMaxOutputs(num_outputs);
 }
 

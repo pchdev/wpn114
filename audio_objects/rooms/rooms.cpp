@@ -412,8 +412,6 @@ float** Rooms::process(float** buf, qint64 nsamples)
 
         auto stc = source->coeffs();
 
-        qDebug() << in[0][0];
-
         for ( quint16 ch = 0; ch < snch; ++ch )
             for ( quint16 o = 0; o < nout; ++o )
                 for (quint16 s = 0; s < nsamples; ++s)
