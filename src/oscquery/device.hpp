@@ -62,7 +62,9 @@ class WPNDevice : public QObject
     QString deviceName          ( ) const { return m_name; }
     WPNNode* rootNode           ( ) { return m_root_node; }
     void setDeviceName          ( QString name );
+
     Q_INVOKABLE void explore    ( ) const;   
+    Q_INVOKABLE QVariant value  ( QString method ) const;
 
     public slots:
     void onValueUpdate  ( QString method, QVariant arguments );

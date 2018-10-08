@@ -117,3 +117,10 @@ void WPNDevice::explore() const
 {
     m_root_node->post();
 }
+
+QVariant WPNDevice::value(QString method) const
+{
+    auto node = WPNDevice::getNode(method);
+    if ( node ) return node->value();
+    else return QVariant();
+}
