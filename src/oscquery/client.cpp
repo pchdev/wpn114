@@ -166,7 +166,7 @@ void WPNQueryClient::requestStreamStart()
     data.insert         ( "LOCAL_SENDER_PORT", m_osc_hdl->remotePort() );
     command.insert      ( "DATA", data );
 
-    m_ws_con->writeText     ( QJsonDocument(command).toJson(QJsonDocument::Compact) );
+    m_ws_con->writeText  ( QJsonDocument(command).toJson(QJsonDocument::Compact) );
 }
 
 void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)

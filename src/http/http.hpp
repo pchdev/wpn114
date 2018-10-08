@@ -29,6 +29,7 @@ class ReplyManager : public QObject
 
     protected slots:
     void onBytesWritten(qint64);
+    void onSocketError(QAbstractSocket::SocketError);
     void next();
 
     private:

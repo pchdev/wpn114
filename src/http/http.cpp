@@ -6,16 +6,17 @@ using namespace HTTP;
 
 QString ReplyManager::formatJsonResponse( QString response )
 {
+    auto ba         = response.toUtf8();
     QString resp    ( "HTTP/1.1 200 OK\r\n" );
+    resp.append     ( "Date:" );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
     resp.append     ( "\r\n" );
-    resp.append     ( "Server: Qt/5.1.1\r\n" );
-    resp.append     ( "Content-Type: application/json\r\n" );
+    resp.append     ( "Server: Qt/5.11.1\r\n" );
+    resp.append     ( "Content-Type: application/json; charset=utf-8\r\n" );
     resp.append     ( "Content-Length: " );
-    resp.append     ( QString::number(response.size()+ANDROID_JSON) );
-    resp.append     ( "\r\n" );
-    resp.append     ( "\r\n" );
-    resp.append     ( response );
+    resp.append     ( QString::number(ba.size()+ANDROID_JSON).append("\r\n"));
+    resp.append     ( "\r\n" );   
+    resp.append     ( response );  
 
     return resp;
 }
@@ -28,9 +29,10 @@ QString ReplyManager::formatJsonResponse(QJsonObject obj)
 QByteArray ReplyManager::formatFileResponse(QByteArray file, QString MIME)
 {
     QByteArray resp ( "HTTP/1.1 200 OK\r\n" );
+    resp.append     ( "Date:" );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
     resp.append     ( "\r\n" );
-    resp.append     ( "Server: Qt/5.1.1\r\n" );
+    resp.append     ( "Server: Qt/5.11.1\r\n" );
     resp.append     ( "Content-Type: " );
     resp.append     ( MIME.append("\r\n"));
     resp.append     ( "Content-Length: " );
@@ -68,12 +70,20 @@ void ReplyManager::onBytesWritten(qint64 bytes)
     if ( !m_queue.isEmpty()) next();
 }
 
+void ReplyManager::onSocketError(QAbstractSocket::SocketError e)
+{
+    qDebug() << e;
+}
+
 void ReplyManager::next()
 {
     auto rep = m_queue.head();
 
     QObject::connect( rep.target, SIGNAL(bytesWritten(qint64)),
                       this, SLOT(onBytesWritten(qint64)) );
+
+    QObject::connect( rep.target, SIGNAL(error(QAbstractSocket::SocketError)),
+                      this, SLOT(onSocketError(QAbstractSocket::SocketError)));
 
     rep.target->write(rep.reply);
     m_free = false;
