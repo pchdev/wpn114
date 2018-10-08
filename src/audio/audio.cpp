@@ -207,7 +207,7 @@ float** StreamNode::process(float** buf, qint64 le)
         float** ubuf = userProcess(buf, le);
 
         for ( const auto& subnode : m_subnodes )
-            if ( subnode->numInputs() == m_num_outputs )
+            if ( subnode->active() && subnode->numInputs() == m_num_outputs )
                 ubuf = subnode->process(ubuf, le);
 
         return ubuf;

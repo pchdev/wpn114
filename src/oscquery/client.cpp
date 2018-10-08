@@ -193,6 +193,19 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
     emit treeComplete();
 }
 
+void WPNQueryClient::sendMessage(QString address, QVariant arguments, bool critical)
+{
+    OSCMessage message { address, arguments };
+
+    if ( critical )
+    {
+        auto encoded = OSCHandler::encode(message);
+        m_ws_con->writeBinary(encoded);
+    }
+
+    else m_osc_hdl->sendMessage(message);
+}
+
 void WPNQueryClient::writeOsc(QString method, QVariant arguments) { }
 void WPNQueryClient::writeWebSocket(QString method, QVariant arguments) { }
 void WPNQueryClient::writeWebSocket(QString message)
