@@ -196,7 +196,13 @@ RoomSource::RoomSource()
 
 inline qreal extractPropertyValueForChannel(QVariant& target, quint16 ch)
 {
-    if ( target.type() == QMetaType::Double )
+    if ( QString(target.typeName()) == "QJSValue" )
+    {
+        QVariantList l = target.toList();
+        return l[ch].toDouble();
+
+    }
+    else if ( target.type() == QMetaType::Double )
         return target.toDouble();
 
     else if ( target.type() == QMetaType::QVariantList )
@@ -219,34 +225,26 @@ void RoomSource::update()
         QVector3D position(chl[0].toDouble(), chl[1].toDouble(), chl[2].toDouble());
 
         qreal diffuse   = extractPropertyValueForChannel(m_diffuse, ch);
-        qreal bias      = extractPropertyValueForChannel(m_bias, ch);
-        qreal rotate    = extractPropertyValueForChannel(m_rotate, ch);
+        qreal bias      = 0.5;
+        qreal rotate    = 0.0;
+
+        if ( !m_bias.isNull()   ) extractPropertyValueForChannel(m_bias, ch);
+        if ( !m_rotate.isNull() ) extractPropertyValueForChannel(m_rotate, ch);
 
         if ( diffuse > 0)
         {
             // compute ellipse width & height
             // and the four highest axis point positions
-            qreal ellwidth = 0, ellheight = 0;
-            QVector3D elltop, ellbottom, ellleft, ellright;
+            qreal ellwidth    = diffuse*(bias/0.5);
+            qreal ellheight   = diffuse*(0.5/bias);
 
-            if ( bias == 0.5 )
-            {
-                // ellipse is a perfect squared circle
-                ellwidth    = diffuse;
-                ellheight   = diffuse;
-            }
-            else
-            {
-                ellwidth    = diffuse*(bias/0.5);
-                ellheight   = diffuse*(0.5/bias);
-            }
-
-            elltop      = QVector3D(position.x(), position.y()+ellheight/2.0, position.z());
-            ellbottom   = QVector3D(position.x(), position.y()-ellheight/2.0, position.z());
-            ellleft     = QVector3D(position.x()-ellwidth/2.0, position.y(), position.z());
-            ellright    = QVector3D(position.x()+ellwidth/2.0, position.y(), position.z());
+            auto elltop      = QVector3D(position.x(), position.y()+ellheight/2.0, position.z());
+            auto ellbottom   = QVector3D(position.x(), position.y()-ellheight/2.0, position.z());
+            auto ellleft     = QVector3D(position.x()-ellwidth/2.0, position.y(), position.z());
+            auto ellright    = QVector3D(position.x()+ellwidth/2.0, position.y(), position.z());
 
             channel << elltop << ellbottom << ellleft << ellright;
+            qDebug() << "[ROOMS] channel" << channel;
         }
 
         else channel << position;

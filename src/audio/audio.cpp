@@ -182,7 +182,7 @@ inline void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint
         buffer[ch] = (float*) std::calloc(nsamples, sizeof(float));
 }
 
-inline void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
+void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
 {
     for ( uint16_t ch = 0; ch < nchannels; ++ch )
         std::memset(buffer[ch], 0.f, sizeof(float)*nsamples);
@@ -365,6 +365,8 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
 
     for ( const auto& input : inputs )
     {
+        if ( !input->active() ) continue;
+
         float** cdata   = input->process ( nullptr, bsize );
         auto pch        = input->parentChannelsVec();
 
