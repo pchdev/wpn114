@@ -6,6 +6,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QQueue>
+#include <QQmlParserStatus>
 
 class WPNFolderNode : public WPNNode
 {
@@ -18,6 +19,7 @@ class WPNFolderNode : public WPNNode
     public:
     WPNFolderNode();
 
+    virtual void componentComplete() override;
     QString folderPath() const { return m_folder_path; }
     QString extensions() const { return m_extensions; }
     bool recursive() const { return m_recursive; }

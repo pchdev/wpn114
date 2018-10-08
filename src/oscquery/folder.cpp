@@ -10,8 +10,6 @@ WPNFolderNode::WPNFolderNode() : m_recursive(true), WPNNode()
     m_attributes.type           = Type::List;
     m_attributes.access         = Access::READ;
     m_attributes.extended_type  = "folder";
-
-    m_filters << "*.png" << "*.qml";
 }
 
 void WPNFolderNode::parseDirectory(QDir dir)
@@ -44,6 +42,9 @@ void WPNFolderNode::parseDirectory(QDir dir)
             folder->setExtendedType ( "folder" );
             folder->setFilters      ( m_filters );
             folder->setFolderPath   ( dir.path()+"/"+d );
+
+            folder->componentComplete ( );
+
             addSubnode              ( folder );
         }
     }
@@ -52,8 +53,13 @@ void WPNFolderNode::parseDirectory(QDir dir)
 void WPNFolderNode::setFolderPath(QString path)
 {
     m_folder_path = path;
+}
 
-    QDir dir            ( path );
+void WPNFolderNode::componentComplete()
+{
+    WPNNode::componentComplete();
+
+    QDir dir            ( m_folder_path );
     dir.setNameFilters  ( m_filters );
     parseDirectory      ( dir );
 }
