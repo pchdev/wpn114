@@ -3,6 +3,7 @@
 #include <qendian.h>
 #include <cmath>
 #include <src/oscquery/node.hpp>
+#include <memory>
 
 StreamNode::StreamNode() : m_level(1.0), m_db_level(0.0),
     m_num_inputs(0), m_num_outputs(0), m_max_outputs(0), m_parent_channels(0),
@@ -185,7 +186,7 @@ inline void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint
 void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
 {
     for ( uint16_t ch = 0; ch < nchannels; ++ch )
-        std::memset(buffer[ch], 0.f, sizeof(float)*nsamples);
+        memset(buffer[ch], 0.f, sizeof(float)*nsamples);
 }
 
 void StreamNode::initialize(StreamProperties properties)

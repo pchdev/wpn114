@@ -2,7 +2,7 @@
 #include "RtMidi.h"
 #include <QObject>
 #include <QQmlParserStatus>
-#include <Qvariant>
+#include <QVariant>
 
 //-------------------------------------------------------------------------------------------------------
 enum class MIDIStatus
