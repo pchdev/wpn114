@@ -1,17 +1,8 @@
 #include "query-server.hpp"
-#include <QDataStream>
 #include <QJsonObject>
 #include <QJsonDocument>
-#include <QCryptographicHash>
-#include <QDateTime>
-#include <QRegExp>
-#include <QBitArray>
 #include "../http/http.hpp"
 #include "file.hpp"
-#include <QNetworkReply>
-#include <chrono>
-#include <thread>
-
 
 WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketServer(5678)),
     m_osc_hdl(new OSCHandler)

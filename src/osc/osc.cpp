@@ -92,7 +92,7 @@ OSCMessage OSCHandler::decode(const QByteArray& data)
         else if ( c == 's' )
         {
             quint8  byte, padding;
-            QString res;
+            QByteArray res;
 
             stream >> byte;
 
@@ -105,7 +105,8 @@ OSCMessage OSCHandler::decode(const QByteArray& data)
             padding = 4-(res.size()%4);
             stream.skipRawData(padding-1);
 
-            arguments << res;
+            QString str = QString::fromUtf8(res);
+            arguments << str;
         }
     }
 
