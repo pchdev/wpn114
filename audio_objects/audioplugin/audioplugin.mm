@@ -1,4 +1,5 @@
 #include "audioplugin.hpp"
+#include <QtDebug>
 
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
@@ -38,16 +39,14 @@ void AudioPlugin::componentComplete()
         m_parameters << str;
     }
 
-    for(int i = 0; i < m_plugin_hdl->get_nprograms(); ++i )
+    for ( int i = 0; i < m_plugin_hdl->get_nprograms(); ++i )
     {
         auto str = QString(m_plugin_hdl->get_program_name(i).c_str());
         m_programs << str;
     }
 
-    SETN_IN         ( m_plugin_hdl->get_ninputs()  );
-    SETN_OUT        ( m_plugin_hdl->get_noutputs() );
-
-    m_plugin_hdl->configure ( SAMPLERATE, m_stream_properties.block_size );
+    SETN_IN    ( m_plugin_hdl->get_ninputs()  );
+    SETN_OUT   ( m_plugin_hdl->get_noutputs() );
 
 #ifdef __APPLE__ //----------------------------------------------------------
     m_view              = new QMacNativeWidget();
@@ -61,7 +60,6 @@ void AudioPlugin::componentComplete()
     m_view_container    ->update();
 
     emit pluginLoaded();
-
 }
 
 void AudioPlugin::showEditorWindow()
@@ -71,6 +69,11 @@ void AudioPlugin::showEditorWindow()
 #endif //--------------------------------------------------------------------
 
     m_view_container->show();
+}
+
+void AudioPlugin::userInitialize(qint64 nsamples)
+{
+    m_plugin_hdl->configure(m_stream_properties.sample_rate, m_stream_properties.block_size);
 }
 
 float** AudioPlugin::userProcess(float**input, qint64 nsamples)

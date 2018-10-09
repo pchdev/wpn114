@@ -105,8 +105,7 @@ OSCMessage OSCHandler::decode(const QByteArray& data)
             padding = 4-(res.size()%4);
             stream.skipRawData(padding-1);
 
-            QString str = QString::fromUtf8(res);
-            arguments << str;
+            arguments << QString::fromUtf8(res);
         }
     }
 

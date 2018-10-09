@@ -95,10 +95,10 @@ class AudioPlugin : public StreamNode, public QQmlParserStatus
 
 public:
     AudioPlugin();
-    ~AudioPlugin();
+    ~AudioPlugin() override;
 
     virtual float** userProcess(float**, qint64) override;
-    virtual void userInitialize(qint64) override {};
+    virtual void userInitialize(qint64) override;
 
     virtual void classBegin()           override;
     virtual void componentComplete()    override;
