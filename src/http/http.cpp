@@ -8,7 +8,7 @@ QString ReplyManager::formatJsonResponse( QString response )
 {
     auto ba         = response.toUtf8();
     QString resp    ( "HTTP/1.1 200 OK\r\n" );
-    resp.append     ( "Date:" );
+    resp.append     ( "Date: " );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
     resp.append     ( "\r\n" );
     resp.append     ( "Server: Qt/5.11.1\r\n" );
@@ -29,7 +29,7 @@ QString ReplyManager::formatJsonResponse(QJsonObject obj)
 QByteArray ReplyManager::formatFileResponse(QByteArray file, QString MIME)
 {
     QByteArray resp ( "HTTP/1.1 200 OK\r\n" );
-    resp.append     ( "Date:" );
+    resp.append     ( "Date: " );
     resp.append     ( QDateTime::currentDateTime().toString("ddd, dd MMMM yyyy hh:mm:ss t" ));
     resp.append     ( "\r\n" );
     resp.append     ( "Server: Qt/5.11.1\r\n" );

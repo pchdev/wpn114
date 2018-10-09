@@ -82,11 +82,22 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
     QObject::connect ( client, SIGNAL(command(QJsonObject)),
                        this, SLOT(onCommand(QJsonObject)));
 
+    QObject::connect ( client, SIGNAL(disconnected()),
+                       this, SLOT(onDisconnection()));
+
     QObject::connect ( client, SIGNAL(httpMessageReceived(QString)),
                        this, SLOT(onClientHttpQuery(QString)));
 
     qDebug() << "[OSCQUERY-SERVER] New client connection";
     emit newConnection();
+}
+
+void WPNQueryServer::onDisconnection()
+{
+    auto sender = qobject_cast<WPNQueryClient*>(QObject::sender());
+    m_clients.removeAll(sender);
+
+    emit disconnection();
 }
 
 void WPNQueryServer::onClientHttpQuery(QString query)
@@ -112,6 +123,7 @@ void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
             rep.target = sender;
             auto spl2 = request.split(' ', QString::SkipEmptyParts);
             rep.reply = namespaceJson(spl2[0]).toUtf8();
+
             m_reply_manager.enqueue(rep);
         }
     }
@@ -178,7 +190,7 @@ void WPNQueryServer::onCommand(QJsonObject command_obj)
     else if ( command == "START_OSC_STREAMING" )
     {
         quint16 port = command_obj["DATA"].toObject()["LOCAL_SERVER_PORT"].toInt();
-        listener->setOscPort(port);
+        listener->setOscPort(port);        
     }
 }
 

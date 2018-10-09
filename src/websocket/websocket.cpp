@@ -238,7 +238,7 @@ void WPNWebSocket::write(QByteArray message, Opcodes op)
 {
     QByteArray data;
     quint8 mask[4], size_mask = m_mask*0x80;
-    quint64 sz = data.size()+ANDROID_JSON;
+    quint64 sz = message.size()+ANDROID_JSON;
 
     QDataStream stream ( &data, QIODevice::WriteOnly );
     stream << (quint8) ( 0x80 + static_cast<quint8>(op)) ;
@@ -272,7 +272,6 @@ void WPNWebSocket::write(QByteArray message, Opcodes op)
     }
 
     else data.append(message);
-
     m_tcp_con->write(data);
 }
 

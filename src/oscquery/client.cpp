@@ -94,18 +94,18 @@ void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
     OSCMessage message = OSCHandler::decode(data);
     onValueUpdate(message.address, message.arguments);
 
-    qDebug() << "WS-OSC In:" << message.address << message.arguments;
+    qDebug() << "Binary In:" << message.address << message.arguments;
 }
 
 void WPNQueryClient::onTextMessageReceived(QString message)
 {
-    auto obj = QJsonDocument::fromJson(message.toUtf8()).object();
+    qDebug() << "Message In:" << message;
+
+    auto obj = QJsonDocument::fromJson(message.toUtf8()).object();        
 
     if      ( obj.contains("COMMAND")) emit command(obj);
     else if ( obj.contains("FULL_PATH")) onNamespaceReceived(obj);
-    else if ( obj.contains("OSC_PORT")) onHostInfoReceived(obj);
-
-    qDebug() << "Message In:" << message;
+    else if ( obj.contains("OSC_PORT")) onHostInfoReceived(obj);    
 }
 
 void WPNQueryClient::onHttpReply(QNetworkReply* reply)
@@ -118,8 +118,6 @@ void WPNQueryClient::onHttpReply(QNetworkReply* reply)
 
 void WPNQueryClient::onHostInfoReceived(QJsonObject info)
 {
-    qDebug() << "[OSCQUERY-CLIENT] HOST_INFO received";
-
     if ( info.contains("NAME" ) )  m_settings.name = info["NAME"].toString();
     if ( info.contains("OSC_PORT") ) m_settings.osc_port = info["OSC_PORT"].toInt();
     if ( info.contains("OSC_TRANSPORT")) m_settings.osc_transport = info["OSC_TRANSPORT"].toString();
@@ -164,14 +162,13 @@ void WPNQueryClient::requestStreamStart()
     command.insert      ( "COMMAND", "START_OSC_STREAMING" );
     data.insert         ( "LOCAL_SERVER_PORT", m_osc_hdl->localPort() );
     data.insert         ( "LOCAL_SENDER_PORT", m_osc_hdl->remotePort() );
-    command.insert      ( "DATA", data );
+    command.insert      ( "DATA", data );   
 
     m_ws_con->writeText  ( QJsonDocument(command).toJson(QJsonDocument::Compact) );
 }
 
 void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
 {
-    qDebug() << "[OSCQUERY-CLIENT] Namespace information received";
     QJsonObject contents = nspace["CONTENTS"].toObject();
 
     for ( const auto& key : contents.keys() )

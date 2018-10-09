@@ -34,12 +34,14 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
 
     signals:
     void newConnection();
+    void disconnection();
     void unknownMethodRequested ( QString method );
 
     protected slots:
     void onClientHttpQuery      ( QString query );
     void onCommand              ( QJsonObject command_obj );
     void onNewConnection        ( WPNWebSocket* client );
+    void onDisconnection        ( );
     void onHttpRequest          ( QTcpSocket* sender, QString req );
     QString hostInfoJson        ( );
     QString namespaceJson       ( QString method );
