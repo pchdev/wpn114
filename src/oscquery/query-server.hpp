@@ -19,6 +19,7 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
 
     public:
     WPNQueryServer();
+    ~WPNQueryServer();
 
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) {}

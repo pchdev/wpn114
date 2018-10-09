@@ -42,6 +42,11 @@ WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketSer
     m_settings.extensions.html              = false;
 }
 
+WPNQueryServer::~WPNQueryServer()
+{
+    m_zeroconf.stopServicePublish();
+}
+
 void WPNQueryServer::componentComplete()
 {
     QObject::connect( m_ws_server, SIGNAL(newConnection(WPNWebSocket*)),

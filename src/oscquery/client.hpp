@@ -60,6 +60,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void requestStreamStart     ( );
 
     void onConnected             ( );
+    void onDisconnected          ( );
     void onBinaryMessageReceived ( QByteArray message );
     void onTextMessageReceived   ( QString message );
 

@@ -13,6 +13,7 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler()), m_d
     QObject::connect(m_ws_con, SIGNAL(connected()), this, SIGNAL(connected()));
     QObject::connect(m_ws_con, SIGNAL(connected()), this, SLOT(onConnected()));
     QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
+    QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
     QObject::connect(m_ws_con, SIGNAL(binaryFrameReceived(QByteArray)), this, SLOT(onBinaryMessageReceived(QByteArray)));
 
@@ -37,7 +38,7 @@ void WPNQueryClient::componentComplete()
     if ( !m_host_addr.isEmpty()) m_ws_con->connect();
     else if ( !m_zconf_host.isEmpty() )
     {
-        qDebug() << "[OSCQUERY-CLIENT] Starting Zeroconf discovery";
+        qDebug() << "[OSCQUERY-CLIENT] Starting zeroconf discovery";
         m_zconf.startBrowser("_oscjson._tcp");
         QObject::connect( &m_zconf, SIGNAL(serviceAdded(QZeroConfService)),
                           this, SLOT(onZeroConfServiceAdded(QZeroConfService)) );
@@ -53,6 +54,17 @@ void WPNQueryClient::onConnected()
     m_host_url = m_host_addr.prepend("http://")+":"+QString::number(m_host_port);
     requestHttp("/?HOST_INFO");
     requestHttp("/");
+}
+
+void WPNQueryClient::onDisconnected()
+{
+    if ( !m_zconf_host.isEmpty() )
+    {
+        qDebug() << "[OSCQUERY-CLIENT] re-starting zeroconf discovery";
+        m_zconf.startBrowser("_oscjson._tcp");
+        QObject::connect( &m_zconf, SIGNAL(serviceAdded(QZeroConfService)),
+                          this, SLOT(onZeroConfServiceAdded(QZeroConfService)) );
+    }
 }
 
 void WPNQueryClient::setHostAddr(QString addr)
