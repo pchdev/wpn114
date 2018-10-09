@@ -91,10 +91,10 @@ void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
 
 void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
 {
-    OSCMessage message = OSCHandler::decode(data);
-    onValueUpdate(message.address, message.arguments);
-
+    OSCMessage message = OSCHandler::decode(data);    
     qDebug() << "Binary In:" << message.address << message.arguments;
+
+    onValueUpdate(message.address, message.arguments);    
 }
 
 void WPNQueryClient::onTextMessageReceived(QString message)

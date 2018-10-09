@@ -140,6 +140,15 @@ void OSCHandler::readPendingDatagrams()
 
 QString OSCHandler::typeTag(const QVariant& argument)
 {
+    if ( QString(argument.typeName()) == "QJSValue" )
+    {
+        QString tt;
+        for ( const auto& sub : argument.toList() )
+            tt.append(typeTag(sub));
+
+        return tt;
+    }
+
     switch(argument.type())
     {
     case QMetaType::Void:         return "N";
@@ -167,17 +176,24 @@ QString OSCHandler::typeTag(const QVariant& argument)
 }
 
 void OSCHandler::append(QByteArray& data, const QVariant& argument)
-{
+{    
+    if ( QString(argument.typeName()) == "QJSValue" )
+    {
+        for ( const auto& v : argument.toList())
+            append(data, v);
+        return;
+    }
+
     switch(argument.type())
     {
     case QMetaType::Void: return;
     case QMetaType::Bool: return;
     case QMetaType::QString:
     {
-        QString str     = argument.toString();
-        auto pads       = 4-(argument.toString().size() % 4);
-        data.append     ( str );
+        QByteArray str  = argument.toString().toUtf8();
+        auto pads       = 4-(str.size() % 4);
         while ( pads--) str.append('\0');
+        data.append     ( str );
         return;
     }
     }
@@ -190,7 +206,7 @@ void OSCHandler::append(QByteArray& data, const QVariant& argument)
         stream << (int) argument.toInt(); return;
     }
 
-    stream.setFloatingPointPrecision ( QDataStream::SinglePrecision );
+    stream.setFloatingPointPrecision ( QDataStream::SinglePrecision );   
 
     switch(argument.type())
     {
