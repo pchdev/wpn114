@@ -6,7 +6,7 @@
 #include <src/http/http.hpp>
 #include <QNetworkReply>
 
-WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
+WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler()), m_direct(true)
 {
     // direct client
     m_ws_con = new WPNWebSocket("127.0.0.1", 5678);
@@ -20,7 +20,7 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler())
     QObject::connect(m_http_manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpReply(QNetworkReply*)));
 }
 
-WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler())
+WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler()), m_direct(false)
 {
     // indirect client (server image)
     // no need for a local udp port
@@ -92,9 +92,10 @@ void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
 void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
 {
     OSCMessage message = OSCHandler::decode(data);    
-    qDebug() << "Binary In:" << message.address << message.arguments;
+    qDebug() << "WebSocket-OSC In:" << message.address << message.arguments;
 
-    onValueUpdate(message.address, message.arguments);    
+    if ( m_direct ) onValueUpdate(message.address, message.arguments);
+    else emit valueUpdate(message.address, message.arguments);
 }
 
 void WPNQueryClient::onTextMessageReceived(QString message)

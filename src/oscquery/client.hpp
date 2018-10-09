@@ -50,6 +50,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void valueUpdate            ( QJsonObject );
     void command                ( QJsonObject );
     void httpMessageReceived    ( QString message );
+    void valueUpdate            ( QString, QVariant );
 
     protected slots:
     void onHttpReply            ( QNetworkReply* );
@@ -63,6 +64,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void onTextMessageReceived   ( QString message );
 
     private:
+    bool m_direct;
     QNetworkAccessManager* m_http_manager;
     QZeroConf m_zconf;
     QString m_zconf_host;

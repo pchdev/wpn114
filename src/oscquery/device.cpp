@@ -1,4 +1,5 @@
 #include "device.hpp"
+#include <QtDebug>
 
 QJsonObject HostExtensions::toJson() const
 {
@@ -105,7 +106,9 @@ void WPNDevice::onValueUpdate(QJsonObject obj)
 
 void WPNDevice::onValueUpdate(QString method, QVariant arguments)
 {
-    m_root_node->subnode(method)->setValueQuiet(arguments);
+    auto node = m_root_node->subnode(method);
+    if ( node ) node->setValueQuiet(arguments);
+    else qDebug() << "[WPNDEVICE] Node" << method << "not found";
 }
 
 void WPNDevice::setDeviceName(QString name)

@@ -88,6 +88,9 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
     QObject::connect ( client, SIGNAL(httpMessageReceived(QString)),
                        this, SLOT(onClientHttpQuery(QString)));
 
+    QObject::connect ( client, SIGNAL(valueUpdate(QString, QVariant)),
+                       this, SLOT(onValueUpdate(QString, QVariant)));
+
     qDebug() << "[OSCQUERY-SERVER] New client connection";
     emit newConnection();
 }
