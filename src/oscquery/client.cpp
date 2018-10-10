@@ -16,9 +16,12 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler()), m_d
     QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
     QObject::connect(m_ws_con, SIGNAL(binaryFrameReceived(QByteArray)), this, SLOT(onBinaryMessageReceived(QByteArray)));
+    QObject::connect(this, SIGNAL(command(QJsonObject)), this, SLOT(onCommand(QJsonObject)));
 
     m_http_manager = new QNetworkAccessManager(this);
     QObject::connect(m_http_manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpReply(QNetworkReply*)));
+
+    m_osc_hdl->listen(0);
 }
 
 WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler()), m_direct(false)
@@ -26,6 +29,8 @@ WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler()),
     // indirect client (server image)
     // no need for a local udp port
     m_ws_con = con;
+
+    setHostAddr(m_ws_con->hostAddr());
     QObject::connect(m_ws_con, SIGNAL(binaryFrameReceived(QByteArray)), this, SLOT(onBinaryMessageReceived(QByteArray)));
     QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
     QObject::connect(m_ws_con, SIGNAL(httpMessageReceived(QString)), this, SIGNAL(httpMessageReceived(QString)));
@@ -86,14 +91,12 @@ void WPNQueryClient::setOscPort(quint16 port)
 
 void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
 {
-    qDebug() << "[OSCQUERY-CLIENT] ZConf service discovered: " << service.name();
-
     if ( service.name() == m_zconf_host )
     {        
-        m_host_addr = service.ip().toString();
+        setHostAddr(service.ip().toString());
         m_host_port = service.port();
 
-        qDebug() << "[OSCQUERY-CLIENT] ZConf target acquired: "
+        qDebug() << "[OSCQUERY-CLIENT] zeroconf target acquired: "
                  << m_host_addr << m_host_port;
 
         m_ws_con->connect   ( m_host_addr, m_host_port );
@@ -130,19 +133,17 @@ void WPNQueryClient::onCommand(QJsonObject command)
     {
         for ( const auto& key : data.keys() )
         {
-            auto obj        = data[key].toObject();
-            WPNNode* node   = m_root_node->subnode(obj["FULL_PATH"].toString());
+            auto obj    = data[key].toObject();
+            auto node   = m_root_node->subnode(obj["FULL_PATH"].toString());
 
             if ( node )
             {
                 node->setDevice ( this );
-                node->update    ( obj );
+                node->update ( obj );
             }
-            else
-            {
-                node = WPNNode::fromJson(obj, this);
-                m_root_node->addSubnode(node);
-            }
+            else node = WPNNode::fromJson(obj, this);
+
+            m_root_node->addSubnode(node);
         }
     }
 }
@@ -181,9 +182,6 @@ void WPNQueryClient::onHostInfoReceived(QJsonObject info)
     if ( ext.contains("PATH_REMOVED")) m_settings.extensions.path_removed = ext["PATH_REMOVED"].toBool();
 
     if ( m_settings.extensions.osc_streaming ) requestStreamStart();
-
-    m_ws_con->writeText("/");
-    m_ws_con->writeText("/play");
 }
 
 void WPNQueryClient::requestHttp(QString address)
@@ -266,5 +264,23 @@ void WPNQueryClient::pushNodeValue(WPNNode* node)
 QTcpSocket* WPNQueryClient::tcpConnection()
 {
     return m_ws_con->tcpConnection();
+}
+
+void WPNQueryClient::listen(QString method)
+{
+    QJsonObject command;
+    command.insert("COMMAND", "LISTEN");
+    command.insert("DATA", method );
+
+    m_ws_con->writeText  ( QJsonDocument(command).toJson(QJsonDocument::Compact) );
+}
+
+void WPNQueryClient::ignore(QString method)
+{
+    QJsonObject command;
+    command.insert("COMMAND", "IGNORE");
+    command.insert("DATA", method);
+
+    writeWebSocket(command);
 }
 

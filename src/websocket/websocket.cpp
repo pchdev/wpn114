@@ -106,12 +106,16 @@ WPNWebSocket::WPNWebSocket(QString host_addr, quint16 port) : m_seed(0),
     QObject::connect(m_tcp_con, SIGNAL(connected()), this, SLOT(onConnected()));
     QObject::connect(m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     QObject::connect(m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
+    QObject::connect(m_tcp_con, SIGNAL(bytesWritten(qint64)), this, SLOT(onBytesWritten(qint64)));
 }
 
 WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con), m_mask(false), m_seed(0)
 {
     // server catching a client
     // the proxy is already connected, so nothing to do here, except chain signals
+    m_host_addr = m_tcp_con->peerAddress().toString();
+    m_host_addr.remove("::ffff:");
+
     QObject::connect(m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     QObject::connect(m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
 }
@@ -143,7 +147,6 @@ void WPNWebSocket::onConnected()
 {
     // tcp-connection established,
     // send http 'handshake' upgrade request to server
-    qDebug() << "[WEBSOCKET] TcpSocket connected, generating Sec-Key and requesting WebSocket-Handshake";
     generateEncryptedSecKey();
     requestHandshake();
 }
@@ -188,7 +191,6 @@ void WPNWebSocket::onHandshakeResponseReceived(QString resp)
         return;
     }
 
-    qDebug() << "[WEBSOCKET] Handshake Accepted and Validated";
     emit connected();
 }
 
@@ -234,6 +236,11 @@ void WPNWebSocket::request(QString req)
     m_tcp_con->write(req.toUtf8());
 }
 
+void WPNWebSocket::onBytesWritten(qint64 nbytes)
+{
+
+}
+
 void WPNWebSocket::write(QByteArray message, Opcodes op)
 {
     QByteArray data;
@@ -272,7 +279,9 @@ void WPNWebSocket::write(QByteArray message, Opcodes op)
     }
 
     else data.append(message);
-    m_tcp_con->write(data);
+
+    m_tcp_con->flush();
+    auto nbytes = m_tcp_con->write(data);
 }
 
 void WPNWebSocket::writeBinary(QByteArray binary)
@@ -345,6 +354,14 @@ void WPNWebSocket::decode(QByteArray data)
     {
     case Opcodes::BINARY_FRAME: emit binaryFrameReceived(decoded); break;
     case Opcodes::TEXT_FRAME: emit textMessageReceived(decoded); break;
+    }
+
+    // check if another message is not hidden behind this one
+    if ( !stream.atEnd() )
+    {
+        qDebug() << "getting another message";
+        QByteArray next = data.remove(0, stream.device()->pos());
+        decode(next);
     }
 }
 

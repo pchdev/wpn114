@@ -29,14 +29,15 @@ class WPNWebSocket : public QObject
 
     ~WPNWebSocket();
 
-    void connect    ( );
-    void connect    ( QString host, quint16 port );
-    void disconnect ( );
+    void connect      ( );
+    void connect      ( QString host, quint16 port );
+    void disconnect   ( );
 
     void request      ( QString http_req );
     void writeText    ( QString message );
     void writeBinary  ( QByteArray binary );
 
+    QString hostAddr  ( ) const { return m_host_addr; }
     QTcpSocket* tcpConnection() { return m_tcp_con; }
 
     signals:
@@ -49,6 +50,7 @@ class WPNWebSocket : public QObject
 
     protected slots:
     void onConnected                  ( );
+    void onBytesWritten               ( qint64 );
     void onRawMessageReceived         ( );
     void onHandshakeResponseReceived  ( QString resp );
 

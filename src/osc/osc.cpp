@@ -21,6 +21,14 @@ void OSCHandler::listen()
     qDebug() << "[UDPSOCKET] Binding on port:" << m_local_port;
 }
 
+void OSCHandler::listen(quint16 port)
+{
+    m_udpsocket->bind(QHostAddress::Any, port);
+    m_local_port = m_udpsocket->localPort();
+
+    qDebug() << "[UDPSOCKET] Binding on port:" << m_local_port;
+}
+
 void OSCHandler::setLocalPort(uint16_t port)
 {
     m_local_port = port;

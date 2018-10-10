@@ -37,6 +37,7 @@ class OSCHandler : public QObject, public QQmlParserStatus
     void setRemoteAddress           ( QString address );
 
     Q_INVOKABLE void listen         ( );
+    Q_INVOKABLE void listen         ( quint16 port );
     Q_INVOKABLE void sendMessage    ( QString address, QVariant arguments );
     void sendMessage                ( const OSCMessage& message );
 

@@ -124,7 +124,7 @@ void WPNDevice::explore() const
 
 QVariant WPNDevice::value(QString method) const
 {
-    auto node = WPNDevice::getNode(method);
+    auto node = m_root_node->subnode(method);
     if ( node ) return node->value();
     else return QVariant();
 }

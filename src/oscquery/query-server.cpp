@@ -88,7 +88,7 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
     QObject::connect ( client, SIGNAL(valueUpdate(QString, QVariant)),
                        this, SLOT(onValueUpdate(QString, QVariant)));
 
-    qDebug() << "[OSCQUERY-SERVER] New client connection";
+    qDebug() << "[OSCQUERY-SERVER] New client connection:" << client->hostAddr();
     emit newConnection();
 }
 
@@ -109,6 +109,9 @@ void WPNQueryServer::onNodeAdded(WPNNode* node)
         command.insert      ( "COMMAND", "PATH_ADDED" );
         data.insert         ( node->name(), node->toJson() );
         command.insert      ( "DATA", data );
+
+        for ( const auto& client : m_clients )
+            client->writeWebSocket(command);
     }
 }
 
@@ -190,7 +193,6 @@ QString WPNQueryServer::namespaceJson(QString method)
 void WPNQueryServer::onCommand(QJsonObject command_obj)
 {
     WPNQueryClient* listener = qobject_cast<WPNQueryClient*>(QObject::sender());
-
     QString command = command_obj["COMMAND"].toString();
 
     if ( command == "LISTEN" || command == "IGNORE" )
@@ -206,7 +208,4 @@ void WPNQueryServer::onCommand(QJsonObject command_obj)
     }
 }
 
-void WPNQueryServer::pushNodeValue(WPNNode* node)
-{
-
-}
+void WPNQueryServer::pushNodeValue(WPNNode* node) { }

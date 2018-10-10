@@ -37,7 +37,7 @@ void WPNNode::update(QJsonObject obj)
     setExtendedType   ( obj["EXTENDED_TYPE"].toString());
     setAccess         ( static_cast<Access::Values>(obj["ACCESS"].toInt()) );
     setDescription    ( obj["DESCRIPTION"].toString()) ;
-    setValue          ( obj["VALUE"].toArray() );
+    setValue          ( obj["VALUE"].toVariant() );
 
 }
 
@@ -295,7 +295,7 @@ void WPNNode::setListening(bool listen, WPNDevice *target)
     if ( listen && !m_listeners.contains(target) )
         m_listeners.push_back(target);
 
-    else m_listeners.removeAll(target);
+    else if ( !listen ) m_listeners.removeAll(target);
 }
 
 void WPNNode::addSubnode(WPNNode *node)
