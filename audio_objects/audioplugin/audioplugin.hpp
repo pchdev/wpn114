@@ -113,7 +113,10 @@ public:
 
     Q_INVOKABLE void showEditorWindow();
 
+    Q_INVOKABLE void set(QString name, float value);
     Q_INVOKABLE void set(int index, float value);
+
+    Q_INVOKABLE float get(QString name) const;
     Q_INVOKABLE float get(int index) const;
     Q_INVOKABLE void save(QString name);
 

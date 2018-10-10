@@ -116,9 +116,19 @@ QStringList AudioPlugin::parameters()
     return m_parameters;
 }
 
+float AudioPlugin::get(QString name) const
+{
+    return m_plugin_hdl->get_parameter_value(m_parameters.indexOf(name));
+}
+
 float AudioPlugin::get(int index) const
 {
     return m_plugin_hdl->get_parameter_value(index);
+}
+
+void AudioPlugin::set(QString name, float value)
+{
+    m_plugin_hdl->set_parameter_value(m_parameters.indexOf(name), value);
 }
 
 void AudioPlugin::set(int index, float value)

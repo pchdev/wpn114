@@ -8,7 +8,6 @@ WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketSer
     m_osc_hdl(new OSCHandler)
 {
     // default settings & extensions
-
     m_settings.name             = "WPN-SERVER";
     m_settings.tcp_port         = 5678;
     m_settings.osc_port         = 1234;
@@ -21,7 +20,7 @@ WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketSer
     m_settings.extensions.description       = true;
     m_settings.extensions.extended_type     = true;
     m_settings.extensions.listen            = true;
-    m_settings.extensions.path_added        = false;
+    m_settings.extensions.path_added        = true;
     m_settings.extensions.path_changed      = false;
     m_settings.extensions.path_removed      = false;
     m_settings.extensions.path_renamed      = false;
@@ -48,6 +47,8 @@ void WPNQueryServer::componentComplete()
 
     QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariant)),
                       this, SLOT(onValueUpdate(QString,QVariant)));
+
+    QObject::connect( this, SIGNAL(nodeAdded(WPNNode*)), this, SLOT(onNodeAdded(WPNNode*)));
 
     m_ws_server->start();
 
@@ -97,6 +98,18 @@ void WPNQueryServer::onDisconnection()
     m_clients.removeAll(sender);
 
     emit disconnection();
+}
+
+void WPNQueryServer::onNodeAdded(WPNNode* node)
+{
+    if ( !m_clients.isEmpty() )
+    {
+        QJsonObject command, data;
+
+        command.insert      ( "COMMAND", "PATH_ADDED" );
+        data.insert         ( node->name(), node->toJson() );
+        command.insert      ( "DATA", data );
+    }
 }
 
 void WPNQueryServer::onClientHttpQuery(QString query)

@@ -66,6 +66,10 @@ class WPNDevice : public QObject
     Q_INVOKABLE void explore    ( ) const;   
     Q_INVOKABLE QVariant value  ( QString method ) const;
 
+    signals:
+    void nodeAdded      ( WPNNode* );
+    void nodeRemoved    ( QString );
+
     public slots:
     void onValueUpdate  ( QString method, QVariant arguments );
     void onValueUpdate  ( QJsonObject obj );

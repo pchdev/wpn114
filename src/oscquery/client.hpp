@@ -63,6 +63,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void onDisconnected          ( );
     void onBinaryMessageReceived ( QByteArray message );
     void onTextMessageReceived   ( QString message );
+    void onCommand  ( QJsonObject command );
 
     private:
     bool m_direct;

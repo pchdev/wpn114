@@ -44,6 +44,7 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     void onNewConnection        ( WPNWebSocket* client );
     void onDisconnection        ( );
     void onHttpRequest          ( QTcpSocket* sender, QString req );
+    void onNodeAdded            ( WPNNode *node );
     QString hostInfoJson        ( );
     QString namespaceJson       ( QString method );
 

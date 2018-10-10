@@ -62,13 +62,14 @@ void WPNDevice::setSingleDevice(bool single)
 void WPNDevice::addNode(WPNDevice* dev, WPNNode *node)
 {
     // get node's parent
-
     QStringList spl = node->path().split('/');
     spl.removeLast();
     QString path = spl.join('/');
 
     auto parent = findOrCreateNode(dev, path);
     parent->addSubnode(node);
+
+    dev->nodeAdded(node);
 }
 
 WPNNode* WPNDevice::findOrCreateNode(WPNDevice* dev, QString path)

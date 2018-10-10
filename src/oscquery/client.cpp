@@ -121,6 +121,32 @@ void WPNQueryClient::onTextMessageReceived(QString message)
     else if ( obj.contains("OSC_PORT")) onHostInfoReceived(obj);    
 }
 
+void WPNQueryClient::onCommand(QJsonObject command)
+{
+    auto type = command["COMMAND"].toString();
+    auto data = command["DATA"].toObject();
+
+    if ( type == "PATH_ADDED" )
+    {
+        for ( const auto& key : data.keys() )
+        {
+            auto obj        = data[key].toObject();
+            WPNNode* node   = m_root_node->subnode(obj["FULL_PATH"].toString());
+
+            if ( node )
+            {
+                node->setDevice ( this );
+                node->update    ( obj );
+            }
+            else
+            {
+                node = WPNNode::fromJson(obj, this);
+                m_root_node->addSubnode(node);
+            }
+        }
+    }
+}
+
 void WPNQueryClient::onHttpReply(QNetworkReply* reply)
 {
     QByteArray data = reply->readAll();
