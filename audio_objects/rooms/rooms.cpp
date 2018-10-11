@@ -189,103 +189,63 @@ void RoomSetup::clearNodes(QQmlListProperty<RoomNode>* list)
 
 //---------------------------------------------------------------------------------------------------------
 
-RoomSource::RoomSource()
+RoomSource::RoomSource() : m_position(QVector3D(0.5, 0.5, 0.5))
 {
     SETN_IN ( 0 );
 }
 
-inline qreal extractPropertyValueForChannel(QVariant& target, quint16 ch)
+void RoomSource::componentComplete()
 {
-    if ( QString(target.typeName()) == "QJSValue" )
-    {
-        QVariantList l = target.toList();
-        return l[ch].toDouble();
-
-    }
-    else if ( target.type() == QMetaType::Double )
-        return target.toDouble();
-
-    else if ( target.type() == QMetaType::QVariantList )
-        return target.toList()[ch].toDouble();
-
-    return 0;
+    SETN_OUT  ( m_max_outputs );
 }
 
 void RoomSource::update()
 {
-    m_channels.clear();
-
-    for ( quint16 ch = 0; ch < m_num_outputs; ++ch )
+    if ( m_diffuse > 0 )
     {
-        RoomChannel channel;
+        qreal ellwidth  = m_diffuse*(m_bias/0.5)/2.0;
+        qreal ellheight = 1.0/ellwidth/2.0;
 
-        auto l = m_position.toList();
-        auto chl = l[ch].toList();
-
-        QVector3D position(chl[0].toDouble(), chl[1].toDouble(), chl[2].toDouble());
-
-        qreal diffuse   = extractPropertyValueForChannel(m_diffuse, ch);
-        qreal bias      = 0.5;
-        qreal rotate    = 0.0;
-
-        if ( !m_bias.isNull()   ) extractPropertyValueForChannel(m_bias, ch);
-        if ( !m_rotate.isNull() ) extractPropertyValueForChannel(m_rotate, ch);
-
-        if ( diffuse > 0)
-        {
-            // compute ellipse width & height
-            // and the four highest axis point positions
-            qreal ellwidth    = diffuse*(bias/0.5);
-            qreal ellheight   = diffuse*(0.5/bias);
-
-            auto elltop      = QVector3D(position.x(), position.y()+ellheight/2.0, position.z());
-            auto ellbottom   = QVector3D(position.x(), position.y()-ellheight/2.0, position.z());
-            auto ellleft     = QVector3D(position.x()-ellwidth/2.0, position.y(), position.z());
-            auto ellright    = QVector3D(position.x()+ellwidth/2.0, position.y(), position.z());
-
-            channel << elltop << ellbottom << ellleft << ellright;
-            qDebug() << "[ROOMS] channel" << channel;
-        }
-
-        else channel << position;
-        m_channels << channel;
+        // rotate todo
+        m_extremities[0] = QVector3D(m_position.x(), m_position.y()+ellheight, m_position.z());
+        m_extremities[1] = QVector3D(m_position.x(), m_position.y()-ellheight, m_position.z());
+        m_extremities[2] = QVector3D(m_position.x()-ellwidth, m_position.y(), m_position.z());
+        m_extremities[3] = QVector3D(m_position.x()+ellwidth, m_position.y(), m_position.z());
     }
 }
 
-void RoomSource::componentComplete()
-{
-    // TODO: we shouldn't have to do this
-    // this should be handled directly by StreamNode
-    for ( const auto& subn : m_subnodes )
-        if ( subn->numOutputs() > m_max_outputs )
-            m_max_outputs = subn->numOutputs();
-
-    SETN_OUT ( m_max_outputs );
-    update();
-}
-
-void RoomSource::setBias(QVariant bias)
-{
-    m_bias = bias;
-    update();
-}
-
-void RoomSource::setDiffuse(QVariant diffuse)
-{
-    m_diffuse = diffuse;
-    update();
-}
-
-void RoomSource::setPosition(QVariant position)
+void RoomSource::setPosition(QVector3D position)
 {
     m_position = position;
     update();
 }
 
-void RoomSource::setRotate(QVariant rotate)
+void RoomSource::setDiffuse(qreal diffuse)
+{
+    m_diffuse = diffuse;
+    update();
+}
+
+void RoomSource::setBias(qreal bias)
+{
+    m_bias = bias;
+    update();
+}
+
+void RoomSource::setRotate(qreal rotate)
 {
     m_rotate = rotate;
     update();
+}
+
+void RoomSource::setX(qreal x)
+{
+    m_position.setX(x);
+}
+
+void RoomSource::setY(qreal y)
+{
+    m_position.setY(y);
 }
 
 void RoomSource::setFixed(bool fixed)
@@ -293,28 +253,98 @@ void RoomSource::setFixed(bool fixed)
     m_fixed = fixed;
 }
 
-void RoomSource::allocateCoeffVector(quint16 size)
-{
-    m_coeffs.clear();
-    m_coeffs.fill(QVector<qreal>(), m_num_outputs);
-
-    for ( auto& ch : m_coeffs )
-        ch.fill(0.0, size);
-}
-
-void RoomSource::setCoeffs(QVector<QVector<qreal>> coeffs)
-{
-    m_coeffs = coeffs;
-}
-
 void RoomSource::userInitialize(qint64 nsamples)
 {
-    update();
+
 }
 
-float** RoomSource::userProcess(float**buf, qint64 nsamples)
+float** RoomSource::userProcess(float** buf, qint64 nsamples)
 {
-    return m_subnodes[0]->process(buf, nsamples);
+    auto out = m_out;
+    auto nout = m_num_outputs;
+
+    for ( const auto& node : m_subnodes )
+        StreamNode::mergeBuffers( out, node->userProcess(buf, nsamples),
+                                  nout, node->numOutputs(), nsamples );
+
+    return out;
+}
+
+// STEREO
+
+RoomStereoSource::RoomStereoSource() :
+    m_left(new RoomSource),
+    m_right(new RoomSource)
+{
+
+}
+
+void RoomStereoSource::setXspread(qreal xspread)
+{
+    m_xspread = xspread;
+
+    auto lx = m_left->position();
+    auto rx = m_right->position();
+
+    lx.setX(0.5-xspread);
+    rx.setX(0.5+xspread);
+
+    m_left  ->setPosition(lx);
+    m_right ->setPosition(rx);
+}
+
+void RoomStereoSource::setYspread(qreal yspread)
+{
+    m_yspread = yspread;
+
+    auto ly = m_left->position();
+    auto ry = m_right->position();
+
+    ly.setY(0.5-yspread);
+    ry.setY(0.5+yspread);
+
+    m_left  ->setPosition(ly);
+    m_right ->setPosition(ry);
+}
+
+void RoomStereoSource::setDiffuse(qreal diffuse)
+{
+    m_diffuse = diffuse;
+
+    m_left  ->setDiffuse(diffuse);
+    m_right ->setDiffuse(diffuse);
+}
+
+void RoomStereoSource::setRotate(qreal rotate)
+{
+    m_rotate = rotate;
+
+    m_left  ->setRotate(rotate);
+    m_right ->setRotate(rotate);
+}
+
+void RoomStereoSource::setBias(qreal bias)
+{
+    m_bias = bias;
+
+    m_left  ->setBias(bias);
+    m_right ->setBias(bias);
+}
+
+void RoomStereoSource::setX(qreal x)
+{
+    m_x = x;
+
+    m_left  ->setX(x);
+    m_right ->setX(x);
+}
+
+void RoomStereoSource::setY(qreal y)
+{
+    m_y = y;
+
+    m_left  ->setY(y);
+    m_right ->setY(y);
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -349,30 +379,7 @@ qreal Rooms::spgain(QVector3D src, QVector4D ls)
 
 void Rooms::computeCoeffs(RoomSource& source)
 {
-    auto schs       = source.channels();
-    auto& coeffs    = source.coeffs();
-    quint16 ch      = 0;
 
-    for ( const auto& sch : schs )
-    {
-        auto& channel_coeffs = coeffs[ch];
-
-        for ( quint16 sp = 0; sp < m_speakers.size(); ++sp)
-        {
-            qreal maxgain = 0;
-            for ( const auto& mirror : sch )
-            {
-                // for each source's point of diffusion
-                // we choose the one with the maximum gain
-                qreal g = spgain(mirror, m_speakers[sp]);
-                if ( g > maxgain ) maxgain = g;
-            }
-            channel_coeffs[sp] = maxgain;
-        }
-        ++ch;
-    }
-
-    qDebug() << "[ROOMS] Setting coeffs" << coeffs;
 }
 
 void Rooms::userInitialize(qint64 nsamples)
@@ -381,8 +388,6 @@ void Rooms::userInitialize(qint64 nsamples)
     {
         auto source = qobject_cast<RoomSource*>(node);
         if ( ! source ) continue;
-
-        source->allocateCoeffVector(m_num_outputs);
 
         // manage coefficents for static sources
         if ( source->fixed() ) computeCoeffs(*source);
@@ -408,12 +413,12 @@ float** Rooms::process(float** buf, qint64 nsamples)
         // if source's not supposed to move, dont re-calculate the coeffs
         if ( !source->fixed() ) computeCoeffs(*source);
 
-        auto stc = source->coeffs();
+        /*auto stc = source->coeffs();
 
         for ( quint16 ch = 0; ch < snch; ++ch )
             for ( quint16 o = 0; o < nout; ++o )
                 for (quint16 s = 0; s < nsamples; ++s)
-                    out[o][s] += in[ch][s] * stc[ch][o];
+                    out[o][s] += in[ch][s] * stc[ch][o];*/
     }
 
     return out;

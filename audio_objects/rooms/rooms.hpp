@@ -107,16 +107,20 @@ class RoomSetup : public QObject, public QQmlParserStatus
 
 using RoomChannel = QVector<QVector3D>;
 
+
+
 class RoomSource : public StreamNode, public QQmlParserStatus
 {
     Q_OBJECT
 
-    Q_PROPERTY  ( QVariant position READ position WRITE setPosition )
-    Q_PROPERTY  ( QVariant diffuse READ diffuse WRITE setDiffuse )
-    Q_PROPERTY  ( QVariant bias READ bias WRITE setBias )
-    Q_PROPERTY  ( QVariant rotate READ rotate WRITE setRotate )
+    Q_PROPERTY  ( QVector3D position READ position WRITE setPosition )
+    Q_PROPERTY  ( qreal diffuse READ diffuse WRITE setDiffuse )
+    Q_PROPERTY  ( qreal bias READ bias WRITE setBias )
+    Q_PROPERTY  ( qreal rotate READ rotate WRITE setRotate )
     Q_PROPERTY  ( bool fixed READ fixed WRITE setFixed )
     Q_PROPERTY  ( int nchannels READ nchannels )
+    Q_PROPERTY  ( qreal x READ x WRITE setX )
+    Q_PROPERTY  ( qreal y READ y WRITE setY )
 
     public:
     RoomSource();
@@ -127,36 +131,70 @@ class RoomSource : public StreamNode, public QQmlParserStatus
     virtual float** userProcess ( float** buf, qint64 le ) override;
     virtual void userInitialize ( qint64 ) override;
 
-    QVariant position   ( ) const { return m_position; }
-    QVariant diffuse    ( ) const { return m_diffuse; }
-    QVariant bias       ( ) const { return m_bias; }
-    QVariant rotate     ( ) const { return m_rotate; }
-    quint16 nchannels   ( ) const { return m_nchannels; }
+    virtual quint16 nchannels   ( ) const { return 1; }
+
+    qreal x ( ) const { return m_x; }
+    qreal y ( ) const { return m_y; }
+
+    QVector3D position  ( ) const { return m_position; }
+    qreal diffuse       ( ) const { return m_diffuse; }
+    qreal bias          ( ) const { return m_bias; }
+    qreal rotate        ( ) const { return m_rotate; }
     bool fixed          ( ) const { return m_fixed; }
 
-    QVector<RoomChannel> const& channels() const { return m_channels; }
-    QVector<QVector<qreal>>& coeffs() { return m_coeffs; }
+    virtual void setX           ( qreal x );
+    virtual void setY           ( qreal y );
+    virtual void setPosition    ( QVector3D position );
+    virtual void setDiffuse     ( qreal diffuse );
+    virtual void setRotate      ( qreal rotate );
+    virtual void setBias        ( qreal bias );
+    virtual void setFixed       ( bool fixed );
 
-    void setCoeffs          ( QVector<QVector<qreal>> coeffs );
-    void setPosition        ( QVariant position );
-    void setDiffuse         ( QVariant diffuse );
-    void setRotate          ( QVariant rotate );
-    void setBias            ( QVariant bias );
-    void setFixed           ( bool fixed );
-
-    void allocateCoeffVector ( quint16 size );
-
-    private:    
+    protected:
     void update();
 
     bool m_fixed;
-    QVector<QVector<qreal>> m_coeffs;
-    QVector<RoomChannel> m_channels;
-    quint16 m_nchannels;
-    QVariant m_position;
-    QVariant m_diffuse;
-    QVariant m_rotate;
-    QVariant m_bias;
+    qreal m_x = 0.5;
+    qreal m_y = 0.5;
+    QVector3D m_position;
+    qreal m_diffuse = 0;
+    qreal m_rotate = 0;
+    qreal m_bias = 0.5;
+    QVector3D m_extremities[4];
+};
+
+class RoomStereoSource : public RoomSource
+{
+    Q_OBJECT
+
+    Q_PROPERTY  ( qreal xspread READ xspread WRITE setXspread )
+    Q_PROPERTY  ( qreal yspread READ yspread WRITE setYspread )
+    Q_PROPERTY  ( RoomSource* left READ left )
+    Q_PROPERTY  ( RoomSource* right READ right )
+
+    public:
+    RoomStereoSource();
+
+    qreal xspread       ( ) const { return m_xspread; }
+    qreal yspread       ( ) const { return m_yspread; }
+    RoomSource* left    ( )  { return m_left; }
+    RoomSource* right   ( ) { return m_right; }
+
+    void setX           ( qreal x ) override;
+    void setY           ( qreal y ) override;
+    void setXspread     ( qreal xspread );
+    void setYspread     ( qreal yspread );
+    void setDiffuse     ( qreal diffuse ) override;
+    void setRotate      ( qreal rotate ) override;
+    void setBias        ( qreal bias ) override;
+    void setPosition    ( QVector3D  ) override {}
+
+    private:
+    qreal m_xspread;
+    qreal m_yspread;
+    RoomSource* m_left;
+    RoomSource* m_right;
+
 };
 
 class Rooms : public StreamNode

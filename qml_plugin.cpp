@@ -45,6 +45,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<MultiSampler, 1>            ( "WPN114", 1, 0, "MultiSampler" );
     qmlRegisterType<RoomSetup, 1>               ( "WPN114", 1, 0, "RoomSetup" );
     qmlRegisterType<RoomSource, 1>              ( "WPN114", 1, 0, "RoomSource" );
+    qmlRegisterType<RoomStereoSource, 1>        ( "WPN114", 1, 0, "RoomStereoSource" );
     qmlRegisterType<Rooms, 1>                   ( "WPN114", 1, 0, "Rooms" );
     qmlRegisterType<SpeakerRing, 1>             ( "WPN114", 1, 0, "SpeakerRing" );
     qmlRegisterType<Sharpen, 1>                 ( "WPN114", 1, 0, "Sharpen" );
