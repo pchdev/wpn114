@@ -98,6 +98,11 @@ WPNNode* WPNDevice::getNode(QString path)
     return nullptr;
 }
 
+WPNNode* WPNDevice::get(QString path)
+{
+    return m_root_node->subnode(path);
+}
+
 void WPNDevice::onValueUpdate(QJsonObject obj)
 {
 
