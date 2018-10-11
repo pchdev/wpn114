@@ -142,9 +142,9 @@ void WPNQueryClient::onCommand(QJsonObject command)
                 node->setDevice ( this );
                 node->update ( obj );
             }
-            else node = WPNNode::fromJson(obj, this);
 
-            m_root_node->addSubnode(node);
+            else node = WPNNode::fromJson(obj, this);
+            WPNDevice::addNode(this, node);
         }
     }
 }
@@ -214,7 +214,7 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
         QJsonObject jsnode = contents[key].toObject();
 
         if ( auto node = m_root_node->subnode(jsnode["FULL_PATH"].toString()))
-        {
+        {            
             node->setDevice ( this );
             node->update    ( jsnode );
 
@@ -222,7 +222,7 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
         }
 
         auto node = WPNNode::fromJson(jsnode, this);
-        m_root_node->addSubnode(node);
+        WPNDevice::addNode(this, node);
     }
 
     emit treeComplete();

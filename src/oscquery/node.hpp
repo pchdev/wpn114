@@ -123,6 +123,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     WPNNode* parent         ( ) { return m_parent; }
     void post               ( ) const;
 
+    QString parentPath ( ) const;
     void setName    ( QString name );
     void setDevice  ( WPNDevice* device );
     void setParent  ( WPNNode* parent );

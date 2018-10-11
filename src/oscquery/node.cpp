@@ -50,7 +50,10 @@ WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr), m_target_property(nul
     m_attributes.critical       = false;
 }
 
-WPNNode::~WPNNode() { }
+WPNNode::~WPNNode()
+{
+    m_parent->removeSubnode(this);
+}
 
 void WPNNode::componentComplete()
 {
@@ -110,6 +113,13 @@ void WPNNode::setDevice         ( WPNDevice* device) { m_device = device; }
 void WPNNode::setParent(WPNNode* parent)
 {
     m_parent = parent;
+}
+
+QString WPNNode::parentPath() const
+{
+    auto spl = m_attributes.path.split('/');
+    spl.removeLast();
+    return spl.join('/');
 }
 
 QJsonObject WPNNode::attributesJson() const

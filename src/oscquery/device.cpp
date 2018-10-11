@@ -74,9 +74,7 @@ void WPNDevice::addNode(WPNDevice* dev, WPNNode *node)
 
 WPNNode* WPNDevice::findOrCreateNode(WPNDevice* dev, QString path)
 {
-    QStringList split = path.split('/');
-    split.removeFirst(); // first is space
-
+    QStringList split = path.split('/', QString::SkipEmptyParts);
     WPNNode* target = dev->rootNode();
 
     for ( const auto& node : split )
@@ -127,4 +125,10 @@ QVariant WPNDevice::value(QString method) const
     auto node = m_root_node->subnode(method);
     if ( node ) return node->value();
     else return QVariant();
+}
+
+void WPNDevice::removeNode(QString path)
+{
+    auto node = m_root_node->subnode(path);
+    if ( node ) node->parent()->removeSubnode(node);
 }
