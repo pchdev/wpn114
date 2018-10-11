@@ -116,7 +116,8 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) { }
 
-    virtual void setTarget(const QQmlProperty& property);
+    virtual void setTarget(const QQmlProperty& property);    
+    void setTarget(QObject* target, const QMetaProperty& property);
 
     QString name            ( ) const { return m_name; }
     WPNDevice* device       ( ) const { return m_device; }
@@ -162,7 +163,8 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     void setClipmode        ( Clipmode::Values clipmode );
     void setExtendedType    ( QString extended_type );
 
-    void setTypeFromTag     ( QString tag );
+    void setTypeFromTag         ( QString tag );
+    void setTypeFromMetaType    ( int type );
 
     // tree/hierarchy ----------------------------------------------------
 
@@ -185,6 +187,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
 
     public slots:
     void propertyChanged    ( );
+    void metaPropertyChanged ( );
 
     protected:
     Attributes      m_attributes;
@@ -193,6 +196,8 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     WPNNode*        m_parent;
 
     QQmlProperty    m_target_property;
+    QMetaProperty   m_meta_property;
+    QObject*        m_target;
 
     bool  m_listening;
 

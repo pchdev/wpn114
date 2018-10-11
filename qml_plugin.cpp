@@ -16,6 +16,7 @@
 #include <audio_objects/rooms/rooms.hpp>
 #include <audio_objects/mangler/mangler.hpp>
 #include <audio_objects/sharpen/sharpen.hpp>
+#include <audio_objects/multisampler/multisampler.hpp>
 #endif
 
 #ifdef WPN114_MIDI
@@ -41,6 +42,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<StereoPanner, 1>            ( "WPN114", 1, 0, "StereoPanner" );
     qmlRegisterType<Sampler, 1>                 ( "WPN114", 1, 0, "Sampler" );
     qmlRegisterType<StreamSampler, 1>           ( "WPN114", 1, 0, "StreamSampler" );
+    qmlRegisterType<MultiSampler, 1>            ( "WPN114", 1, 0, "MultiSampler" );
     qmlRegisterType<RoomSetup, 1>               ( "WPN114", 1, 0, "RoomSetup" );
     qmlRegisterType<RoomSource, 1>              ( "WPN114", 1, 0, "RoomSource" );
     qmlRegisterType<Rooms, 1>                   ( "WPN114", 1, 0, "Rooms" );

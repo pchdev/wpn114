@@ -84,22 +84,6 @@ void WPNNode::componentComplete()
     }
 }
 
-void WPNNode::propertyChanged()
-{
-    // no need to push it back to qmlproperty
-    QVariant value = m_target_property.read();
-    emit valueReceived(value);
-
-    if ( value != m_attributes.value )
-    {
-        emit valueChanged(value);
-        m_attributes.value = value;
-    }
-
-    for ( const auto& listener : m_listeners )
-         listener->pushNodeValue(this);
-}
-
 void WPNNode::setAccess         ( Access::Values access ) { m_attributes.access = access; }
 void WPNNode::setClipmode       ( Clipmode::Values mode ) { m_attributes.clipmode = mode; }
 void WPNNode::setCritical       ( bool critical ) { m_attributes.critical = critical; }
@@ -113,6 +97,7 @@ void WPNNode::setDevice         ( WPNDevice* device) { m_device = device; }
 void WPNNode::setParent(WPNNode* parent)
 {
     m_parent = parent;
+    if ( !m_device ) m_device = parent->device();
 }
 
 QString WPNNode::parentPath() const
@@ -156,11 +141,9 @@ QJsonObject WPNNode::attributeJson(QString attr) const
     return obj;
 }
 
-void WPNNode::setTarget(const QQmlProperty& property)
+void WPNNode::setTypeFromMetaType(int type)
 {
-    m_target_property = property;
-
-    switch ( property.propertyType() )
+    switch(type)
     {
     case QMetaType::Bool: m_attributes.type = Type::Bool; break;
     case QMetaType::Float: m_attributes.type = Type::Float; break;
@@ -172,10 +155,66 @@ void WPNNode::setTarget(const QQmlProperty& property)
     case QMetaType::QVector4D: m_attributes.type = Type::Vec4f; break;
     case QMetaType::QVariantList: m_attributes.type = Type::List; break;
     case QMetaType::QVariant: m_attributes.type = Type::List; break;
+    default: m_attributes.type = Type::List; break;
     }
+}
+
+void WPNNode::setTarget(const QQmlProperty& property)
+{
+    m_target_property = property;    
+    setTypeFromMetaType(property.propertyType());
 
     m_attributes.value = property.read();
     m_target_property.connectNotifySignal(this, SLOT(propertyChanged()));
+}
+
+void WPNNode::setTarget(QObject* sender, const QMetaProperty& property)
+{
+    m_meta_property = property;
+    setTypeFromMetaType(property.type());
+
+    m_attributes.value = property.read(sender);
+
+    auto mmcount = metaObject()->methodCount();
+    QMetaMethod mmethod;
+
+    for ( int i = 0; i < mmcount; ++i )
+        if ( metaObject()->method(i).name() == QString("metaPropertyChanged"))
+            mmethod = metaObject()->method(i);
+
+    if ( property.hasNotifySignal() )
+        QObject::connect(sender, property.notifySignal(), this, mmethod );
+}
+
+void WPNNode::metaPropertyChanged()
+{
+    QVariant value = m_meta_property.read(m_target);
+    emit valueReceived(value);
+
+    if ( value != m_attributes.value )
+    {
+        emit valueChanged(value);
+        m_attributes.value = value;
+    }
+
+    for ( const auto& listener : m_listeners )
+         listener->pushNodeValue(this);
+}
+
+void WPNNode::propertyChanged()
+{
+    // no need to push it back to qmlproperty
+    QVariant value = m_target_property.read();
+    emit valueReceived(value);
+
+    if ( value != m_attributes.value )
+    {
+        emit valueChanged(value);
+        m_attributes.value = value;
+    }
+
+    for ( const auto& listener : m_listeners )
+         listener->pushNodeValue(this);
 }
 
 QString WPNNode::typeTag() const
@@ -265,6 +304,8 @@ void WPNNode::setValueQuiet(QVariant value)
     if ( m_target_property.isWritable())
         m_target_property.write(value);
 
+    if ( m_target ) m_meta_property.write(m_target, value);
+
     emit valueReceived(value);
 
     if ( m_attributes.value != value )
@@ -310,6 +351,10 @@ void WPNNode::setListening(bool listen, WPNDevice *target)
 
 void WPNNode::addSubnode(WPNNode *node)
 {
+    if ( node->name().isEmpty())
+        node->setName("undefined");
+
+    node->setPath           ( m_attributes.path +"/"+node->name() );
     node->setParent         ( this );
     node->setDevice         ( m_device );
     m_children.push_back    ( node );

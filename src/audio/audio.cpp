@@ -76,14 +76,33 @@ void StreamNode::setExposePath(QString path)
     m_exp_path = path;
 
     if ( m_exp_device )
-    {
-        m_exp_node = WPNDevice::findOrCreateNode(m_exp_device, path);
-    }
+         m_exp_node = WPNDevice::findOrCreateNode(m_exp_device, path);
 
     else if ( auto dev = WPNDevice::instance() )
     {
         m_exp_device = dev;
         m_exp_node = WPNDevice::findOrCreateNode(dev, path);
+    }
+
+    else return;
+
+    auto pcount = metaObject()->propertyCount();
+
+    for ( quint16 i = 0; i < pcount; ++i )
+    {
+        auto property = metaObject()->property(i);
+        QString name = property.name();
+
+        if ( name == "parentStream" ||
+             name == "subnodes" ||
+             name == "exposeDevice" ||
+             name == "exposePath" ) continue;
+
+        WPNNode* node = new WPNNode;
+        node->setName   ( property.name() );
+        node->setTarget ( this, property );
+
+        m_exp_node->addSubnode(node);
     }
 }
 
