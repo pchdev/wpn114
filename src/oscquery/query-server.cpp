@@ -182,7 +182,7 @@ void WPNQueryServer::onCommand(QJsonObject command_obj)
     {
         QString method = command_obj["DATA"].toString();
         auto node = m_root_node->subnode(method);
-        node->setListening(command == "LISTEN", listener);
+        if ( node ) node->setListening(command == "LISTEN", listener);
     }
     else if ( command == "START_OSC_STREAMING" )
     {

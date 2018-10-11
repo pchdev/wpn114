@@ -171,6 +171,8 @@ void WPNNode::setTarget(const QQmlProperty& property)
 void WPNNode::setTarget(QObject* sender, const QMetaProperty& property)
 {
     m_meta_property = property;
+    m_target = sender;
+
     setTypeFromMetaType(property.type());
 
     m_attributes.value = property.read(sender);

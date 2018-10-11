@@ -66,8 +66,13 @@ void WPNDevice::addNode(WPNDevice* dev, WPNNode *node)
     spl.removeLast();
     QString path = spl.join('/');
 
-    auto parent = findOrCreateNode(dev, path);
-    parent->addSubnode(node);
+    if ( path.isEmpty() || path == "/" || path == " ")
+        node->setParent(dev->rootNode());
+    else
+    {
+        auto parent = findOrCreateNode(dev, path);
+        parent->addSubnode(node);
+    }
 
     dev->nodeAdded(node);
 }

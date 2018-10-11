@@ -5,6 +5,15 @@
 #include <src/oscquery/node.hpp>
 #include <memory>
 
+static const QStringList g_ignore = {
+    "parentStream", "subnodes", "exposeDevice", "objectName", "exposePath"
+};
+
+static const QStringList g_stream =
+{
+    "active", "mute", "numInputs", "numOutputs", "parentChannels", "level", "dBlevel"
+};
+
 StreamNode::StreamNode() : m_level(1.0), m_db_level(0.0),
     m_num_inputs(0), m_num_outputs(0), m_max_outputs(0), m_parent_channels(0),
     m_mute(false), m_active(false),
@@ -88,21 +97,22 @@ void StreamNode::setExposePath(QString path)
 
     auto pcount = metaObject()->propertyCount();
 
+    auto stream     = m_exp_node->createSubnode("control");
+    auto parameters = m_exp_node->createSubnode("parameters");
+
     for ( quint16 i = 0; i < pcount; ++i )
     {
         auto property = metaObject()->property(i);
         QString name = property.name();
 
-        if ( name == "parentStream" ||
-             name == "subnodes" ||
-             name == "exposeDevice" ||
-             name == "exposePath" ) continue;
+        WPNNode* node;
 
-        WPNNode* node = new WPNNode;
-        node->setName   ( property.name() );
+        if      ( g_ignore.contains(name) ) continue;
+        else if ( g_stream.contains(name) )
+             node = stream->createSubnode(property.name());
+        else node = parameters->createSubnode(property.name());
+
         node->setTarget ( this, property );
-
-        m_exp_node->addSubnode(node);
     }
 }
 
