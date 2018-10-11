@@ -50,6 +50,8 @@ class StreamNode : public QObject
     StreamNode();
     static void allocateBuffer  ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void resetBuffer     ( float**& buffer, quint16 nchannels, quint16 nsamples );
+    static void mergeBuffers    ( float**& lhs, float **rhs, quint16 lnchannels,
+                                  quint16 rnchannels, quint16 nsamples );
 
     virtual float** userProcess ( float** buf, qint64 le ) = 0;
     virtual void userInitialize ( qint64 ) = 0;

@@ -52,7 +52,8 @@ audio {
         audio_objects/sampler/sampler.cpp           \
         audio_objects/rooms/rooms.cpp               \
         audio_objects/mangler/mangler.cpp           \
-        audio_objects/sharpen/sharpen.cpp
+        audio_objects/sharpen/sharpen.cpp           \
+        audio_objects/multisampler/multisampler.cpp
     HEADERS +=                                      \
         src/audio/audio.hpp                         \
         audio_objects/sine/sine.hpp                 \
@@ -61,7 +62,8 @@ audio {
         audio_objects/sampler/sampler.hpp           \
         audio_objects/rooms/rooms.hpp               \
         audio_objects/mangler/mangler.hpp           \
-        audio_objects/sharpen/sharpen.hpp
+        audio_objects/sharpen/sharpen.hpp           \
+        audio_objects/multisampler/multisampler.hpp
 }
 
 midi {
@@ -97,6 +99,7 @@ network {
 }
 
 SOURCES += qml_plugin.cpp
+
 HEADERS += qml_plugin.hpp
 
 # Default rules for deployment.

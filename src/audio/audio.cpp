@@ -189,6 +189,14 @@ void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 nsample
         memset(buffer[ch], 0.f, sizeof(float)*nsamples);
 }
 
+void StreamNode::mergeBuffers(float**& lhs, float** rhs, quint16 lnchannels,
+                              quint16 rnchannels, quint16 nsamples )
+{
+    for ( quint16 ch = 0; ch < rnchannels; ++ch )
+        for ( quint16 s = 0; s < nsamples; ++s )
+            lhs[ch][s] += rhs[ch][s];
+}
+
 void StreamNode::initialize(StreamProperties properties)
 {
     m_stream_properties = properties;
