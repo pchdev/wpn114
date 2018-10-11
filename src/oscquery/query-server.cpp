@@ -39,19 +39,12 @@ WPNQueryServer::~WPNQueryServer()
 
 void WPNQueryServer::componentComplete()
 {
-    QObject::connect( m_ws_server, SIGNAL(newConnection(WPNWebSocket*)),
-                      this, SLOT(onNewConnection(WPNWebSocket*)));
-
-    QObject::connect( m_ws_server, SIGNAL(httpRequestReceived(QTcpSocket*,QString)),
-                      this, SLOT(onHttpRequest(QTcpSocket*,QString)));
-
-    QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariant)),
-                      this, SLOT(onValueUpdate(QString,QVariant)));
-
+    QObject::connect( m_ws_server, SIGNAL(newConnection(WPNWebSocket*)), this, SLOT(onNewConnection(WPNWebSocket*)));
+    QObject::connect( m_ws_server, SIGNAL(httpRequestReceived(QTcpSocket*,QString)), this, SLOT(onHttpRequest(QTcpSocket*,QString)));
+    QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariant)), this, SLOT(onValueUpdate(QString,QVariant)));
     QObject::connect( this, SIGNAL(nodeAdded(WPNNode*)), this, SLOT(onNodeAdded(WPNNode*)));
 
     m_ws_server->start();
-
     m_zeroconf.startServicePublish(
                 m_settings.name.toStdString().c_str(), "_oscjson._tcp", "local", m_settings.tcp_port);
 }
@@ -73,20 +66,11 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
     auto client = new WPNQueryClient(con);
     m_clients.push_back(client);   
 
-    QObject::connect ( client, SIGNAL(valueUpdate(QJsonObject)),
-                      this, SLOT(onValueUpdate(QJsonObject)));
-
-    QObject::connect ( client, SIGNAL(command(QJsonObject)),
-                       this, SLOT(onCommand(QJsonObject)));
-
-    QObject::connect ( client, SIGNAL(disconnected()),
-                       this, SLOT(onDisconnection()));
-
-    QObject::connect ( client, SIGNAL(httpMessageReceived(QString)),
-                       this, SLOT(onClientHttpQuery(QString)));
-
-    QObject::connect ( client, SIGNAL(valueUpdate(QString, QVariant)),
-                       this, SLOT(onValueUpdate(QString, QVariant)));
+    QObject::connect ( client, SIGNAL(valueUpdate(QJsonObject)), this, SLOT(onValueUpdate(QJsonObject)));
+    QObject::connect ( client, SIGNAL(command(QJsonObject)), this, SLOT(onCommand(QJsonObject)));
+    QObject::connect ( client, SIGNAL(disconnected()), this, SLOT(onDisconnection()));
+    QObject::connect ( client, SIGNAL(httpMessageReceived(QString)), this, SLOT(onClientHttpQuery(QString)));
+    QObject::connect ( client, SIGNAL(valueUpdate(QString, QVariant)), this, SLOT(onValueUpdate(QString, QVariant)));
 
     qDebug() << "[OSCQUERY-SERVER] New client connection:" << client->hostAddr();
     emit newConnection();
@@ -178,7 +162,6 @@ QString WPNQueryServer::namespaceJson(QString method)
         {
             // if node is a file
             // reply with the contents of the file
-
             if ( file->path().endsWith(".png"))
                 return HTTP::ReplyManager::formatFileResponse(file->data(), "image/png");
 

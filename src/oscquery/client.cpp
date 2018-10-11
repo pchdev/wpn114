@@ -20,6 +20,7 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler()), m_d
 
     m_http_manager = new QNetworkAccessManager(this);
     QObject::connect(m_http_manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpReply(QNetworkReply*)));
+    QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariant)), this, SLOT(onValueUpdate(QString,QVariant)));
 
     m_osc_hdl->listen(0);
 }
@@ -96,11 +97,11 @@ void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
         setHostAddr(service.ip().toString());
         m_host_port = service.port();
 
+        m_zconf.stopBrowser ( );
+        m_ws_con->connect   ( m_host_addr, m_host_port );
+
         qDebug() << "[OSCQUERY-CLIENT] zeroconf target acquired: "
                  << m_host_addr << m_host_port;
-
-        m_ws_con->connect   ( m_host_addr, m_host_port );
-        m_zconf.stopBrowser ( );
     }
 }
 

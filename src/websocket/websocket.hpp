@@ -37,6 +37,8 @@ class WPNWebSocket : public QObject
     void writeText    ( QString message );
     void writeBinary  ( QByteArray binary );
 
+    bool isConnected  ( ) const { return m_connected; }
+
     QString hostAddr  ( ) const { return m_host_addr; }
     QTcpSocket* tcpConnection() { return m_tcp_con; }
 
@@ -56,6 +58,7 @@ class WPNWebSocket : public QObject
 
     protected:
     bool m_mask;
+    bool m_connected;
     QString m_device;
     QString m_host_addr;
     quint16 m_host_port;

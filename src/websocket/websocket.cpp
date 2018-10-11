@@ -99,7 +99,7 @@ void WPNWebSocketServer::sendHandshakeResponse ( QTcpSocket* target, QString key
 
 // CLIENT ----------------------------------------------------------------------------------------------
 
-WPNWebSocket::WPNWebSocket(QString host_addr, quint16 port) : m_seed(0),
+WPNWebSocket::WPNWebSocket(QString host_addr, quint16 port) : m_seed(0), m_connected(false),
     m_host_addr(host_addr), m_host_port(port), m_mask(true), m_tcp_con(new QTcpSocket(this))
 {
     // direct client case
@@ -109,7 +109,7 @@ WPNWebSocket::WPNWebSocket(QString host_addr, quint16 port) : m_seed(0),
     QObject::connect(m_tcp_con, SIGNAL(bytesWritten(qint64)), this, SLOT(onBytesWritten(qint64)));
 }
 
-WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con), m_mask(false), m_seed(0)
+WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con), m_mask(false), m_seed(0), m_connected(true)
 {
     // server catching a client
     // the proxy is already connected, so nothing to do here, except chain signals
@@ -191,6 +191,7 @@ void WPNWebSocket::onHandshakeResponseReceived(QString resp)
         return;
     }
 
+    m_connected = true;
     emit connected();
 }
 
