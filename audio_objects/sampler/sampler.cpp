@@ -128,7 +128,7 @@ void StreamSampler::componentComplete()
     QObject::connect(m_streamer, SIGNAL(bufferLoaded()), this, SLOT(onNextBufferReady()));
 }
 
-void StreamSampler::userInitialize(qint64)
+void StreamSampler::initialize(qint64)
 {
     m_xfade_inc     = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_xfade, SAMPLERATE));
     m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
@@ -171,7 +171,7 @@ inline float lininterp(float x, float a, float b)
     return a + x * (b - a);
 }
 
-float** StreamSampler::userProcess(float** buf, qint64 nsamples)
+float** StreamSampler::process(float** buf, qint64 nsamples)
 {
     auto bufdata        = m_current_buffer;
     auto xfdata         = m_xfade_buffer;
@@ -491,7 +491,7 @@ void Sampler::stop()
     m_releasing = true;
 }
 
-void Sampler::userInitialize(qint64)
+void Sampler::initialize(qint64)
 {   
     m_xfade_inc     = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_xfade, SAMPLERATE));
     m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
@@ -504,7 +504,7 @@ void Sampler::userInitialize(qint64)
     m_xfade_point   = m_buffer_size-m_xfade_length;
 }
 
-float** Sampler::userProcess(float**, qint64 le)
+float** Sampler::process(float**, qint64 le)
 {
     auto bufdata        = m_buffer;
     auto bufnsamples    = m_buffer_size;

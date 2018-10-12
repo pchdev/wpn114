@@ -25,8 +25,8 @@ class Mangler : public StreamNode
     public:
     Mangler();
 
-    virtual void userInitialize(qint64) override;
-    virtual float** userProcess(float**, qint64) override;
+    virtual void initialize ( qint64 ) override;
+    virtual float** process ( float**, qint64 ) override;
 
     qreal inputGain         ( ) const { return m_input_gain; }
     qreal dryOut            ( ) const { return m_dry_out; }
@@ -61,8 +61,6 @@ class Mangler : public StreamNode
     qreal m_love;
     qreal m_jive;
     int m_attitude;
-
-
 };
 
 #endif // MANGLER_HPP

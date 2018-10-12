@@ -20,7 +20,6 @@ AudioPlugin::~AudioPlugin()
     delete m_view_container;
 }
 
-void AudioPlugin::classBegin() {}
 void AudioPlugin::componentComplete()
 {
     //          load plugin
@@ -71,12 +70,12 @@ void AudioPlugin::showEditorWindow()
     m_view_container->show();
 }
 
-void AudioPlugin::userInitialize(qint64 nsamples)
+void AudioPlugin::initialize(qint64 nsamples)
 {
     m_plugin_hdl->configure(m_stream_properties.sample_rate, m_stream_properties.block_size);
 }
 
-float** AudioPlugin::userProcess(float**input, qint64 nsamples)
+float** AudioPlugin::process(float**input, qint64 nsamples)
 {    
     if  ( m_num_inputs )
         m_plugin_hdl->process_audio(input, m_out, nsamples);

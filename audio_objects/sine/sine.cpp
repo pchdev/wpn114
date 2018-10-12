@@ -9,7 +9,7 @@ SinOsc::SinOsc() : StreamNode(), m_frequency(440.f), m_pos(0)
         m_wavetable[i] = sin ((float) i/WT_SIZE*M_PI*2 );
 }
 
-float** SinOsc::userProcess(float** buf, qint64 nsamples)
+float** SinOsc::process(float** buf, qint64 nsamples)
 {
     float level         = m_level;
     quint16 pos         = m_pos;

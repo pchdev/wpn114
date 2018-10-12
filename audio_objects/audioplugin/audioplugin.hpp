@@ -84,7 +84,7 @@ class vst2x_plugin : public plugin_hdl
 
 // QT INSTANCE --------------------------------------------------------------------
 
-class AudioPlugin : public StreamNode, public QQmlParserStatus
+class AudioPlugin : public StreamNode
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
@@ -97,11 +97,10 @@ public:
     AudioPlugin();
     ~AudioPlugin() override;
 
-    virtual float** userProcess(float**, qint64) override;
-    virtual void userInitialize(qint64) override;
+    virtual float** process ( float**, qint64 ) override;
+    virtual void initialize ( qint64 ) override;
 
-    virtual void classBegin()           override;
-    virtual void componentComplete()    override;
+    virtual void componentComplete() override;
 
     quint16 program() const;
     QString path() const;

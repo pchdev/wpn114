@@ -239,7 +239,7 @@ void WPNWebSocket::request(QString req)
 
 void WPNWebSocket::onBytesWritten(qint64 nbytes)
 {
-
+//    qDebug() << nbytes << "bytes written";
 }
 
 void WPNWebSocket::write(QByteArray message, Opcodes op)
@@ -283,6 +283,7 @@ void WPNWebSocket::write(QByteArray message, Opcodes op)
 
     m_tcp_con->flush();
     auto nbytes = m_tcp_con->write(data);
+//    qDebug() << "WS Out:" << message << "writing" << nbytes << "bytes";
 }
 
 void WPNWebSocket::writeBinary(QByteArray binary)
@@ -360,7 +361,6 @@ void WPNWebSocket::decode(QByteArray data)
     // check if another message is not hidden behind this one
     if ( !stream.atEnd() )
     {
-        qDebug() << "getting another message";
         QByteArray next = data.remove(0, stream.device()->pos());
         decode(next);
     }

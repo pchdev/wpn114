@@ -12,11 +12,9 @@
 #define BUFSTREAM_NSAMPLES_DEFAULT 131072
 // approx. 3 seconds buffer
 
-class StreamSampler : public StreamNode, public QQmlParserStatus
+class StreamSampler : public StreamNode
 {
     Q_OBJECT
-
-    Q_INTERFACES ( QQmlParserStatus )
 
     Q_PROPERTY  ( QString path READ path WRITE setPath )
     Q_PROPERTY  ( bool loop READ loop WRITE setLoop )
@@ -31,11 +29,10 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     StreamSampler();
     ~StreamSampler() override;
 
-    virtual void componentComplete() override;
-    virtual void classBegin() override {}
+    virtual void componentComplete() override;    
 
-    virtual float** userProcess(float**, qint64 le) override;
-    virtual void userInitialize(qint64) override;
+    virtual float** process ( float**, qint64 le ) override;
+    virtual void initialize ( qint64 ) override;
 
     Q_INVOKABLE void play   ( );
     Q_INVOKABLE void stop   ( );
@@ -113,11 +110,9 @@ class StreamSampler : public StreamNode, public QQmlParserStatus
     qreal m_rate        = 1;
 };
 
-class Sampler : public StreamNode, public QQmlParserStatus
+class Sampler : public StreamNode
 {
     Q_OBJECT
-
-    Q_INTERFACES ( QQmlParserStatus )
 
     Q_PROPERTY  ( QString path READ path WRITE setPath )
     Q_PROPERTY  ( bool loop READ loop WRITE setLoop )
@@ -134,10 +129,9 @@ class Sampler : public StreamNode, public QQmlParserStatus
     ~Sampler() override;
 
     virtual void componentComplete() override;
-    virtual void classBegin() override {}
 
-    virtual float** userProcess(float**, qint64 le) override;
-    virtual void userInitialize(qint64) override;
+    virtual float** process ( float**, qint64 le ) override;
+    virtual void initialize ( qint64 ) override;
 
     Q_INVOKABLE void play   ( );
     Q_INVOKABLE void stop   ( );

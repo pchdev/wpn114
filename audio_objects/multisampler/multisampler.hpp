@@ -15,14 +15,14 @@ class MultiSampler : public StreamNode
     public:
     MultiSampler();   
 
-    virtual void userInitialize(qint64) override;
-    virtual float** userProcess(float** buf, qint64 nsamples) override;
+    virtual void initialize ( qint64 ) override;
+    virtual float** process ( float** buf, qint64 nsamples ) override;
 
     Q_INVOKABLE void play(quint16 index);
     Q_INVOKABLE void stop(quint16 index);
 
-    QString path() const { return m_path; }
-    void setPath(QString path);
+    QString path    ( ) const { return m_path; }
+    void setPath    ( QString path );
 
     QStringList files() const { return m_files; }
 

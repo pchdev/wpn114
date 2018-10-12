@@ -10,8 +10,8 @@ class StereoPanner : public StreamNode
 
     public:
     StereoPanner();
-    virtual void userInitialize(qint64) override {}
-    virtual float** userProcess(float** buf, qint64 le) override;
+    virtual void initialize ( qint64 ) override {}
+    virtual float** process ( float** buf, qint64 le ) override;
 
     qreal position() const { return m_position; }
     void setPosition (qreal position ) { m_position = position; }

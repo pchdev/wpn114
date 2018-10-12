@@ -26,19 +26,19 @@ void MultiSampler::setPath(QString path)
     }
 }
 
-void MultiSampler::userInitialize(qint64 nsamples)
+void MultiSampler::initialize(qint64 nsamples)
 {
     for ( const auto& sampler : m_samplers )
-        sampler->userInitialize(nsamples);
+        sampler->initialize(nsamples);
 }
 
-float** MultiSampler::userProcess(float** buf, qint64 nsamples)
+float** MultiSampler::process(float** buf, qint64 nsamples)
 {
     auto out = m_out;
     auto nout = m_num_outputs;
 
     for ( const auto& sampler : m_samplers )
-        StreamNode::mergeBuffers( out, sampler->userProcess(nullptr, nsamples),
+        StreamNode::mergeBuffers( out, sampler->process(nullptr, nsamples),
                                  nout, sampler->numOutputs(), nsamples );
 
     return out;

@@ -23,6 +23,11 @@ StreamNode::StreamNode() : m_level(1.0), m_db_level(0.0),
 
 }
 
+void StreamNode::componentComplete()
+{
+
+}
+
 void StreamNode::setNumInputs(uint16_t num_inputs)
 {
     if ( m_num_inputs != num_inputs ) emit numInputsChanged();
@@ -226,27 +231,27 @@ void StreamNode::mergeBuffers(float**& lhs, float** rhs, quint16 lnchannels,
             lhs[ch][s] += rhs[ch][s];
 }
 
-void StreamNode::initialize(StreamProperties properties)
+void StreamNode::preinitialize(StreamProperties properties)
 {
     m_stream_properties = properties;
     StreamNode::allocateBuffer(m_in, m_num_inputs, properties.block_size);
     StreamNode::allocateBuffer(m_out, m_num_outputs, properties.block_size);
 
-    userInitialize(properties.block_size);
+    initialize(properties.block_size);
 
     for ( const auto& subnode : m_subnodes )
-        subnode->initialize(properties);
+        subnode->preinitialize(properties);
 }
 
-float** StreamNode::process(float** buf, qint64 le)
+float** StreamNode::preprocess(float** buf, qint64 le)
 {
     if ( !m_num_inputs ) // if generator, pass the buffer down the chain
     {
-        float** ubuf = userProcess(buf, le);
+        float** ubuf = process(buf, le);
 
         for ( const auto& subnode : m_subnodes )
             if ( subnode->active() && subnode->numInputs() == m_num_outputs )
-                ubuf = subnode->process(ubuf, le);
+                ubuf = subnode->preprocess(ubuf, le);
 
         return ubuf;
     }
@@ -261,7 +266,7 @@ float** StreamNode::process(float** buf, qint64 le)
             if ( subnode->active() )
             {
                 auto pch     = subnode->parentChannelsVec();
-                auto genbuf  = subnode->process(nullptr, le);
+                auto genbuf  = subnode->preprocess(nullptr, le);
 
                 for ( quint16 ch = 0; ch < pch.size(); ++ch )
                     for ( quint16 s = 0; s < le; ++s )
@@ -378,7 +383,7 @@ AudioStream::~AudioStream()
 void AudioStream::start()
 {
     for ( const auto& input : m_world.m_subnodes )
-        input->initialize({m_world.m_sample_rate, m_world.m_block_size});
+        input->preinitialize({m_world.m_sample_rate, m_world.m_block_size});
 
     StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
 
@@ -405,7 +410,7 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
     {
         if ( !input->active() ) continue;
 
-        float** cdata   = input->process ( nullptr, bsize );
+        float** cdata   = input->preprocess ( nullptr, bsize );
         auto pch        = input->parentChannelsVec();
 
         for ( quint16 s = 0; s < bsize; ++s )

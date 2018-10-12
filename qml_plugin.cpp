@@ -37,6 +37,7 @@ void qml_plugin::registerTypes(const char *uri)
 #ifdef WPN114_AUDIO
     qmlRegisterUncreatableType<StreamNode, 1>   ( "WPN114", 1, 0, "StreamNode","Coucou");
     qmlRegisterUncreatableType<RoomNode, 1>     ( "WPN114", 1, 0, "RoomNode", "Coucou" );
+    qmlRegisterUncreatableType<RoomSource, 1>   ( "WPN114", 1, 0, "RoomSource", "Coucou");
     qmlRegisterType<WorldStream, 1>             ( "WPN114", 1, 0, "AudioStream" );
     qmlRegisterType<SinOsc, 1>                  ( "WPN114", 1, 0, "SinOsc" );
     qmlRegisterType<StereoPanner, 1>            ( "WPN114", 1, 0, "StereoPanner" );
@@ -44,8 +45,8 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<StreamSampler, 1>           ( "WPN114", 1, 0, "StreamSampler" );
     qmlRegisterType<MultiSampler, 1>            ( "WPN114", 1, 0, "MultiSampler" );
     qmlRegisterType<RoomSetup, 1>               ( "WPN114", 1, 0, "RoomSetup" );
-    qmlRegisterType<RoomSource, 1>              ( "WPN114", 1, 0, "RoomSource" );
-    qmlRegisterType<RoomStereoSource, 1>        ( "WPN114", 1, 0, "RoomStereoSource" );
+    qmlRegisterType<MonoSource, 1>              ( "WPN114", 1, 0, "MonoSource" );
+    qmlRegisterType<StereoSource, 1>            ( "WPN114", 1, 0, "StereoSource" );
     qmlRegisterType<Rooms, 1>                   ( "WPN114", 1, 0, "Rooms" );
     qmlRegisterType<SpeakerRing, 1>             ( "WPN114", 1, 0, "SpeakerRing" );
     qmlRegisterType<Sharpen, 1>                 ( "WPN114", 1, 0, "Sharpen" );

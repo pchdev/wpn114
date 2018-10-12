@@ -54,7 +54,7 @@ class SpeakerRing : public RoomNode, public QQmlParserStatus
     virtual void classBegin() override {}
     virtual void componentComplete() override;
 
-    qreal offset    ( ) const { return m_offset; }
+    qreal offset     ( ) const { return m_offset; }
     qreal elevation  ( ) const { return m_elevation; }
     qreal width      ( ) const { return m_width; }
     qreal height     ( ) const { return m_height; }
@@ -86,9 +86,9 @@ class RoomSetup : public QObject, public QQmlParserStatus
     virtual void classBegin() override {}
     virtual void componentComplete() override;
 
-    QQmlListProperty<RoomNode> nodes        ( );
-    const QVector<RoomNode*>& getNodes      ( ) const { return m_nodes; }
-    const QVector<QVector4D> speakers       ( ) const;
+    QQmlListProperty<RoomNode> nodes    ( );
+    const QVector<RoomNode*>& getNodes  ( ) const { return m_nodes; }
+    const QVector<QVector4D> speakers   ( ) const;
 
     void appendNode     ( RoomNode* );
     int nodeCount       ( ) const;
@@ -105,15 +105,27 @@ class RoomSetup : public QObject, public QQmlParserStatus
     quint16 m_nspeakers;
 };
 
-using RoomChannel = QVector<QVector3D>;
+struct RoomChannel
+{
+    qreal spgain ( QVector3D src, QVector4D ls );
+    void computeCoeffs ( );
 
+    QVector3D c;
+    QVector3D n;
+    QVector3D w;
+    QVector3D s;
+    QVector3D e;
 
+    QVector<QVector4D> speakers;
 
-class RoomSource : public StreamNode, public QQmlParserStatus
+    float* coeffs;
+    bool diffuse;
+};
+
+class RoomSource : public StreamNode
 {
     Q_OBJECT
 
-    Q_PROPERTY  ( QVector3D position READ position WRITE setPosition )
     Q_PROPERTY  ( qreal diffuse READ diffuse WRITE setDiffuse )
     Q_PROPERTY  ( qreal bias READ bias WRITE setBias )
     Q_PROPERTY  ( qreal rotate READ rotate WRITE setRotate )
@@ -126,74 +138,102 @@ class RoomSource : public StreamNode, public QQmlParserStatus
     RoomSource();
 
     virtual void componentComplete() override;
-    virtual void classBegin() override {}
 
-    virtual float** userProcess ( float** buf, qint64 le ) override;
-    virtual void userInitialize ( qint64 ) override;
+    virtual float** process ( float** buf, qint64 le ) override;
+    virtual void initialize ( qint64 ) override;
 
-    virtual quint16 nchannels   ( ) const { return 1; }
+    virtual quint16 nchannels  ( ) const = 0;
+
+    virtual void allocateCoeffs ( QVector<QVector4D> const& speakerset ) = 0;
+    virtual RoomChannel& channel(quint16 channel) = 0;
 
     qreal x ( ) const { return m_x; }
     qreal y ( ) const { return m_y; }
 
-    QVector3D position  ( ) const { return m_position; }
-    qreal diffuse       ( ) const { return m_diffuse; }
-    qreal bias          ( ) const { return m_bias; }
-    qreal rotate        ( ) const { return m_rotate; }
-    bool fixed          ( ) const { return m_fixed; }
+    qreal diffuse   ( ) const { return m_diffuse; }
+    qreal bias      ( ) const { return m_bias; }
+    qreal rotate    ( ) const { return m_rotate; }
+    bool fixed      ( ) const { return m_fixed; }
 
     virtual void setX           ( qreal x );
     virtual void setY           ( qreal y );
-    virtual void setPosition    ( QVector3D position );
     virtual void setDiffuse     ( qreal diffuse );
     virtual void setRotate      ( qreal rotate );
     virtual void setBias        ( qreal bias );
     virtual void setFixed       ( bool fixed );
 
     protected:
-    void update();
-
+    virtual void update() {}
     bool m_fixed;
+
     qreal m_x = 0.5;
     qreal m_y = 0.5;
-    QVector3D m_position;
     qreal m_diffuse = 0;
     qreal m_rotate = 0;
     qreal m_bias = 0.5;
-    QVector3D m_extremities[4];
 };
 
-class RoomStereoSource : public RoomSource
+class MonoSource : public RoomSource
+{
+    Q_OBJECT
+    Q_PROPERTY  ( QVector3D position READ position WRITE setPosition )
+
+    public:
+    MonoSource();
+
+    virtual quint16 nchannels ( ) const override { return 1; }
+
+    virtual void allocateCoeffs ( QVector<QVector4D> const& speakerset ) override;
+    virtual RoomChannel& channel(quint16 channel) override;
+
+    void setX   ( qreal x ) override;
+    void setY   ( qreal y ) override;
+
+    QVector3D position  ( ) const { return m_channel.c; }
+    void setPosition    ( QVector3D position );
+
+    protected:
+    void update() override;
+    RoomChannel m_channel;
+
+};
+
+class StereoSource : public RoomSource
 {
     Q_OBJECT
 
     Q_PROPERTY  ( qreal xspread READ xspread WRITE setXspread )
     Q_PROPERTY  ( qreal yspread READ yspread WRITE setYspread )
-    Q_PROPERTY  ( RoomSource* left READ left )
-    Q_PROPERTY  ( RoomSource* right READ right )
+    Q_PROPERTY  ( MonoSource* left READ left )
+    Q_PROPERTY  ( MonoSource* right READ right )
 
     public:
-    RoomStereoSource();
+    StereoSource();
+
+    virtual quint16 nchannels ( ) const override { return 2; }
+
+    virtual void allocateCoeffs ( QVector<QVector4D> const& speakerset ) override;
+    virtual RoomChannel& channel(quint16 channel) override;
 
     qreal xspread       ( ) const { return m_xspread; }
     qreal yspread       ( ) const { return m_yspread; }
-    RoomSource* left    ( )  { return m_left; }
-    RoomSource* right   ( ) { return m_right; }
+    MonoSource* left    ( )  { return m_left; }
+    MonoSource* right   ( ) { return m_right; }
+
+    void setXspread     ( qreal xspread );
+    void setYspread     ( qreal yspread );
 
     void setX           ( qreal x ) override;
     void setY           ( qreal y ) override;
-    void setXspread     ( qreal xspread );
-    void setYspread     ( qreal yspread );
     void setDiffuse     ( qreal diffuse ) override;
     void setRotate      ( qreal rotate ) override;
     void setBias        ( qreal bias ) override;
-    void setPosition    ( QVector3D  ) override {}
 
     private:
     qreal m_xspread;
     qreal m_yspread;
-    RoomSource* m_left;
-    RoomSource* m_right;
+    MonoSource* m_left;
+    MonoSource* m_right;
 
 };
 
@@ -209,17 +249,14 @@ class Rooms : public StreamNode
     RoomSetup* setup() const { return m_setup; }
     void setSetup(RoomSetup* setup);
 
-    virtual float** process ( float** buf, qint64 le ) override;
-    virtual float** userProcess ( float** buf, qint64 le ) override;
-    virtual void userInitialize ( qint64 ) override;
+    virtual float** preprocess  ( float** buf, qint64 le ) override;
+    virtual float** process     ( float** buf, qint64 le ) override {}
+    virtual void initialize     ( qint64 ) override;
 
-    private:
-    void computeCoeffs(RoomSource& source);
-    qreal spgain (QVector3D src, QVector4D ls);
+    private:    
 
     QVector<QVector4D> m_speakers;
     RoomSetup* m_setup;
-
 };
 
 #endif // ROOMS_H

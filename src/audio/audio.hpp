@@ -28,10 +28,11 @@ struct StreamProperties
 
 class WorldStream;
 
-class StreamNode : public QObject
+class StreamNode : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_CLASSINFO ( "DefaultProperty", "subnodes" )
+    Q_CLASSINFO     ( "DefaultProperty", "subnodes" )
+    Q_INTERFACES    ( QQmlParserStatus )
 
     Q_PROPERTY  ( bool mute READ mute WRITE setMute NOTIFY muteChanged )
     Q_PROPERTY  ( bool active READ active WRITE setActive NOTIFY activeChanged )
@@ -48,16 +49,20 @@ class StreamNode : public QObject
 
     public:
     StreamNode();
+
     static void allocateBuffer  ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void resetBuffer     ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void mergeBuffers    ( float**& lhs, float **rhs, quint16 lnchannels,
                                   quint16 rnchannels, quint16 nsamples );
 
-    virtual float** userProcess ( float** buf, qint64 le ) = 0;
-    virtual void userInitialize ( qint64 ) = 0;
+    virtual void initialize     ( qint64 ) = 0;
+    virtual void preinitialize  ( StreamProperties properties);
 
-    virtual void initialize     ( StreamProperties properties);
-    virtual float** process     ( float** buf, qint64 le );
+    virtual float** preprocess  ( float** buf, qint64 le );
+    virtual float** process     ( float** buf, qint64 le ) = 0;
+
+    virtual void componentComplete  ( ) override;
+    virtual void classBegin         ( ) override {}
 
     QQmlListProperty<StreamNode>  subnodes();
     const QVector<StreamNode*>&   getSubnodes() const { return m_subnodes; }
@@ -80,14 +85,14 @@ class StreamNode : public QObject
     WPNDevice* exposeDevice     ( ) const { return m_exp_device; }
     StreamNode* parentStream   ( ) const { return m_parent_stream; }
 
-    void setNumInputs    ( uint16_t num_inputs );
-    void setNumOutputs   ( uint16_t num_outputs );
-    void setMaxOutputs   ( uint16_t max_outputs );
-    void setMute         ( bool mute );
-    void setActive       ( bool active );
-    void setExposePath   ( QString path );
-    void setExposeDevice ( WPNDevice* device );
-    void setParentStream ( StreamNode* stream );
+    void setNumInputs       ( uint16_t num_inputs );
+    void setNumOutputs      ( uint16_t num_outputs );
+    void setMaxOutputs      ( uint16_t max_outputs );
+    void setMute            ( bool mute );
+    void setActive          ( bool active );
+    void setExposePath      ( QString path );
+    void setExposeDevice    ( WPNDevice* device );
+    void setParentStream    ( StreamNode* stream );
 
     QVector<quint16> parentChannelsVec ( ) const;
     QVariant parentChannels ( ) const { return m_parent_channels; }
@@ -161,10 +166,9 @@ class AudioStream : public QIODevice
 
 };
 
-class WorldStream : public StreamNode, public QQmlParserStatus
+class WorldStream : public StreamNode
 {
     Q_OBJECT
-    Q_INTERFACES    ( QQmlParserStatus )
 
     Q_PROPERTY      ( int sampleRate READ sampleRate WRITE setSampleRate NOTIFY sampleRateChanged )
     Q_PROPERTY      ( int blockSize READ blockSize WRITE setBlockSize NOTIFY blockSizeChanged )
@@ -176,11 +180,10 @@ class WorldStream : public StreamNode, public QQmlParserStatus
     public:    
     WorldStream();
 
-    virtual void userInitialize(qint64) override {}
-    virtual float** userProcess(float**, qint64) override {}
+    virtual void initialize     ( qint64 ) override {}
+    virtual float** process     ( float**, qint64 ) override {}
 
-    virtual void classBegin()           override {}
-    virtual void componentComplete()    override;
+    virtual void componentComplete() override;
 
     Q_INVOKABLE void start  ();
     Q_INVOKABLE void stop   ();

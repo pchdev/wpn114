@@ -8,12 +8,12 @@ Sharpen::Sharpen() : m_distortion(0)
     SETN_OUT    ( 2 );
 }
 
-void Sharpen::userInitialize(qint64 dist)
+void Sharpen::initialize(qint64 dist)
 {
 
 }
 
-float** Sharpen::userProcess(float** in, qint64 nsamples)
+float** Sharpen::process(float** in, qint64 nsamples)
 {
     auto dist   = std::min(m_distortion/100.f, 0.999);
     auto coeff  = 2.f*dist/(1.f-dist);
