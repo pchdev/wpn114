@@ -17,8 +17,11 @@ class MultiSampler : public StreamNode
 
     virtual void initialize ( qint64 ) override;
     virtual float** process ( float** buf, qint64 nsamples ) override;
+    virtual void expose(WPNNode*) override;
 
     Q_INVOKABLE void play(quint16 index);
+    Q_INVOKABLE void playRandom();
+
     Q_INVOKABLE void stop(quint16 index);
 
     QString path    ( ) const { return m_path; }

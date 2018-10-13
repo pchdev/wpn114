@@ -86,6 +86,19 @@ void StreamSampler::setPath(QString path)
     m_path = path;
 }
 
+void StreamSampler::expose(WPNNode* root)
+{
+    auto funcs = m_exp_node->createSubnode("functions");
+    auto play = funcs->createSubnode("play");
+    auto stop = funcs->createSubnode("stop");
+
+    play->setType(Type::Impulse);
+    stop->setType(Type::Impulse);
+
+    QObject::connect(play, SIGNAL(valueReceived(QVariant)), this, SLOT(play()));
+    QObject::connect(stop, SIGNAL(valueReceived(QVariant)), this, SLOT(stop()));
+}
+
 void StreamSampler::componentComplete()
 {
     if ( m_path.isEmpty() ) return;
@@ -401,6 +414,19 @@ Sampler::~Sampler()
     delete m_buffer;
 }
 
+void Sampler::expose(WPNNode* root)
+{
+    auto funcs = m_exp_node->createSubnode("functions");
+    auto play = funcs->createSubnode("play");
+    auto stop = funcs->createSubnode("stop");
+
+    play->setType(Type::Impulse);
+    stop->setType(Type::Impulse);
+
+    QObject::connect(play, SIGNAL(valueReceived(QVariant)), this, SLOT(play()));
+    QObject::connect(stop, SIGNAL(valueReceived(QVariant)), this, SLOT(stop()));
+}
+
 void Sampler::componentComplete()
 {
     if ( m_path.isEmpty() ) return;
@@ -429,7 +455,6 @@ void Sampler::componentComplete()
 
     SETN_IN  ( 0 );
     SETN_OUT ( nch );
-
 }
 
 void Sampler::setPath(QString path)

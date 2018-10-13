@@ -119,6 +119,8 @@ void StreamNode::setExposePath(QString path)
 
         node->setTarget ( this, property );
     }
+
+    expose(m_exp_node);
 }
 
 void StreamNode::setExposeDevice(WPNDevice* device)

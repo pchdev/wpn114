@@ -1,4 +1,5 @@
 #include "multisampler.hpp"
+#include <cstdlib>
 
 MultiSampler::MultiSampler() : m_dir(nullptr)
 {
@@ -32,6 +33,23 @@ void MultiSampler::initialize(qint64 nsamples)
         sampler->initialize(nsamples);
 }
 
+void MultiSampler::expose(WPNNode* node)
+{
+    auto funcs = m_exp_node->createSubnode("functions");
+    auto play = funcs->createSubnode("play");
+    auto stop = funcs->createSubnode("stop");
+    auto rplay = funcs->createSubnode("rplay");
+
+    play->setType(Type::Int);
+    stop->setType(Type::Int);
+    rplay->setType(Type::Impulse);
+
+    QObject::connect(play, SIGNAL(valueReceived(QVariant)), this, SLOT(play(quint16)));
+    QObject::connect(rplay, SIGNAL(valueReceived(QVariant)), this, SLOT(playRandom()));
+
+    QObject::connect(stop, SIGNAL(valueReceived(QVariant)), this, SLOT(stop(quint16)));
+}
+
 float** MultiSampler::process(float** buf, qint64 nsamples)
 {
     auto out = m_out;
@@ -47,6 +65,14 @@ float** MultiSampler::process(float** buf, qint64 nsamples)
 void MultiSampler::play(quint16 index)
 {
     m_samplers[index]->play();
+}
+
+void MultiSampler::playRandom()
+{
+    auto rand = std::rand()/RAND_MAX;
+    quint16 srand = m_samplers.size()*(quint16)rand;
+
+    play(srand);
 }
 
 void MultiSampler::stop(quint16 index)

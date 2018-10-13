@@ -64,6 +64,8 @@ class StreamNode : public QObject, public QQmlParserStatus
     virtual void componentComplete  ( ) override;
     virtual void classBegin         ( ) override {}
 
+    virtual void expose(WPNNode*) {}
+
     QQmlListProperty<StreamNode>  subnodes();
     const QVector<StreamNode*>&   getSubnodes() const { return m_subnodes; }
 
@@ -107,6 +109,7 @@ class StreamNode : public QObject, public QQmlParserStatus
     void numInputsChanged   ( );
     void numOutputsChanged  ( );
     void levelChanged       ( );
+    void exposePathChanged  ( );
 
     protected:
     static void appendSubnode     ( QQmlListProperty<StreamNode>*, StreamNode* );

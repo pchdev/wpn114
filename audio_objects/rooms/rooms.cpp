@@ -305,6 +305,8 @@ void MonoSource::allocateCoeffs(QVector<QVector4D> const& speakerset)
     if ( coeffs ) delete coeffs;
 
     coeffs = new float[speakerset.size()]();
+
+    m_channel.coeffs = coeffs;
     m_channel.speakers = speakerset;
 }
 

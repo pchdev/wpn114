@@ -30,12 +30,10 @@ class StreamSampler : public StreamNode
     ~StreamSampler() override;
 
     virtual void componentComplete() override;    
+    virtual void expose(WPNNode* root) override;
 
     virtual float** process ( float**, qint64 le ) override;
     virtual void initialize ( qint64 ) override;
-
-    Q_INVOKABLE void play   ( );
-    Q_INVOKABLE void stop   ( );
 
     QString path        ( ) const { return m_path; }
     bool loop           ( ) const { return m_loop; }
@@ -59,6 +57,8 @@ class StreamSampler : public StreamNode
 
     public slots:
     void onNextBufferReady();
+    Q_INVOKABLE void play   ( );
+    Q_INVOKABLE void stop   ( );
 
     signals:
     void reset  (float*);
@@ -133,8 +133,7 @@ class Sampler : public StreamNode
     virtual float** process ( float**, qint64 le ) override;
     virtual void initialize ( qint64 ) override;
 
-    Q_INVOKABLE void play   ( );
-    Q_INVOKABLE void stop   ( );
+    virtual void expose(WPNNode* root) override;
 
     QString path        ( ) const { return m_path; }
     bool loop           ( ) const { return m_loop; }
@@ -155,6 +154,10 @@ class Sampler : public StreamNode
     void setEnd         ( qreal end );
     void setLength      ( qreal length );
     void setRate        ( qreal rate );
+
+    public slots:
+    Q_INVOKABLE void play   ( );
+    Q_INVOKABLE void stop   ( );
 
     private:    
     Soundfile* m_soundfile  = nullptr;
