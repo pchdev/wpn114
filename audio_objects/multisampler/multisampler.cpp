@@ -1,10 +1,33 @@
 #include "multisampler.hpp"
 #include <cstdlib>
 
+Urn::Urn(quint16 size) : m_size(size) { }
+
+inline quint16 Urn::get()
+{
+    float rand = (float) std::rand()/RAND_MAX;
+    quint16 srand = m_size*rand;
+
+    return srand;
+}
+
+quint16 Urn::draw()
+{
+    if ( m_draws.size() == m_size )
+        m_draws.clear();
+
+    auto draw = get();
+    while ( m_draws.contains(draw))
+        draw = get();
+
+    m_draws.push_back(draw);
+    return draw;
+}
+
 MultiSampler::MultiSampler() : m_dir(nullptr)
 {
     SETN_IN     ( 0 );
-    SETN_OUT    ( 2 );
+    SETN_OUT    ( 0 );
 }
 
 void MultiSampler::setPath(QString path)
@@ -24,7 +47,13 @@ void MultiSampler::setPath(QString path)
         sampler->setPath(m_path+"/"+file);
         sampler->componentComplete();
         sampler->setActive(true);
+
+        m_samplers.push_back(sampler);
+
+        setNumOutputs(qMax(m_num_outputs, sampler->numOutputs()));
     }
+
+    m_urn = Urn(m_files.size());
 
     emit filesChanged();
 }
@@ -32,7 +61,10 @@ void MultiSampler::setPath(QString path)
 void MultiSampler::initialize(qint64 nsamples)
 {
     for ( const auto& sampler : m_samplers )
-        sampler->initialize(nsamples);
+    {
+        sampler->setActive(false);
+        sampler->preinitialize(m_stream_properties);
+    }
 }
 
 void MultiSampler::expose(WPNNode* node)
@@ -62,9 +94,15 @@ float** MultiSampler::process(float** buf, qint64 nsamples)
     auto out = m_out;
     auto nout = m_num_outputs;
 
+    StreamNode::resetBuffer(out, nout, nsamples);
+
     for ( const auto& sampler : m_samplers )
-        StreamNode::mergeBuffers( out, sampler->process(nullptr, nsamples),
+    {
+        if ( !sampler->active() ) continue;
+
+        StreamNode::mergeBuffers( out, sampler->preprocess(nullptr, nsamples),
                                  nout, sampler->numOutputs(), nsamples );
+    }
 
     return out;
 }
@@ -84,10 +122,7 @@ void MultiSampler::play(QVariant variant)
 
 void MultiSampler::playRandom()
 {
-    float rand = (float) std::rand()/RAND_MAX;
-    quint16 srand = m_samplers.size()*rand;
-
-    play(srand);
+    play(m_urn.draw());
 }
 
 void MultiSampler::stop(QVariant variant)

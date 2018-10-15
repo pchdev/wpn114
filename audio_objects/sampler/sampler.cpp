@@ -511,6 +511,7 @@ void Sampler::setRate(qreal rate)
 void Sampler::play()
 {
     m_playing = true;
+    if ( !m_active ) m_active = true;
 }
 
 void Sampler::stop()
@@ -524,8 +525,8 @@ void Sampler::initialize(qint64)
     m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
     m_release_inc   = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_release, SAMPLERATE));
 
-    m_release_end   = ENV_RESOLUTION;
-    m_attack_end    = ENV_RESOLUTION;
+    m_release_end   = ms_to_samples(m_release, SAMPLERATE);
+    m_attack_end    = ms_to_samples(m_attack, SAMPLERATE);
 
     m_xfade_length  = ms_to_samples(m_xfade, SAMPLERATE);
     m_xfade_point   = m_buffer_size-m_xfade_length;
@@ -632,13 +633,14 @@ float** Sampler::process(float**, qint64 le)
                 for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
 
-                m_playing       = false;
-                m_active        = false;
-                m_releasing     = false;
-                spos            = 0;
-                attack_phase    = 0;
-                xfade_phase     = 0;
-                release_phase   = 0;
+                m_phase             = 0;
+                m_attack_phase      = 0;
+                m_xfade_phase       = 0;
+                m_release_phase     = 0;
+                m_playing           = false;
+                m_first_play        = true;
+                m_active            = false;
+                m_releasing         = false;
             }
         }
         else
@@ -655,13 +657,14 @@ float** Sampler::process(float**, qint64 le)
             // if reaching end of release envelope
             if ( release_phase >= release_end )
             {
-                m_playing       = false;
-                m_active        = false;
-                m_releasing     = false;
-                spos            = 0;
-                attack_phase    = 0;
-                xfade_phase     = 0;
-                release_phase   = 0;
+                m_phase             = 0;
+                m_attack_phase      = 0;
+                m_xfade_phase       = 0;
+                m_release_phase     = 0;
+                m_playing           = false;
+                m_first_play        = true;
+                m_active            = false;
+                m_releasing         = false;
 
                 for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;

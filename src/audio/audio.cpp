@@ -253,7 +253,7 @@ void StreamNode::preinitialize(StreamProperties properties)
 }
 
 float** StreamNode::preprocess(float** buf, qint64 le)
-{
+{   
     if ( !m_num_inputs ) // if generator, pass the buffer down the chain
     {
         float** ubuf = process(buf, le);
@@ -264,7 +264,6 @@ float** StreamNode::preprocess(float** buf, qint64 le)
 
         return ubuf;
     }
-
     else
     {
         // mix all sources down to an array of channels

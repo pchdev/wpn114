@@ -5,6 +5,19 @@
 #include <audio_objects/sampler/sampler.hpp>
 #include <QDir>
 
+class Urn
+{
+    public:
+    Urn() {}
+    Urn(quint16 size);
+    quint16 draw();
+
+    private:
+    quint16 get();
+    quint16 m_size;
+    QVector<quint16> m_draws;
+};
+
 class MultiSampler : public StreamNode
 {
     Q_OBJECT
@@ -33,6 +46,7 @@ class MultiSampler : public StreamNode
     void filesChanged();
 
     private:
+    Urn m_urn;
     QDir* m_dir;
     QString m_path;
     QStringList m_files;
