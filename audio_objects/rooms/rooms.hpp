@@ -174,7 +174,8 @@ class RoomSource : public StreamNode
 
     virtual void componentComplete() override;
 
-    virtual float** process ( float** buf, qint64 le ) override;
+    virtual float** preprocess ( float** buf, qint64 le ) override;
+    virtual float** process ( float** buf, qint64 le ) override {}
     virtual void initialize ( qint64 ) override;
 
     virtual quint16 nchannels  ( ) const = 0;
@@ -216,6 +217,8 @@ class MonoSource : public RoomSource
     public:
     MonoSource();
 
+    virtual void componentComplete() override;
+
     virtual quint16 nchannels ( ) const override { return 1; }
 
     virtual void allocateCoeffs ( QVector<QVector4D> const& speakerset ) override;
@@ -230,6 +233,8 @@ class MonoSource : public RoomSource
     protected:
     void update() override;
     RoomChannel m_channel;
+    qreal m_w;
+    qreal m_h;
 
 };
 
@@ -244,6 +249,8 @@ class StereoSource : public RoomSource
 
     public:
     StereoSource();
+
+    virtual void componentComplete() override;
 
     virtual quint16 nchannels ( ) const override { return 2; }
 

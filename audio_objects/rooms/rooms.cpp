@@ -280,10 +280,13 @@ void RoomSource::initialize(qint64 nsamples)
 
 }
 
-float** RoomSource::process(float** buf, qint64 nsamples)
+float** RoomSource::preprocess(float** buf, qint64 nsamples)
 {
+    if ( m_subnodes.size() == 1 ) return m_subnodes[0]->preprocess(buf, nsamples);
+
     auto out = m_out;
     auto nout = m_num_outputs;
+    StreamNode::resetBuffer(out, nout, nsamples);
 
     for ( const auto& node : m_subnodes )
         StreamNode::mergeBuffers( out, node->preprocess(buf, nsamples),
@@ -322,12 +325,13 @@ void RoomChannel::computeCoeffs()
         if ( !diffuse ) gain = spgain(c, speaker);
         else
         {
+            qreal cg = spgain(c, speaker);
             qreal ng = spgain(n, speaker);
             qreal sg = spgain(s, speaker);
             qreal eg = spgain(e, speaker);
             qreal wg = spgain(w, speaker);
 
-            gain = qMax(qMax(qMax(ng,sg),eg),wg);
+            gain = qMax(qMax(qMax(qMax(ng,sg),eg),wg),cg);
         }
 
         coeffs[spk] = gain;
@@ -358,20 +362,29 @@ RoomChannel& MonoSource::channel(quint16)
     return m_channel;
 }
 
+void MonoSource::componentComplete()
+{
+    RoomSource::componentComplete();
+
+    if       ( m_bias == 0.5 )  { m_w = m_diffuse; m_h = m_diffuse; }
+    else if  ( m_bias < 0.5  )  { m_w = m_diffuse; m_h = m_bias; }
+    else if  ( m_bias > 0.5  )  { m_h = m_diffuse; m_w = m_bias-0.5; }
+
+    m_w /= 2.0; m_h /= 2.0;
+    update();
+}
+
 void MonoSource::update()
 {
     if ( m_diffuse > 0 )
     {
         m_channel.diffuse = true;
 
-        qreal ellwidth  = m_diffuse*(m_bias/0.5)/2.0;
-        qreal ellheight = 1.0/ellwidth;
-
         // rotate todo
-        m_channel.n = QVector3D(m_x, m_y+ellheight, 0.5);
-        m_channel.s = QVector3D(m_x, m_y-ellheight, 0.5);
-        m_channel.w = QVector3D(m_x-ellwidth, m_y, 0.5);
-        m_channel.e = QVector3D(m_x+ellwidth, m_y, 0.5);
+        m_channel.n = QVector3D(m_x, m_y+m_h, 0.5);
+        m_channel.s = QVector3D(m_x, m_y-m_h, 0.5);
+        m_channel.w = QVector3D(m_x-m_w, m_y, 0.5);
+        m_channel.e = QVector3D(m_x+m_w, m_y, 0.5);
     }
 
     else m_channel.diffuse = false;
@@ -406,6 +419,13 @@ StereoSource::StereoSource() : RoomSource(),
     m_right ( new MonoSource )
 {
 
+}
+
+void StereoSource::componentComplete()
+{
+    RoomSource::componentComplete();
+    m_left->componentComplete();
+    m_right->componentComplete();
 }
 
 void StereoSource::allocateCoeffs(QVector<QVector4D> const& speakerset)
@@ -495,7 +515,7 @@ void Rooms::initialize(qint64 nsamples)
         auto source = qobject_cast<RoomSource*>(node);
         if ( ! source ) continue;
 
-        source->allocateCoeffs(m_speakers);
+        source->allocateCoeffs(m_speakers);        
 
         // manage coefficents for static sources
         if ( source->fixed() )
@@ -515,10 +535,10 @@ float** Rooms::preprocess(float** buf, qint64 nsamples)
     for ( const auto& node : m_subnodes )
     {
         auto source = qobject_cast<RoomSource*>(node);
-        if ( !source ) continue;
+        if ( !source || !source->active() ) continue;
 
         quint16 snch = source->numOutputs();
-        float** in  = source->process(buf, nsamples);
+        float** in  = source->preprocess(nullptr, nsamples);
 
         for ( quint16 ch = 0; ch < snch; ++ch )
         {

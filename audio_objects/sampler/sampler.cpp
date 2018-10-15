@@ -14,6 +14,8 @@ StreamSampler::StreamSampler()
         m_attack_env[i]   = env_value;
         m_release_env[i]  = 1.f-env_value;
     }
+
+    m_active = false;
 }
 
 StreamSampler::~StreamSampler()
@@ -409,6 +411,8 @@ Sampler::Sampler()
         m_attack_env[i]   = env_value;
         m_release_env[i]  = 1.f-env_value;
     }
+
+    m_active = false;
 }
 
 Sampler::~Sampler()

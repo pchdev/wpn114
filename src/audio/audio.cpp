@@ -442,7 +442,6 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
             }
         }
 
-
     // i.e. block_size * 2bytes per value * numChannels
     return ( bsize*2*nout );
 
