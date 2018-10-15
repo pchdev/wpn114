@@ -17,6 +17,8 @@
 #include <audio_objects/mangler/mangler.hpp>
 #include <audio_objects/sharpen/sharpen.hpp>
 #include <audio_objects/multisampler/multisampler.hpp>
+#include <audio_objects/fork/fork.hpp>
+#include <audio_objects/peakrms/peakrms.hpp>
 #endif
 
 #ifdef WPN114_MIDI
@@ -48,9 +50,12 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<MonoSource, 1>              ( "WPN114", 1, 0, "MonoSource" );
     qmlRegisterType<StereoSource, 1>            ( "WPN114", 1, 0, "StereoSource" );
     qmlRegisterType<Rooms, 1>                   ( "WPN114", 1, 0, "Rooms" );
+    qmlRegisterType<SpeakerPair, 1>             ( "WPN114", 1, 0, "SpeakerPair" );
     qmlRegisterType<SpeakerRing, 1>             ( "WPN114", 1, 0, "SpeakerRing" );
     qmlRegisterType<Sharpen, 1>                 ( "WPN114", 1, 0, "Sharpen" );
     qmlRegisterType<Mangler, 1>                 ( "WPN114", 1, 0, "Mangler" );
+    qmlRegisterType<Fork, 1>                    ( "WPN114", 1, 0, "Fork" );
+    qmlRegisterType<PeakRMS, 1>                 ( "WPN114", 1, 0, "PeakRMS" );
 #endif
 
 #ifdef WPN114_MIDI

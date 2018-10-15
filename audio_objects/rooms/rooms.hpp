@@ -7,15 +7,21 @@
 #include <QVector4D>
 #include <QQmlListProperty>
 
-class RoomNode : public QObject
+class RoomNode : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES    ( QQmlParserStatus )
+
     Q_PROPERTY  ( int nspeakers READ nspeakers WRITE setNspeakers )
     Q_PROPERTY  ( QVariant influence READ influence WRITE setInfluence )
     Q_PROPERTY  ( QVariant position READ position WRITE setPosition )
 
     public:
     RoomNode();
+
+    virtual void classBegin() override {}
+    virtual void componentComplete() override {}
+
     quint16 nspeakers   ( ) const { return m_nspeakers; }
     void setNspeakers   ( quint16 nspeakers );
 
@@ -38,20 +44,49 @@ class RoomNode : public QObject
     quint16 m_nspeakers;
 };
 
-class SpeakerRing : public RoomNode, public QQmlParserStatus
+class SpeakerPair : public RoomNode
 {
     Q_OBJECT
-    Q_INTERFACES    ( QQmlParserStatus )
+    Q_PROPERTY  ( qreal xspread READ xspread WRITE setXspread )
+    Q_PROPERTY  ( qreal yspread READ yspread WRITE setYspread )
+    Q_PROPERTY  ( qreal x READ x WRITE setX )
+    Q_PROPERTY  ( qreal y READ y WRITE setY )
+
+    public:
+    SpeakerPair();
+
+    virtual void componentComplete() override;
+
+    qreal xspread() const { return m_xspread; }
+    qreal yspread() const { return m_yspread; }
+    qreal x() const { return m_x; }
+    qreal y() const { return m_y; }
+
+    void setXspread(qreal xspread);
+    void setYspread(qreal yspread);
+    void setX(qreal x);
+    void setY(qreal y);
+
+    private:
+    qreal m_xspread;
+    qreal m_yspread;
+    qreal m_x;
+    qreal m_y;
+
+};
+
+class SpeakerRing : public RoomNode
+{
+    Q_OBJECT
+
     Q_PROPERTY      ( qreal offset READ offset WRITE setOffset )
     Q_PROPERTY      ( qreal elevation READ elevation WRITE setElevation )
-
     Q_PROPERTY      ( qreal width READ width WRITE setWidth )
     Q_PROPERTY      ( qreal height READ height WRITE setHeight )
 
     public:
     SpeakerRing();
 
-    virtual void classBegin() override {}
     virtual void componentComplete() override;
 
     qreal offset     ( ) const { return m_offset; }

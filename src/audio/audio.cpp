@@ -16,7 +16,7 @@ static const QStringList g_stream =
 
 StreamNode::StreamNode() : m_level(1.0), m_db_level(0.0),
     m_num_inputs(0), m_num_outputs(0), m_max_outputs(0), m_parent_channels(0),
-    m_mute(false), m_active(false),
+    m_mute(false), m_active(true),
     m_in(nullptr), m_out(nullptr),
     m_exp_device(nullptr), m_parent_stream(nullptr)
 {
@@ -225,6 +225,13 @@ void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 nsample
         memset(buffer[ch], 0.f, sizeof(float)*nsamples);
 }
 
+void StreamNode::applyGain(float**& buffer, quint16 nchannels, quint16 nsamples, float gain)
+{
+    for ( quint16 ch = 0; ch < nchannels; ++ch )
+        for ( quint16 s = 0; s < nsamples; ++s )
+            buffer[ch][s] *= gain;
+}
+
 void StreamNode::mergeBuffers(float**& lhs, float** rhs, quint16 lnchannels,
                               quint16 rnchannels, quint16 nsamples )
 {
@@ -283,6 +290,11 @@ float** StreamNode::preprocess(float** buf, qint64 le)
 WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512)
 {
 
+}
+
+WorldStream::~WorldStream()
+{
+    m_stream_thread.terminate();
 }
 
 void WorldStream::setSampleRate(uint32_t sample_rate)

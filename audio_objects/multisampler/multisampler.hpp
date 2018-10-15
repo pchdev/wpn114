@@ -10,7 +10,7 @@ class MultiSampler : public StreamNode
     Q_OBJECT
 
     Q_PROPERTY  ( QString path READ path WRITE setPath )
-    Q_PROPERTY  ( QStringList files READ files )
+    Q_PROPERTY  ( QStringList files READ files NOTIFY filesChanged )
 
     public:
     MultiSampler();   
@@ -19,15 +19,18 @@ class MultiSampler : public StreamNode
     virtual float** process ( float** buf, qint64 nsamples ) override;
     virtual void expose(WPNNode*) override;
 
-    Q_INVOKABLE void play(quint16 index);
+    Q_INVOKABLE void play(QVariant var);
     Q_INVOKABLE void playRandom();
 
-    Q_INVOKABLE void stop(quint16 index);
+    Q_INVOKABLE void stop(QVariant var);
 
     QString path    ( ) const { return m_path; }
     void setPath    ( QString path );
 
     QStringList files() const { return m_files; }
+
+    signals:
+    void filesChanged();
 
     private:
     QDir* m_dir;

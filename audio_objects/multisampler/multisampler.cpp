@@ -25,6 +25,8 @@ void MultiSampler::setPath(QString path)
         sampler->componentComplete();
         sampler->setActive(true);
     }
+
+    emit filesChanged();
 }
 
 void MultiSampler::initialize(qint64 nsamples)
@@ -35,19 +37,24 @@ void MultiSampler::initialize(qint64 nsamples)
 
 void MultiSampler::expose(WPNNode* node)
 {
-    auto funcs = m_exp_node->createSubnode("functions");
-    auto play = funcs->createSubnode("play");
-    auto stop = funcs->createSubnode("stop");
-    auto rplay = funcs->createSubnode("rplay");
+    auto funcs      = m_exp_node->createSubnode("functions");
+    auto play       = funcs->createSubnode("play");
+    auto playstr    = funcs->createSubnode("playFile");
+    auto stop       = funcs->createSubnode("stop");
+    auto stopstr    = funcs->createSubnode("stopFile");
+    auto rplay      = funcs->createSubnode("rplay");
 
-    play->setType(Type::Int);
-    stop->setType(Type::Int);
-    rplay->setType(Type::Impulse);
+    play->setType       ( Type::Int );
+    stop->setType       ( Type::Int );
+    playstr->setType    ( Type::String );
+    stopstr->setType    ( Type::String );
+    rplay->setType      ( Type::Impulse );
 
-    QObject::connect(play, SIGNAL(valueReceived(QVariant)), this, SLOT(play(quint16)));
+    QObject::connect(play,  SIGNAL(valueReceived(QVariant)), this, SLOT(play(QVariant)));
+    QObject::connect(playstr,  SIGNAL(valueReceived(QVariant)), this, SLOT(play(QVariant)));
     QObject::connect(rplay, SIGNAL(valueReceived(QVariant)), this, SLOT(playRandom()));
-
-    QObject::connect(stop, SIGNAL(valueReceived(QVariant)), this, SLOT(stop(quint16)));
+    QObject::connect(stop,  SIGNAL(valueReceived(QVariant)), this, SLOT(stop(QVariant)));
+    QObject::connect(stopstr,  SIGNAL(valueReceived(QVariant)), this, SLOT(stop(QVariant)));
 }
 
 float** MultiSampler::process(float** buf, qint64 nsamples)
@@ -62,20 +69,37 @@ float** MultiSampler::process(float** buf, qint64 nsamples)
     return out;
 }
 
-void MultiSampler::play(quint16 index)
+void MultiSampler::play(QVariant variant)
 {
-    m_samplers[index]->play();
+    if ( variant.type() == QMetaType::Int )
+        m_samplers[variant.toInt()]->play();
+
+    else if ( variant.type() == QMetaType::QString )
+    {
+        auto idx = m_files.indexOf(variant.toString());
+        if ( idx < 0 ) return;
+        m_samplers[idx]->play();
+    }
 }
 
 void MultiSampler::playRandom()
 {
-    auto rand = std::rand()/RAND_MAX;
-    quint16 srand = m_samplers.size()*(quint16)rand;
+    float rand = (float) std::rand()/RAND_MAX;
+    quint16 srand = m_samplers.size()*rand;
 
     play(srand);
 }
 
-void MultiSampler::stop(quint16 index)
+void MultiSampler::stop(QVariant variant)
 {
-    m_samplers[index]->stop();
+    if ( variant.type() == QMetaType::Int )
+        m_samplers[variant.toInt()]->stop();
+
+    else if ( variant.type() == QMetaType::QString )
+    {
+        auto idx = m_files.indexOf(variant.toString());
+        if ( idx < 0 ) return;
+        m_samplers[idx]->stop();
+    }
 }
+

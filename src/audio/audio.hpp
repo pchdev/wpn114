@@ -52,11 +52,12 @@ class StreamNode : public QObject, public QQmlParserStatus
 
     static void allocateBuffer  ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void resetBuffer     ( float**& buffer, quint16 nchannels, quint16 nsamples );
+    static void applyGain       ( float**& buffer, quint16 nchannels, quint16 nsamples, float gain );
     static void mergeBuffers    ( float**& lhs, float **rhs, quint16 lnchannels,
                                   quint16 rnchannels, quint16 nsamples );
 
-    virtual void initialize     ( qint64 ) = 0;
     virtual void preinitialize  ( StreamProperties properties);
+    virtual void initialize     ( qint64 ) = 0;
 
     virtual float** preprocess  ( float** buf, qint64 le );
     virtual float** process     ( float** buf, qint64 le ) = 0;
@@ -64,7 +65,7 @@ class StreamNode : public QObject, public QQmlParserStatus
     virtual void componentComplete  ( ) override;
     virtual void classBegin         ( ) override {}
 
-    virtual void expose(WPNNode*) {}
+    virtual void expose(WPNNode*)   { }
 
     QQmlListProperty<StreamNode>  subnodes();
     const QVector<StreamNode*>&   getSubnodes() const { return m_subnodes; }
@@ -85,7 +86,7 @@ class StreamNode : public QObject, public QQmlParserStatus
 
     QString exposePath          ( ) const { return m_exp_path; }
     WPNDevice* exposeDevice     ( ) const { return m_exp_device; }
-    StreamNode* parentStream   ( ) const { return m_parent_stream; }
+    StreamNode* parentStream    ( ) const { return m_parent_stream; }
 
     void setNumInputs       ( uint16_t num_inputs );
     void setNumOutputs      ( uint16_t num_outputs );
@@ -149,16 +150,16 @@ class AudioStream : public QIODevice
      Q_OBJECT
 
     public:
-    AudioStream(const WorldStream& world, QAudioFormat format, QAudioInput* input, QAudioOutput* output);
-    ~AudioStream() override;
+    AudioStream  ( const WorldStream& world, QAudioFormat format, QAudioInput* input, QAudioOutput* output);
+    ~AudioStream ( ) override;
 
-    virtual qint64 readData ( char*, qint64 )           override;
-    virtual qint64 writeData ( const char*, qint64 )    override;
-    virtual qint64 bytesAvailable ( )                   const override;
+    virtual qint64 readData  ( char*, qint64 )        override;
+    virtual qint64 writeData ( const char*, qint64 )  override;
+    virtual qint64 bytesAvailable ( )                 const override;
 
     public slots:
-    Q_INVOKABLE void start  ();
-    Q_INVOKABLE void stop   ();
+    Q_INVOKABLE void start  ( );
+    Q_INVOKABLE void stop   ( );
 
     private:
     WorldStream const& m_world;
@@ -182,14 +183,15 @@ class WorldStream : public StreamNode
 
     public:    
     WorldStream();
+    ~WorldStream();
 
     virtual void initialize     ( qint64 ) override {}
     virtual float** process     ( float**, qint64 ) override {}
 
     virtual void componentComplete() override;
 
-    Q_INVOKABLE void start  ();
-    Q_INVOKABLE void stop   ();
+    Q_INVOKABLE void start  ( );
+    Q_INVOKABLE void stop   ( );
 
     uint32_t sampleRate     ( ) const { return m_sample_rate; }
     uint16_t blockSize      ( ) const { return m_block_size; }
@@ -205,8 +207,8 @@ class WorldStream : public StreamNode
     void onAudioStateChanged ( QAudio::State ) const;
 
     signals:
-    void startStream();
-    void stopStream();
+    void startStream        ( );
+    void stopStream         ( );
     void sampleRateChanged  ( );
     void blockSizeChanged   ( );
     void inDeviceChanged    ( );

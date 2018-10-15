@@ -2,6 +2,49 @@
 #include <cmath>
 #include <QtDebug>
 
+SpeakerPair::SpeakerPair()
+{
+    setNspeakers(2);
+}
+
+void SpeakerPair::setXspread(qreal xspread)
+{
+
+}
+
+void SpeakerPair::setYspread(qreal yspread)
+{
+
+}
+
+void SpeakerPair::setX(qreal x)
+{
+
+}
+
+void SpeakerPair::setY(qreal y)
+{
+
+}
+
+void SpeakerPair::componentComplete()
+{
+    QVector3D position_l, position_r;
+    QVariantList list;
+
+    position_l.setX(0.5-m_xspread);
+    position_r.setX(0.5+m_xspread);
+    position_l.setY(m_y);
+    position_r.setY(m_y);
+
+    list << position_l << position_r;
+    m_positions << position_l << position_r;
+
+    m_position = list;
+}
+
+//--------------------------------------------------------------------------------------------------
+
 SpeakerRing::SpeakerRing()
 {
 
