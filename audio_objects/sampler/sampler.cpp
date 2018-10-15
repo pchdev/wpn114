@@ -228,6 +228,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
     {        
         if ( !m_playing )
         {
+            // filling with zeroes before going inactive
             for ( quint16 ch = 0; ch < nch; ++ch )
                 out[ch][s] = 0.f;
             return out;

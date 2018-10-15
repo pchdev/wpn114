@@ -55,25 +55,30 @@ void SoundfileStreamer::next(float* target)
 
     if ( m_wrap && endframe > endbyte )
     {
-        quint64 f   = nbytes-(endframe-endbyte);
-        quint64 f2  = endbyte-position;
+        // if the last frame of the buffer goes beyond the end of the file
+        // we stream the last chunk and concat it with first chunk
+        quint64 chunk1  = endbyte-position;
+        quint64 chunk2  = nbytes-chunk1;
 
-        for ( quint64 i = 0; i < f; ++i )
+        quint64 ch1_nframes = chunk1/byps;
+        quint64 ch2_nframes = chunk2/byps;
+
+        for ( quint64 i = 0; i < ch1_nframes; ++i )
         {
             qint16 si16; stream >> si16;
             target[i] = si16/(float)div;
         }
 
-        stream.resetStatus();
+        m_file->reset();
         stream.skipRawData(m_start_byte);
 
-        for ( quint64 i = 0; i < f2; ++i )
+        for ( quint64 i = 0; i < ch2_nframes; ++i )
         {
             qint16 si16; stream >> si16;
-            target[i] = si16/(float)div;
+            target[ch1_nframes+i] = si16/(float)div;
         }
 
-        m_position_byte = m_start_byte+f2;
+        m_position_byte = m_start_byte+chunk2;
     }
     else
     {
