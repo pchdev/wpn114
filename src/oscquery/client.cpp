@@ -217,7 +217,6 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
         {            
             node->setDevice ( this );
             node->update    ( jsnode );
-
             continue;
         }
 

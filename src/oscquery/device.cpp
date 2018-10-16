@@ -67,7 +67,8 @@ void WPNDevice::addNode(WPNDevice* dev, WPNNode *node)
     QString path = spl.join('/');
 
     if ( path.isEmpty() || path == "/" || path == " ")
-        node->setParent(dev->rootNode());
+        dev->rootNode()->addSubnode(node);
+
     else
     {
         auto parent = findOrCreateNode(dev, path);
@@ -105,7 +106,10 @@ WPNNode* WPNDevice::getNode(QString path)
 
 WPNNode* WPNDevice::get(QString path)
 {
-    return m_root_node->subnode(path);
+    auto node = m_root_node->subnode(path);
+    if ( !node ) qDebug() << path << "no node at that address";
+
+    return node;
 }
 
 void WPNDevice::onValueUpdate(QJsonObject obj)

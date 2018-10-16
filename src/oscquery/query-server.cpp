@@ -35,6 +35,12 @@ WPNQueryServer::WPNQueryServer() : WPNDevice (), m_ws_server(new WPNWebSocketSer
 WPNQueryServer::~WPNQueryServer()
 {
     m_zeroconf.stopServicePublish();
+
+    delete m_ws_server;
+    delete m_osc_hdl;
+
+    for ( const auto& client : m_clients )
+        delete client;
 }
 
 void WPNQueryServer::componentComplete()

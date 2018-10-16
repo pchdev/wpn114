@@ -6,7 +6,7 @@
 // SERVER ----------------------------------------------------------------------------------------------
 
 WPNWebSocketServer::WPNWebSocketServer(quint16 port) : m_port(port),
-    m_tcp_server(new QTcpServer())
+    m_tcp_server(new QTcpServer(this))
 {
     QObject::connect(m_tcp_server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 }
