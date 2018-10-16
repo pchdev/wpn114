@@ -66,6 +66,8 @@ class WPNDevice : public QObject
     Q_INVOKABLE QVariant value  ( QString method ) const;
     Q_INVOKABLE WPNNode* get    ( QString path );
 
+    void link(WPNNode* node);
+
     signals:
     void nodeAdded      ( WPNNode* );
     void nodeRemoved    ( QString );

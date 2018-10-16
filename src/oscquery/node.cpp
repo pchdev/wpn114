@@ -60,13 +60,6 @@ void WPNNode::componentComplete()
     if ( m_name.isEmpty() )
         m_name = m_attributes.path.split('/').last();
 
-    if ( !m_device ) m_device = WPNDevice::instance();
-    if ( m_device && !m_parent )
-    {
-        m_parent = m_device->findOrCreateNode(parentPath());
-        m_parent->addSubnode(this);
-    }
-
     if ( m_attributes.type != Type::None )
          m_attributes.access = Access::RW;
 
@@ -77,6 +70,9 @@ void WPNNode::componentComplete()
         if ( QString(v.typeName()) == "QJSValue")
             propertyChanged();
     }
+
+    if ( !m_device ) m_device = WPNDevice::instance();
+    if ( m_device && !m_parent ) m_device->link(this);
 }
 
 void WPNNode::setAccess         ( Access::Values access ) { m_attributes.access = access; }

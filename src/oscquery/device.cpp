@@ -77,8 +77,15 @@ WPNNode* WPNDevice::findOrCreateNode(QString path)
         next: ;
     }
 
-    if ( target != m_root_node ) nodeAdded(target);
     return target;
+}
+
+void WPNDevice::link(WPNNode* node)
+{
+    auto parent = findOrCreateNode(node->parentPath());
+    parent->addSubnode(node);
+
+    emit nodeAdded(node);
 }
 
 WPNNode* WPNDevice::get(QString path)
