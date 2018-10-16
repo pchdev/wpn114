@@ -22,7 +22,6 @@ void WPNFolderNode::parseDirectory(QDir dir)
 
         node->setName           ( file );
         node->setFilePath       ( dir.path()+"/"+file );
-        node->setPath           ( m_attributes.path+"/"+file );
         node->setExtendedType   ( "file");
         addSubnode              ( node );
     }
@@ -37,15 +36,13 @@ void WPNFolderNode::parseDirectory(QDir dir)
             WPNFolderNode* folder = new WPNFolderNode;
 
             folder->setName         ( d );
-            folder->setPath         ( m_attributes.path+"/"+d );
             folder->setRecursive    ( true );
             folder->setExtendedType ( "folder" );
             folder->setFilters      ( m_filters );
             folder->setFolderPath   ( dir.path()+"/"+d );
+            addSubnode              ( folder );
 
             folder->componentComplete ( );
-
-            addSubnode              ( folder );
         }
     }
 }

@@ -135,16 +135,10 @@ void WPNQueryClient::onCommand(QJsonObject command)
         for ( const auto& key : data.keys() )
         {
             auto obj    = data[key].toObject();
-            auto node   = m_root_node->subnode(obj["FULL_PATH"].toString());
+            auto node   = findOrCreateNode(this, obj["FULL_PATH"].toString());
 
-            if ( node )
-            {
-                node->setDevice ( this );
-                node->update ( obj );
-            }
-
-            else node = WPNNode::fromJson(obj, this);
-            WPNDevice::addNode(this, node);
+            node->setDevice ( this );
+            node->update ( obj );
         }
     }
 }

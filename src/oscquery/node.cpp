@@ -60,16 +60,11 @@ void WPNNode::componentComplete()
     if ( m_name.isEmpty() )
         m_name = m_attributes.path.split('/').last();
 
-    if ( m_device && !m_parent ) m_device->addNode(m_device, this);
-
-    if ( !m_device )
+    if ( !m_device ) m_device = WPNDevice::instance();
+    if ( m_device && !m_parent )
     {
-        auto dev = WPNDevice::instance();
-        if ( dev )
-        {
-            m_device = dev;
-            m_device->addNode(m_device, this);
-        }
+        m_parent = m_device->findOrCreateNode(m_device, parentPath());
+        m_parent->addSubnode(this);
     }
 
     if ( m_attributes.type != Type::None )
@@ -356,7 +351,9 @@ void WPNNode::addSubnode(WPNNode *node)
     if ( node->name().isEmpty())
         node->setName("undefined");
 
-    node->setPath           ( m_attributes.path +"/"+node->name() );
+    if ( node->path().isEmpty() )
+         node->setPath(m_attributes.path +"/"+node->name());
+
     node->setParent         ( this );
     node->setDevice         ( m_device );
     m_children.push_back    ( node );
