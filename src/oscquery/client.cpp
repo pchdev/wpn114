@@ -135,7 +135,7 @@ void WPNQueryClient::onCommand(QJsonObject command)
         for ( const auto& key : data.keys() )
         {
             auto obj    = data[key].toObject();
-            auto node   = findOrCreateNode(this, obj["FULL_PATH"].toString());
+            auto node   = findOrCreateNode(obj["FULL_PATH"].toString());
 
             node->setDevice ( this );
             node->update ( obj );
@@ -207,15 +207,9 @@ void WPNQueryClient::onNamespaceReceived(QJsonObject nspace)
     {
         QJsonObject jsnode = contents[key].toObject();
 
-        if ( auto node = m_root_node->subnode(jsnode["FULL_PATH"].toString()))
-        {            
-            node->setDevice ( this );
-            node->update    ( jsnode );
-            continue;
-        }
-
-        auto node = WPNNode::fromJson(jsnode, this);
-        WPNDevice::addNode(this, node);
+        auto node = findOrCreateNode(jsnode["FULL_PATH"].toString());
+        node->setDevice ( this );
+        node->update ( jsnode );
     }
 
     emit treeComplete();

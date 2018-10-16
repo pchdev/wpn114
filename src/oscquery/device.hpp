@@ -55,11 +55,8 @@ class WPNDevice : public QObject
 
     virtual void pushNodeValue(WPNNode* node) = 0;
 
-    static void       addNode           ( WPNDevice* dev, WPNNode* node );
-    static WPNNode*   findOrCreateNode  ( WPNDevice* dev, QString path );
-    static WPNNode*   getNode           ( QString path );   
-
-    void removeNode  ( QString path );
+    WPNNode* findOrCreateNode   ( QString path );
+    void removeNode             ( QString path );
 
     QString deviceName          ( ) const { return m_name; }
     WPNNode* rootNode           ( ) { return m_root_node; }

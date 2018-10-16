@@ -90,12 +90,12 @@ void StreamNode::setExposePath(QString path)
     m_exp_path = path;
 
     if ( m_exp_device )
-         m_exp_node = WPNDevice::findOrCreateNode(m_exp_device, path);
+         m_exp_node = m_exp_device->findOrCreateNode(path);
 
     else if ( auto dev = WPNDevice::instance() )
     {
         m_exp_device = dev;
-        m_exp_node = WPNDevice::findOrCreateNode(dev, path);
+        m_exp_node = m_exp_device->findOrCreateNode(path);
     }
 
     else return;

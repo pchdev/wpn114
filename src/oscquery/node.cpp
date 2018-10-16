@@ -63,7 +63,7 @@ void WPNNode::componentComplete()
     if ( !m_device ) m_device = WPNDevice::instance();
     if ( m_device && !m_parent )
     {
-        m_parent = m_device->findOrCreateNode(m_device, parentPath());
+        m_parent = m_device->findOrCreateNode(parentPath());
         m_parent->addSubnode(this);
     }
 

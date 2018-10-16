@@ -132,7 +132,7 @@ void WPNFolderMirror::next()
     QString path = m_downloads.first().prepend("/").prepend(m_abs_path);
     m_output.setFileName(path);
 
-    if ( !m_output.open(QIODevice::WriteOnly | QIODevice::Text ))
+    if ( !m_output.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text ))
     {
         qDebug() << "error opening file for writing";
         qDebug() << path;

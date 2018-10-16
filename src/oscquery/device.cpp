@@ -59,29 +59,10 @@ void WPNDevice::setSingleDevice(bool single)
     if ( single ) m_singleton = this;
 }
 
-void WPNDevice::addNode(WPNDevice* dev, WPNNode *node)
-{
-    // get node's parent
-    QStringList spl = node->path().split('/');
-    spl.removeLast();
-    QString path = spl.join('/');
-
-    if ( path.isEmpty() || path == "/" || path == " ")
-        dev->rootNode()->addSubnode(node);
-
-    else
-    {
-        auto parent = findOrCreateNode(dev, path);
-        parent->addSubnode(node);
-    }
-
-    dev->nodeAdded(node);
-}
-
-WPNNode* WPNDevice::findOrCreateNode(WPNDevice* dev, QString path)
+WPNNode* WPNDevice::findOrCreateNode(QString path)
 {
     QStringList split = path.split('/', QString::SkipEmptyParts);
-    WPNNode* target = dev->rootNode();
+    WPNNode* target = m_root_node;
 
     for ( const auto& node : split )
     {
@@ -96,12 +77,8 @@ WPNNode* WPNDevice::findOrCreateNode(WPNDevice* dev, QString path)
         next: ;
     }
 
+    if ( target != m_root_node ) nodeAdded(target);
     return target;
-}
-
-WPNNode* WPNDevice::getNode(QString path)
-{
-    return nullptr;
 }
 
 WPNNode* WPNDevice::get(QString path)
