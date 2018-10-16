@@ -9,22 +9,22 @@ SpeakerPair::SpeakerPair()
 
 void SpeakerPair::setXspread(qreal xspread)
 {
-
+    m_xspread = xspread;
 }
 
 void SpeakerPair::setYspread(qreal yspread)
 {
-
+    m_yspread = yspread;
 }
 
 void SpeakerPair::setX(qreal x)
 {
-
+    m_x = x;
 }
 
 void SpeakerPair::setY(qreal y)
 {
-
+    m_y = y;
 }
 
 void SpeakerPair::componentComplete()
@@ -332,6 +332,8 @@ void RoomChannel::computeCoeffs()
             qreal wg = spgain(w, speaker);
 
             gain = qMax(qMax(qMax(qMax(ng,sg),eg),wg),cg);
+
+            //qDebug() << "Gain for speaker:" << spk << gain;
         }
 
         coeffs[spk] = gain;

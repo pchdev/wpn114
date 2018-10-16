@@ -58,7 +58,6 @@ class StreamNode : public QObject, public QQmlParserStatus
 
     virtual void preinitialize  ( StreamProperties properties);
     virtual void initialize     ( qint64 ) = 0;
-
     virtual float** preprocess  ( float** buf, qint64 le );
     virtual float** process     ( float** buf, qint64 le ) = 0;
 
@@ -76,6 +75,7 @@ class StreamNode : public QObject, public QQmlParserStatus
     void clearSubnodes      ( );
 
     float** inputBuffer  ( ) const { return m_in; }
+    float** outputBuffer ( ) const { return m_out; }
     uint16_t numInputs   ( ) const { return m_num_inputs; }
     uint16_t numOutputs  ( ) const { return m_num_outputs; }
     uint16_t maxOutputs  ( ) const { return m_max_outputs; }
@@ -88,11 +88,11 @@ class StreamNode : public QObject, public QQmlParserStatus
     WPNDevice* exposeDevice     ( ) const { return m_exp_device; }
     StreamNode* parentStream    ( ) const { return m_parent_stream; }
 
+    virtual void setMute    ( bool mute );
+    virtual void setActive  ( bool active );
     void setNumInputs       ( uint16_t num_inputs );
     void setNumOutputs      ( uint16_t num_outputs );
     void setMaxOutputs      ( uint16_t max_outputs );
-    void setMute            ( bool mute );
-    void setActive          ( bool active );
     void setExposePath      ( QString path );
     void setExposeDevice    ( WPNDevice* device );
     void setParentStream    ( StreamNode* stream );

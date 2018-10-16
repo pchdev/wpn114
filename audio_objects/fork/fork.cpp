@@ -1,19 +1,38 @@
 #include "fork.hpp"
 
-Fork::Fork() : StreamNode()
+ForkEndpoint::ForkEndpoint(Fork& fork) : m_fork(fork)
 {
+    SETN_IN     ( fork.numInputs() );
+    SETN_OUT    ( fork.numOutputs() );
+}
 
+float** ForkEndpoint::process(float** buf, qint64 nsamples)
+{
+    return m_fork.process(buf, nsamples);
+}
+
+Fork::Fork() : StreamNode(), m_parent(nullptr), m_target(nullptr), m_endpoint(nullptr)
+{
+    m_active = false;
 }
 
 void Fork::setTarget(StreamNode* target)
 {
     m_target = target;
-    target->appendSubnode(this);
+    m_parent = qobject_cast<StreamNode*>(QObject::parent());
 
-    auto parent = qobject_cast<StreamNode*>(QObject::parent());
+    SETN_IN  ( m_parent->numOutputs() );
+    SETN_OUT ( m_parent->numOutputs() );
 
-    SETN_IN  ( parent->numOutputs() );
-    SETN_OUT ( parent->numOutputs() );
+    m_endpoint = new ForkEndpoint(*this);
+    m_target->appendSubnode(m_endpoint);
+}
+
+void Fork::setActive(bool active)
+{
+    // this is to keep parent from processing the fork
+    // only the receiver gets to process it
+    if ( m_endpoint ) m_endpoint->setActive(active);
 }
 
 void Fork::initialize(qint64 nsamples)
@@ -21,10 +40,15 @@ void Fork::initialize(qint64 nsamples)
 
 }
 
-float** Fork::process(float** buf, qint64 nsamples)
+float** Fork::process(float**, qint64 nsamples)
 {
-    StreamNode::mergeBuffers(m_out, buf, m_num_outputs, m_num_inputs, nsamples);
-    StreamNode::applyGain(m_out, m_num_outputs, nsamples, m_level);
+    auto in = m_parent->outputBuffer();
+    auto nout = m_num_outputs;
+    auto out = m_out;
 
-    return m_out;
+    StreamNode::resetBuffer(out, m_num_outputs, nsamples);
+    StreamNode::mergeBuffers(out, in, m_num_outputs, m_num_outputs, nsamples);
+    StreamNode::applyGain(out, m_num_outputs, nsamples, m_level);
+
+    return out;
 }
