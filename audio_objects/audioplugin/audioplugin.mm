@@ -76,7 +76,7 @@ void AudioPlugin::initialize(qint64 nsamples)
 }
 
 float** AudioPlugin::process(float**input, qint64 nsamples)
-{    
+{                
     if  ( m_num_inputs )
         m_plugin_hdl->process_audio(input, m_out, nsamples);
 

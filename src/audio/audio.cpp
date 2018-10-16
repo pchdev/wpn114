@@ -266,8 +266,9 @@ float** StreamNode::preprocess(float** buf, qint64 le)
     }
     else
     {
-        // mix all sources down to an array of channels
-        float** ubuf = inputBuffer();
+        // otherwise mix all sources down to an array of channels
+        float** in = m_in;
+        StreamNode::resetBuffer(in, m_num_outputs, le);
 
         for ( const auto& subnode : m_subnodes )
         {
@@ -278,9 +279,11 @@ float** StreamNode::preprocess(float** buf, qint64 le)
 
                 for ( quint16 ch = 0; ch < pch.size(); ++ch )
                     for ( quint16 s = 0; s < le; ++s )
-                        ubuf[pch[ch]][s] += genbuf[ch][s];
+                        in[pch[ch]][s] += genbuf[ch][s];
             }
         }
+
+        return process(in, le);
     }
 }
 
@@ -421,7 +424,7 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
 
     for ( const auto& input : inputs )
     {
-        if ( !input->active() ) continue;
+        if ( !input->active() ) continue;       
 
         float** cdata   = input->preprocess ( nullptr, bsize );
         auto pch        = input->parentChannelsVec();
