@@ -282,15 +282,21 @@ void RoomSource::initialize(qint64 nsamples)
 
 float** RoomSource::preprocess(float** buf, qint64 nsamples)
 {
-    if ( m_subnodes.size() == 1 ) return m_subnodes[0]->preprocess(buf, nsamples);
+    if ( m_subnodes.size() == 1 && m_subnodes[0]->active())
+        return m_subnodes[0]->preprocess(buf, nsamples);
 
     auto out = m_out;
     auto nout = m_num_outputs;
     StreamNode::resetBuffer(out, nout, nsamples);
 
+    // TODO: if single source, connect active signal
+
     for ( const auto& node : m_subnodes )
+    {
+        if ( !node->active() ) continue;
         StreamNode::mergeBuffers( out, node->preprocess(buf, nsamples),
                                   nout, node->numOutputs(), nsamples );
+    }
 
     return out;
 }

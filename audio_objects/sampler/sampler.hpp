@@ -91,6 +91,7 @@ class StreamSampler : public StreamNode
     float m_release_inc         = 0.f;
     float m_xfade_inc           = 0.f;
 
+    quint64 m_release_end       = 0;
     quint64 m_attack_end        = 0;
     quint64 m_xfade_point       = 0;
     quint64 m_xfade_length      = 0;
