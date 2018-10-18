@@ -204,7 +204,7 @@ class WorldStream : public StreamNode
     void setOutDevice    ( QString device );
 
     protected slots:
-    void onAudioStateChanged ( QAudio::State ) const;
+    void onAudioStateChanged ( QAudio::State );
 
     signals:
     void startStream        ( );

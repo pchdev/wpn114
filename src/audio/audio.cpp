@@ -212,7 +212,7 @@ int StreamNode::subnodesCount(QQmlListProperty<StreamNode>* list)
 
 //-------------------------------------------------------------------------------------------
 
-inline void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
+void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
 {
     buffer = new float* [ nchannels ];
     for ( uint16_t ch = 0; ch < nchannels; ++ch )
@@ -254,7 +254,7 @@ void StreamNode::preinitialize(StreamProperties properties)
 
 float** StreamNode::preprocess(float** buf, qint64 le)
 {   
-    if ( !m_num_inputs ) // if generator, pass the buffer down the chain
+    if ( !m_num_inputs || buf == nullptr ) // if generator, pass the buffer down the chain
     {
         float** ubuf = process(buf, le);
 
@@ -268,7 +268,7 @@ float** StreamNode::preprocess(float** buf, qint64 le)
     {
         // otherwise mix all sources down to an array of channels
         float** in = m_in;
-        StreamNode::resetBuffer(in, m_num_outputs, le);
+        StreamNode::resetBuffer(in, m_num_inputs, le);
 
         for ( const auto& subnode : m_subnodes )
         {
@@ -365,9 +365,17 @@ void WorldStream::componentComplete()
     QObject::connect ( this, SIGNAL(stopStream()), m_stream, SLOT(stop()));
 }
 
-void WorldStream::onAudioStateChanged(QAudio::State state) const
+void WorldStream::onAudioStateChanged(QAudio::State state)
 {
-    qDebug() << "[AUDIO]" << state;
+    auto obj = qobject_cast<QAudioOutput*>(QObject::sender());
+    qDebug() << "[AUDIO]" << state;    
+
+    if ( obj->error() == QAudio::UnderrunError )
+    {
+        // restart stream
+        stop();
+        start();
+    }
 }
 
 void WorldStream::start()
@@ -428,6 +436,8 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
 
         float** cdata   = input->preprocess ( nullptr, bsize );
         auto pch        = input->parentChannelsVec();
+
+        if ( pch.size() > nout ) pch.resize(nout);
 
         for ( quint16 s = 0; s < bsize; ++s )
             for ( quint16 ch = 0; ch < pch.size(); ++ch )

@@ -343,7 +343,9 @@ void WPNNode::setListening(bool listen, WPNDevice *target)
 }
 
 void WPNNode::addSubnode(WPNNode *node)
-{
+{    
+    if ( m_children.contains(node)) return;
+
     if ( node->name().isEmpty())
         node->setName("undefined");
 

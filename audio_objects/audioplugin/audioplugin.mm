@@ -15,9 +15,10 @@
 
 AudioPlugin::AudioPlugin() : m_path(""), m_view(0), m_plugin_hdl(0) {}
 AudioPlugin::~AudioPlugin()
-{
+{    
     delete m_view;
     delete m_view_container;
+    delete m_plugin_hdl;
 }
 
 void AudioPlugin::componentComplete()
@@ -198,7 +199,7 @@ void AudioPlugin::sysex(QVariantList bytes)
     m_aeffect->dispatcher(m_aeffect, command, index, 0, &name, 0); \
     return (std::string) name;
 
-vst2x_plugin::vst2x_plugin(std::string path)
+vst2x_plugin::vst2x_plugin(std::string path) : m_block_pos(0), m_event_queue(new VstEvents)
 {
 
 #ifdef __APPLE__ //-----------------------------------------------------------------------------
@@ -233,6 +234,8 @@ vst2x_plugin::vst2x_plugin(std::string path)
 
 vst2x_plugin::~vst2x_plugin()
 {
+    m_aeffect->dispatcher(m_aeffect, effStopProcess, 0, 0, nullptr, 0.f);
+    m_aeffect->dispatcher(m_aeffect, effMainsChanged, 0, 0, nullptr, 0.f);
     m_aeffect->dispatcher(m_aeffect, effClose, 0, 0, nullptr, 0.f);
 
 #ifdef __APPLE__ // ---------------------------------------------------------------
@@ -248,6 +251,7 @@ void vst2x_plugin::configure(const uint32_t srate, const uint16_t bsize)
     m_aeffect->dispatcher(m_aeffect, effSetSampleRate, 0, 0, nullptr, srate);
     m_aeffect->dispatcher(m_aeffect, effSetBlockSize, 0, bsize, nullptr, 0.f);
     m_aeffect->dispatcher(m_aeffect, effMainsChanged, 0, 1, nullptr, 0.f);
+    m_aeffect->dispatcher(m_aeffect, effStartProcess, 0, 0, nullptr, 0.0);
 }
 
 uint16_t vst2x_plugin::get_nparameters() const
@@ -292,7 +296,7 @@ void vst2x_plugin::set_parameter_value(const uint16_t index, const float value)
 
 void vst2x_plugin::set_program(const uint16_t index)
 {
-    m_aeffect->dispatcher(m_aeffect, effSetProgram, index, 0, 0, 0);
+    m_aeffect->dispatcher(m_aeffect, effSetProgram, index, 0, nullptr, 0);
 }
 
 void vst2x_plugin::set_program_name(const std::string name)
@@ -303,30 +307,36 @@ void vst2x_plugin::set_program_name(const std::string name)
 
 void vst2x_plugin::process_audio(float** inputs, float **outputs, const uint16_t nsamples)
 {
+    if ( m_event_queue->numEvents )
+        m_aeffect->dispatcher(m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f);
+
+    m_event_queue->numEvents = 0;
     m_aeffect->processReplacing(m_aeffect, inputs, outputs, nsamples);
 }
 
 void vst2x_plugin::process_audio(float **&outputs, const uint16_t nsamples)
 {
+    if ( m_event_queue->numEvents )
+        m_aeffect->dispatcher(m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f);
+
+    m_event_queue->numEvents = 0;
     m_aeffect->processReplacing(m_aeffect, nullptr, outputs, nsamples);
 }
 
 void vst2x_plugin::process_midi(const uint8_t data[4])
 {
-    auto events         = new VstEvents();
-    events->events[0]   = new VstEvent();
-    events->numEvents   = 1;
+    auto midiev = new VstMidiEvent;
+    std::memset ( midiev, 0, sizeof(VstMidiEvent) );
+    std::copy_n ( data, 4, midiev->midiData );
 
-    auto midiev         = (VstMidiEvent*) events->events[0];
-
-    for ( int i = 0; i < 4; ++i )
-        midiev->midiData[i] = data[i];
-
+    midiev->deltaFrames = 0;
     midiev->flags       = kVstMidiEventIsRealtime;
     midiev->byteSize    = sizeof(VstMidiEvent);
     midiev->type        = kVstMidiType;
 
-    m_aeffect->dispatcher(m_aeffect, effProcessEvents, 0, 0, events, 0.f);
+    auto nevents = m_event_queue->numEvents;
+    m_event_queue->events[nevents] = reinterpret_cast<VstEvent*>(midiev);
+    m_event_queue->numEvents++;
 }
 
 void vst2x_plugin::open_editor(void* view)
@@ -371,8 +381,21 @@ VstIntPtr VSTCALLBACK HostCallback
     case audioMasterIdle:
         result = 1;
         break;
+
     case audioMasterGetTime:
+    {
+        VstTimeInfo* info = new VstTimeInfo;
+        std::memset(info, 0, sizeof(VstTimeInfo));
+
+        if ( value & kVstTempoValid )
+        {
+          info->tempo = 120;
+          info->flags |= kVstTempoValid;
+        }
+
+        result = reinterpret_cast<VstIntPtr>(info);
         break;
+    }
     case audioMasterProcessEvents:
         break;
     case audioMasterIOChanged:
@@ -386,12 +409,14 @@ VstIntPtr VSTCALLBACK HostCallback
     case audioMasterGetOutputLatency:
         break;
     case audioMasterGetCurrentProcessLevel:
+        result = kVstProcessLevelUser;
         break;
     case audioMasterGetAutomationState:
         break;
     case audioMasterGetVendorString:
         break;
     case audioMasterGetProductString:
+         std::copy_n("wpn214", 7, static_cast<char*>(ptr));
         break;
     case audioMasterGetVendorVersion:
         break;

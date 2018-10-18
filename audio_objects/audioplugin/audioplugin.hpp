@@ -7,6 +7,7 @@
 #include "aeffectx.h"
 #include <QMacNativeWidget>
 #include <QMacCocoaViewContainer>
+#include <QQueue>
 
 static VstIntPtr VSTCALLBACK HostCallback
 (AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void* ptr, float opt);
@@ -79,7 +80,9 @@ class vst2x_plugin : public plugin_hdl
     ~vst2x_plugin();
 
     private:
-        AEffect* m_aeffect;
+    quint16 m_block_pos;
+    VstEvents* m_event_queue;
+    AEffect* m_aeffect;
 };
 
 // QT INSTANCE --------------------------------------------------------------------

@@ -46,7 +46,7 @@ WPNDevice* WPNDevice::instance()
     return m_singleton;
 }
 
-WPNDevice::WPNDevice()
+WPNDevice::WPNDevice() : m_singleDevice(false)
 {
     m_root_node = new WPNNode;
     m_root_node ->setPath   ( "/" );
@@ -56,6 +56,7 @@ WPNDevice::~WPNDevice() {}
 
 void WPNDevice::setSingleDevice(bool single)
 {
+    m_singleDevice = single;
     if ( single ) m_singleton = this;
 }
 
