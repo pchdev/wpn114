@@ -1,5 +1,7 @@
 #include "audioplugin.hpp"
 #include <QtDebug>
+#include <QFile>
+#include <QDataStream>
 
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
@@ -139,6 +141,36 @@ void AudioPlugin::set(int index, float value)
 void AudioPlugin::save(QString name)
 {
     m_plugin_hdl->set_program_name(name.toStdString());
+}
+
+void AudioPlugin::setChunk(QString name)
+{
+    m_chunk = name;
+}
+
+void AudioPlugin::saveChunk(QString name)
+{
+    // write to file
+    QFile out(name);
+    out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+
+    QDataStream stream(&out);
+    auto chunk = m_plugin_hdl->get_chunk();
+    stream << chunk;
+
+    out.close();
+}
+
+void AudioPlugin::loadChunk(QString name)
+{
+    // read from file
+    QFile in(name);
+    in.open(QIODevice::ReadOnly);
+
+    QByteArray chunk = in.readAll();
+    m_plugin_hdl->set_chunk(chunk);
+
+    in.close();
 }
 
 #define MIDI_AR2(cmd) \
@@ -365,6 +397,19 @@ std::array<uint16_t, 2> vst2x_plugin::get_editor_size() const
     return res;
 }
 
+QByteArray vst2x_plugin::get_chunk()
+{
+    QByteArray chunk;
+    m_aeffect->dispatcher(m_aeffect, effGetChunk, 0, 0, chunk.data(), 0.0);
+
+    return chunk;
+}
+
+void vst2x_plugin::set_chunk(QByteArray chunk)
+{
+    m_aeffect->dispatcher(m_aeffect, effSetChunk, 0, chunk.size(), chunk.data(), 0);
+}
+
 VstIntPtr VSTCALLBACK HostCallback
 (AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void *ptr, float opt)
 {
@@ -526,5 +571,16 @@ void vst3x_plugin::open_editor(void* view)
 version vst3x_plugin::get_version() const
 {
     return version::VST3X;
+}
+
+QByteArray vst3x_plugin::get_chunk()
+{
+    QByteArray chunk;
+    return chunk;
+}
+
+void vst3x_plugin::set_chunk(QByteArray chunk)
+{
+
 }
 

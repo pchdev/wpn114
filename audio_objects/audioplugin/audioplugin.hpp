@@ -46,6 +46,8 @@ enum class MIDI
     virtual void                        set_parameter_value(const uint16_t index, float value) pure; \
     virtual void                        set_program(const uint16_t index) pure ; \
     virtual void                        set_program_name(const std::string name) pure; \
+    virtual QByteArray                  get_chunk() pure; \
+    virtual void                        set_chunk(QByteArray) pure; \
     virtual void                        process_midi(const uint8_t data[4]) pure; \
     virtual void                        process_audio(float** inputs, float** outputs, const uint16_t nsamples) pure; \
     virtual void                        process_audio(float**& outputs, const uint16_t nsamples) pure; \
@@ -95,6 +97,7 @@ class AudioPlugin : public StreamNode
     Q_PROPERTY      ( int program READ program WRITE setProgram NOTIFY programChanged )
     Q_PROPERTY      ( QStringList programs READ programs )
     Q_PROPERTY      ( QStringList parameters READ parameters )
+    Q_PROPERTY      ( QString chunk READ chunk WRITE setChunk )
 
 public:
     AudioPlugin();
@@ -109,6 +112,9 @@ public:
     QString path() const;
     QStringList programs();
     QStringList parameters();
+    QString chunk() { return m_chunk; }
+
+    void setChunk(QString name);
 
     void setPath(const QString);
     void setProgram(const quint16);
@@ -121,6 +127,9 @@ public:
     Q_INVOKABLE float get(QString name) const;
     Q_INVOKABLE float get(int index) const;
     Q_INVOKABLE void save(QString name);
+
+    Q_INVOKABLE void loadChunk(QString name);
+    Q_INVOKABLE void saveChunk(QString name);
 
     Q_INVOKABLE void noteOn(int channel, int index, int value);
     Q_INVOKABLE void noteOff(int channel, int index, int value);
@@ -143,6 +152,7 @@ private:
     plugin_hdl*         m_plugin_hdl;
     QStringList         m_programs;
     QStringList         m_parameters;
+    QString             m_chunk;
 
 #ifdef __APPLE__
     QMacNativeWidget*           m_view;

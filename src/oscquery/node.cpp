@@ -397,7 +397,7 @@ WPNNode* WPNNode::subnode(QString path)
     return nullptr;
 }
 
-WPNNode* WPNNode::subnode(uint64_t index)
+WPNNode* WPNNode::subnodeAt(int index)
 {
     return m_children[index];
 }
