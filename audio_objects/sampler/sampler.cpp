@@ -176,18 +176,44 @@ void StreamSampler::onNextBufferReady()
 
 void StreamSampler::play()
 {
-    m_playing = true;
+    if ( m_playing )
+    {
+        // if already playing, reset
+        reset();
+    }
+
+    else m_playing = true;
     if ( !m_active ) m_active = true;
 }
 
 void StreamSampler::stop()
 {
-    m_releasing = true;
+    if ( m_active && m_playing )
+        m_releasing = true;
+
+    else
+    {
+        reset();
+
+        m_playing      = false;
+        m_releasing    = false;
+    }
 }
 
 inline float lininterp(float x, float a, float b)
 {
     return a + x * (b - a);
+}
+
+inline void StreamSampler::reset()
+{
+    m_phase             = 0;
+    m_stream_phase      = 0;
+    m_xfade_buf_phase   = 0;
+    m_attack_phase      = 0;
+    m_xfade_phase       = 0;
+    m_release_phase     = 0;
+    m_first_play        = true;
 }
 
 float** StreamSampler::process(float** buf, qint64 nsamples)
@@ -334,14 +360,9 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
                 for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;
 
-                m_phase             = 0;
-                m_stream_phase      = 0;
-                m_xfade_buf_phase   = 0;
-                m_attack_phase      = 0;
-                m_xfade_phase       = 0;
-                m_release_phase     = 0;
+                reset();
+
                 m_playing           = false;
-                m_first_play        = true;
                 m_active            = false;
                 m_releasing         = false;
 
@@ -362,18 +383,13 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
         {
             // if reaching end of release envelope
             if ( release_phase >= release_end )
-            {
+            {                
+                reset();
+                emit reset(m_current_buffer);
+
                 m_playing       = false;
                 m_active        = false;
                 m_releasing     = false;
-                m_phase             = 0;
-                m_stream_phase      = 0;
-                m_xfade_buf_phase   = 0;
-                m_attack_phase      = 0;
-                m_xfade_phase       = 0;
-                m_release_phase     = 0;
-
-                emit reset(m_current_buffer);
 
                 for ( quint16 ch = 0; ch < nch; ++ch )
                     out[ch][s] = 0.f;

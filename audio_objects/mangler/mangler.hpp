@@ -53,6 +53,7 @@ class Mangler : public StreamNode
     private:
     qreal m_input_gain;
     qreal m_dry_out;
+    qreal m_wet_out;
     qreal m_bad_resampler;
     bool m_bitcrusher;
     qreal m_thermonuclear;

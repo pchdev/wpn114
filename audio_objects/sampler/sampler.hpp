@@ -66,6 +66,8 @@ class StreamSampler : public StreamNode
     void fileLengthChanged ();
 
     private:
+    void reset();
+
     Soundfile* m_soundfile          = nullptr;
     SoundfileStreamer* m_streamer   = nullptr;
     QThread m_streamer_thread;
@@ -160,7 +162,9 @@ class Sampler : public StreamNode
     Q_INVOKABLE void play   ( );
     Q_INVOKABLE void stop   ( );
 
-    private:    
+    private:        
+
+
     Soundfile* m_soundfile  = nullptr;
     float* m_buffer         = nullptr;
     quint64 m_buffer_size   = 0;

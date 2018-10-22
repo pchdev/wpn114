@@ -124,11 +124,7 @@ void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
 void WPNQueryClient::onTextMessageReceived(QString message)
 {
     qDebug() << "Message In:" << message;
-    qDebug() << message.size();
-
     auto obj = QJsonDocument::fromJson(message.toUtf8()).object();        
-
-    qDebug() << obj;
 
     if      ( obj.contains("COMMAND")) emit command(obj);
     else if ( obj.contains("FULL_PATH")) onNamespaceReceived(obj);

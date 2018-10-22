@@ -34,6 +34,7 @@ void SoundfileStreamer::setBufferSize(quint64 nsamples)
 
 void SoundfileStreamer::reset(float* target)
 {
+    m_file->reset();
     m_position_byte = m_start_byte;
     next(target);
 }

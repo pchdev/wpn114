@@ -158,7 +158,7 @@ QString WPNQueryServer::namespaceJson(QString method)
 
         if ( !node ) return "";
 
-        auto obj   = node->attributeJson(spl[1]);
+        auto obj = node->attributeJson(spl[1]);
         return HTTP::ReplyManager::formatJsonResponse(obj);
     }
     else

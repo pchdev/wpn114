@@ -107,7 +107,7 @@ QJsonObject WPNNode::attributesJson() const
 
     if  ( m_attributes.type != Type::None )
     {
-        obj.insert("DESCRIPTION", m_attributes.description);
+        //obj.insert("DESCRIPTION", m_attributes.description);
         obj.insert("VALUE", jsonValue());
         obj.insert("CRITICAL", m_attributes.critical);
         obj.insert("TYPE", typeTag());
