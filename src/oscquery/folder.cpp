@@ -94,7 +94,11 @@ void WPNFolderMirror::setDestination(QString destination)
 {
     m_destination = destination;
     m_abs_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).append(destination);
-    if ( !QDir(m_abs_path).exists()) QDir().mkdir(m_abs_path);
+    if ( !QDir(m_abs_path).exists())
+    {
+        qDebug() << "creating path" << m_abs_path;
+        QDir().mkpath(m_abs_path);
+    }
 }
 
 QUrl WPNFolderMirror::toUrl(QString file)

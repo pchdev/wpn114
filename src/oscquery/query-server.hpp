@@ -34,8 +34,8 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     void setName    ( QString name ) { m_settings.name = name; }
 
     signals:
-    void newConnection();
-    void disconnection();
+    void newConnection(QString host);
+    void disconnection(QString host);
     void unknownMethodRequested ( QString method );
 
     protected slots:
@@ -47,6 +47,7 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     void onNodeAdded            ( WPNNode *node );
     QString hostInfoJson        ( );
     QString namespaceJson       ( QString method );
+    void onZConfError           ( QZeroConf::error_t err);
 
     private:        
     OSCHandler* m_osc_hdl;

@@ -130,6 +130,12 @@ void WPNWebSocket::connect()
     m_tcp_con->connectToHost(m_host_addr, m_host_port);
 }
 
+void WPNWebSocket::connect(QString host)
+{
+    auto spl = host.split(':');
+    m_tcp_con->connectToHost(spl[0], spl[1].toInt());
+}
+
 void WPNWebSocket::connect(QString host, quint16 port)
 {
     m_host_addr = host;
@@ -350,7 +356,7 @@ void WPNWebSocket::decode(QByteArray data)
             stream >> byte;
             decoded.append ( byte^mask[i%4] );
         }
-    }
+    }    
 
     switch(static_cast<Opcodes>(opcode))
     {

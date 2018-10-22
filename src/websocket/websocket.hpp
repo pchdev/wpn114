@@ -30,6 +30,7 @@ class WPNWebSocket : public QObject
     ~WPNWebSocket();
 
     void connect      ( );
+    void connect      ( QString host );
     void connect      ( QString host, quint16 port );
     void disconnect   ( );
 

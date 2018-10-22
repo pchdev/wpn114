@@ -14,7 +14,7 @@ QString ReplyManager::formatJsonResponse( QString response )
     resp.append     ( "Server: Qt/5.11.1\r\n" );
     resp.append     ( "Content-Type: application/json; charset=utf-8\r\n" );
     resp.append     ( "Content-Length: " );
-    resp.append     ( QString::number(ba.size()+ANDROID_JSON).append("\r\n"));
+    resp.append     ( QString::number(ba.size()).append("\r\n"));
     resp.append     ( "\r\n" );   
     resp.append     ( response );  
 
@@ -85,6 +85,7 @@ void ReplyManager::next()
     QObject::connect( rep.target, SIGNAL(error(QAbstractSocket::SocketError)),
                       this, SLOT(onSocketError(QAbstractSocket::SocketError)));
 
+    rep.target->flush();
     rep.target->write(rep.reply);
     m_free = false;
 }

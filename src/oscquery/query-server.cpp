@@ -48,11 +48,17 @@ void WPNQueryServer::componentComplete()
     QObject::connect( m_ws_server, SIGNAL(newConnection(WPNWebSocket*)), this, SLOT(onNewConnection(WPNWebSocket*)));
     QObject::connect( m_ws_server, SIGNAL(httpRequestReceived(QTcpSocket*,QString)), this, SLOT(onHttpRequest(QTcpSocket*,QString)));
     QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariant)), this, SLOT(onValueUpdate(QString,QVariant)));
-    QObject::connect( this, SIGNAL(nodeAdded(WPNNode*)), this, SLOT(onNodeAdded(WPNNode*)));
+    QObject::connect( this, SIGNAL(nodeAdded(WPNNode*)), this, SLOT(onNodeAdded(WPNNode*)));    
+    QObject::connect( &m_zeroconf, SIGNAL(error(QZeroConf::error_t)), this, SLOT(onZConfError(QZeroConf::error_t)));
 
     m_ws_server->start();
-    m_zeroconf.startServicePublish(
-                m_settings.name.toStdString().c_str(), "_oscjson._tcp", "local", m_settings.tcp_port);
+    m_zeroconf.startServicePublish( m_settings.name.toStdString().c_str(),
+                                   "_oscjson._tcp", "local", m_settings.tcp_port );
+}
+
+void WPNQueryServer::onZConfError(QZeroConf::error_t err)
+{
+    qDebug() << "[ZEROCONF-SERVER] Error" << err;
 }
 
 void WPNQueryServer::setTcpPort(quint16 port)
@@ -78,16 +84,17 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
     QObject::connect ( client, SIGNAL(httpMessageReceived(QString)), this, SLOT(onClientHttpQuery(QString)));
     QObject::connect ( client, SIGNAL(valueUpdate(QString, QVariant)), this, SLOT(onValueUpdate(QString, QVariant)));
 
-    qDebug() << "[OSCQUERY-SERVER] New client connection:" << client->hostAddr();
-    emit newConnection();
+    QString host = client->hostAddr().append(":").append(QString::number(client->port()));
+    emit newConnection(host);
 }
 
 void WPNQueryServer::onDisconnection()
 {
-    auto sender = qobject_cast<WPNQueryClient*>(QObject::sender());
+    auto sender = qobject_cast<WPNQueryClient*>(QObject::sender());    
+    QString host = sender->hostAddr().append(":").append(QString::number(sender->port()));
     m_clients.removeAll(sender);
 
-    emit disconnection();
+    emit disconnection(host);
 }
 
 void WPNQueryServer::onNodeAdded(WPNNode* node)

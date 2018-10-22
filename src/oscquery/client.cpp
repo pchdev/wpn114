@@ -51,15 +51,22 @@ void WPNQueryClient::componentComplete()
     }
 }
 
-void WPNQueryClient::onConnected()
+void WPNQueryClient::connect(QString host)
 {
-    // request host info
-    // request namespace
-    qDebug() << "[OSCQUERY-CLIENT] Connected to host, requesting info & namespace";
+    auto spl    = host.split(':');
+    m_host_addr = spl[0];
+    m_host_port = spl[1].toInt();
 
+    m_ws_con->connect(m_host_addr, m_host_port);
+}
+
+void WPNQueryClient::onConnected()
+{    
     m_host_url = m_host_addr.prepend("http://")+":"+QString::number(m_host_port);
     requestHttp("/?HOST_INFO");
     requestHttp("/");
+
+    qDebug() << "[OSCQUERY-CLIENT] Connected to host, requesting info & namespace";
 }
 
 void WPNQueryClient::onDisconnected()
@@ -117,8 +124,11 @@ void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
 void WPNQueryClient::onTextMessageReceived(QString message)
 {
     qDebug() << "Message In:" << message;
+    qDebug() << message.size();
 
     auto obj = QJsonDocument::fromJson(message.toUtf8()).object();        
+
+    qDebug() << obj;
 
     if      ( obj.contains("COMMAND")) emit command(obj);
     else if ( obj.contains("FULL_PATH")) onNamespaceReceived(obj);
