@@ -46,7 +46,7 @@ void SoundfileStreamer::next(float* target)
     quint64 position    = m_position_byte;
     quint64 endframe    = position+nbytes;
     quint64 endbyte     = m_end_byte;
-    quint32 div         = (2<<(bps-1))-1;
+    quint32 div         = ((2<<(bps-1))-1)/2;
 
     QDataStream stream(m_file);
 
@@ -193,7 +193,7 @@ void Soundfile::buffer(float* buffer, quint64 start_sample, quint64 len )
     {
         // convert to float
         qint16 si16; stream >> si16;
-        buffer[f] = si16/65535.f;
+        buffer[f] = si16/32767.f;
     }
 
     m_file->reset();

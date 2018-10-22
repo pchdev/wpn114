@@ -102,8 +102,8 @@ void StreamNode::setExposePath(QString path)
 
     auto pcount = metaObject()->propertyCount();
 
-    auto stream     = m_exp_node->createSubnode("control");
-    auto parameters = m_exp_node->createSubnode("parameters");
+    auto stream     = m_exp_node->createSubnode("stream");
+    auto parameters = m_exp_node->createSubnode("properties");
 
     for ( quint16 i = 0; i < pcount; ++i )
     {
@@ -227,6 +227,8 @@ void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 nsample
 
 void StreamNode::applyGain(float**& buffer, quint16 nchannels, quint16 nsamples, float gain)
 {
+    if ( gain == 1.f ) return;
+
     for ( quint16 ch = 0; ch < nchannels; ++ch )
         for ( quint16 s = 0; s < nsamples; ++s )
             buffer[ch][s] *= gain;
@@ -254,9 +256,10 @@ void StreamNode::preinitialize(StreamProperties properties)
 
 float** StreamNode::preprocess(float** buf, qint64 le)
 {   
-    if ( !m_num_inputs || buf == nullptr ) // if generator, pass the buffer down the chain
+    if ( !m_num_inputs ) // if generator, pass the buffer down the chain
     {
         float** ubuf = process(buf, le);
+        StreamNode::applyGain(ubuf, m_num_outputs, le, m_level);
 
         for ( const auto& subnode : m_subnodes )
             if ( subnode->active() && subnode->numInputs() == m_num_outputs )
@@ -266,9 +269,12 @@ float** StreamNode::preprocess(float** buf, qint64 le)
     }
     else
     {
-        // otherwise mix all sources down to an array of channels
+        // otherwise mix all sources down to an array of channels       
         float** in = m_in;
         StreamNode::resetBuffer(in, m_num_inputs, le);
+
+        if  ( buf != nullptr )
+            StreamNode::mergeBuffers(in, buf, m_num_inputs, m_num_inputs, le);
 
         for ( const auto& subnode : m_subnodes )
         {
