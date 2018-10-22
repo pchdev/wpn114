@@ -6,6 +6,7 @@
 #include <src/oscquery/node.hpp>
 #include <src/oscquery/file.hpp>
 #include <src/oscquery/folder.hpp>
+#include <src/oscquery/netexplorer.hpp>
 #endif
 
 #ifdef WPN114_AUDIO
@@ -19,6 +20,7 @@
 #include <audio_objects/multisampler/multisampler.hpp>
 #include <audio_objects/fork/fork.hpp>
 #include <audio_objects/peakrms/peakrms.hpp>
+#include <audio_objects/convolver/convolver.hpp>
 #endif
 
 #ifdef WPN114_MIDI
@@ -56,6 +58,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<Mangler, 1>                 ( "WPN114", 1, 0, "Mangler" );
     qmlRegisterType<Fork, 1>                    ( "WPN114", 1, 0, "Fork" );
     qmlRegisterType<PeakRMS, 1>                 ( "WPN114", 1, 0, "PeakRMS" );
+    qmlRegisterType<Convolver, 1>               ( "WPN114", 1, 0, "Convolver" );
 #endif
 
 #ifdef WPN114_MIDI
@@ -77,5 +80,6 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<WPNFolderMirror, 1>         ( "WPN114", 1, 0, "FolderMirror" );
     qmlRegisterType<WPNQueryServer, 1>          ( "WPN114", 1, 0, "OSCQueryServer" );
     qmlRegisterType<WPNQueryClient, 1>          ( "WPN114", 1, 0, "OSCQueryClient" );
+    qmlRegisterType<NetExplorer, 1>             ( "WPN114", 1, 0, "NetExplorer" );
 #endif
 }

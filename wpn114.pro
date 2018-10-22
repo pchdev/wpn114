@@ -55,7 +55,12 @@ audio {
         audio_objects/sharpen/sharpen.cpp           \
         audio_objects/multisampler/multisampler.cpp \
         audio_objects/fork/fork.cpp                 \
-        audio_objects/peakrms/peakrms.cpp
+        audio_objects/peakrms/peakrms.cpp           \
+        audio_objects/convolver/convolver.cpp       \
+        audio_objects/convolver/AudioFFT.cpp        \
+        audio_objects/convolver/FFTConvolver.cpp    \
+        audio_objects/convolver/TwoStageFFTConvolver.cpp \
+        audio_objects/convolver/Utilities.cpp
     HEADERS +=                                      \
         src/audio/audio.hpp                         \
         audio_objects/sine/sine.hpp                 \
@@ -67,7 +72,12 @@ audio {
         audio_objects/sharpen/sharpen.hpp           \
         audio_objects/multisampler/multisampler.hpp \
         audio_objects/fork/fork.hpp                 \
-        audio_objects/peakrms/peakrms.hpp
+        audio_objects/peakrms/peakrms.hpp           \
+        audio_objects/convolver/convolver.hpp       \
+        audio_objects/convolver/AudioFFT.h          \
+        audio_objects/convolver/FFTConvolver.h      \
+        audio_objects/convolver/TwoStageFFTConvolver.h \
+        audio_objects/convolver/Utilities.h
 }
 
 midi {
@@ -89,7 +99,9 @@ network {
         src/oscquery/folder.cpp                 \
         src/oscquery/node.cpp                   \
         src/oscquery/query-server.cpp           \
-        src/websocket/websocket.cpp
+        src/websocket/websocket.cpp             \
+        src/oscquery/nodetree.cpp               \
+        src/oscquery/netexplorer.cpp
     HEADERS +=                                  \
         src/http/http.hpp                       \
         src/osc/osc.hpp                         \
@@ -99,12 +111,13 @@ network {
         src/oscquery/folder.hpp                 \
         src/oscquery/node.hpp                   \
         src/oscquery/query-server.hpp           \
-        src/websocket/websocket.hpp
+        src/websocket/websocket.hpp             \
+        src/oscquery/nodetree.hpp               \
+        src/oscquery/netexplorer.hpp
 }
 
 SOURCES += qml_plugin.cpp
 HEADERS += qml_plugin.hpp
-
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
