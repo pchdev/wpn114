@@ -24,20 +24,30 @@ class Fork : public StreamNode
 {
     Q_OBJECT
     Q_PROPERTY  ( StreamNode* target READ target WRITE setTarget )
+    Q_PROPERTY  ( bool prefader READ prefader WRITE setPrefader )
 
     public:
     Fork();
 
     virtual void preinitialize(StreamProperties properties) override;
     virtual void initialize(qint64) override {}
-    virtual float** process(float** buf, qint64 nsamples) override;
+    virtual float** preprocess(float** buf, qint64 nsamples) override;
+    virtual float** process(float** buf, qint64 nsamples) override {}
 
     void setActive(bool active) override;
 
-    StreamNode* target() { return m_target; }
-    void setTarget(StreamNode* target);
+    StreamNode* target  ( ) { return m_target; }
+    bool prefader       ( ) { return m_prefader; }
+
+    void setTarget      ( StreamNode* target );
+    void setPrefader    ( bool prefader );
+
+    public slots:
+    void onSourceActiveChanged();
 
     private:
+    bool m_active_default;
+    bool m_prefader;
     StreamNode* m_parent;
     StreamNode* m_target;
     ForkEndpoint* m_endpoint;
