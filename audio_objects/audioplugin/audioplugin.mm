@@ -87,6 +87,16 @@ float** AudioPlugin::process(float**input, qint64 nsamples)
     return  m_out;
 }
 
+void AudioPlugin::expose(WPNNode* root)
+{
+    // TODO: expose parameters and programs
+    auto funcs = m_exp_node->createSubnode("functions");
+    auto show = funcs->createSubnode("show");
+
+    show->setType(Type::Impulse);
+    QObject::connect(show, SIGNAL(valueReceived(QVariant)), this, SLOT(showEditorWindow()));
+}
+
 QString AudioPlugin::path() const
 {
     return m_path;

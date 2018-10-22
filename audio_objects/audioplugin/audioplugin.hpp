@@ -107,6 +107,7 @@ public:
     virtual void initialize ( qint64 ) override;
 
     virtual void componentComplete() override;
+    virtual void expose(WPNNode*) override;
 
     quint16 program() const;
     QString path() const;
@@ -118,6 +119,8 @@ public:
 
     void setPath(const QString);
     void setProgram(const quint16);
+
+    public slots:
 
     Q_INVOKABLE void showEditorWindow();
 
