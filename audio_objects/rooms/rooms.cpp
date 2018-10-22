@@ -277,7 +277,13 @@ void RoomSource::setFixed(bool fixed)
 
 void RoomSource::initialize(qint64 nsamples)
 {
+    if ( m_subnodes.size() != 1 ) return;
+    QObject::connect(m_subnodes[0], SIGNAL(activeChanged()), this, SLOT(onSingleSourceActiveChanged()));
+}
 
+void RoomSource::onSingleSourceActiveChanged()
+{
+    m_active = m_subnodes[0]->active();
 }
 
 float** RoomSource::preprocess(float** buf, qint64 nsamples)
@@ -288,8 +294,6 @@ float** RoomSource::preprocess(float** buf, qint64 nsamples)
     auto out = m_out;
     auto nout = m_num_outputs;
     StreamNode::resetBuffer(out, nout, nsamples);
-
-    // TODO: if single source, connect active signal
 
     for ( const auto& node : m_subnodes )
     {

@@ -198,6 +198,9 @@ class RoomSource : public StreamNode
     virtual void setBias        ( qreal bias );
     virtual void setFixed       ( bool fixed );
 
+    public slots:
+    void onSingleSourceActiveChanged();
+
     protected:
     virtual void update() {}
     bool m_fixed;
