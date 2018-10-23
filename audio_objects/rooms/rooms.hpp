@@ -153,8 +153,8 @@ struct RoomChannel
 
     QVector<QVector4D> speakers;
 
-    float* coeffs;
-    bool diffuse;
+    float* coeffs   = nullptr;
+    bool diffuse    = 0.5;
 };
 
 class RoomSource : public StreamNode

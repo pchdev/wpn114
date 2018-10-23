@@ -180,6 +180,8 @@ QString OSCHandler::typeTag(const QVariant& argument)
 
         return tt;
     }
+
+    default: return "N";
     }
 }
 

@@ -132,9 +132,10 @@ void WPNQueryServer::onHttpRequest(QTcpSocket* sender, QString req)
         else
         {
             HTTP::Reply rep;
-            rep.target = sender;
-            auto spl2 = request.split(' ', QString::SkipEmptyParts);
-            rep.reply = namespaceJson(spl2[0]).toUtf8();
+
+            rep.target  = sender;
+            auto spl2   = request.split(' ', QString::SkipEmptyParts);
+            rep.reply   = namespaceJson(spl2[0]).toUtf8();
 
             m_reply_manager.enqueue(rep);
         }
@@ -159,6 +160,9 @@ QString WPNQueryServer::namespaceJson(QString method)
         if ( !node ) return "";
 
         auto obj = node->attributeJson(spl[1]);
+
+        // workaround for http value requests don't seem to work with score for some reason
+        if ( spl[1] == "VALUE" ) pushNodeValue(node);
         return HTTP::ReplyManager::formatJsonResponse(obj);
     }
     else
@@ -204,4 +208,8 @@ void WPNQueryServer::onCommand(QJsonObject command_obj)
     }
 }
 
-void WPNQueryServer::pushNodeValue(WPNNode* node) { }
+void WPNQueryServer::pushNodeValue(WPNNode* node)
+{
+    for ( const auto& client : m_clients )
+        client->pushNodeValue(node);
+}

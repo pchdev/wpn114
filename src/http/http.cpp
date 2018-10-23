@@ -85,7 +85,7 @@ void ReplyManager::next()
     QObject::connect( rep.target, SIGNAL(error(QAbstractSocket::SocketError)),
                       this, SLOT(onSocketError(QAbstractSocket::SocketError)));
 
-    rep.target->flush();
+    //rep.target->flush();
     rep.target->write(rep.reply);
     m_free = false;
 }

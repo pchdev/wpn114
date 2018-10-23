@@ -278,6 +278,9 @@ void RoomSource::setFixed(bool fixed)
 void RoomSource::initialize(qint64 nsamples)
 {
     if ( m_subnodes.size() != 1 ) return;
+
+    // if single source, link 'active' property
+    onSingleSourceActiveChanged();
     QObject::connect(m_subnodes[0], SIGNAL(activeChanged()), this, SLOT(onSingleSourceActiveChanged()));
 }
 
