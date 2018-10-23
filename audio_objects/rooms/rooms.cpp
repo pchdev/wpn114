@@ -164,6 +164,12 @@ RoomSetup::RoomSetup() : m_nspeakers(0)
 
 }
 
+RoomSetup::~RoomSetup()
+{
+    for ( const auto& node : m_nodes )
+        delete node;
+}
+
 void RoomSetup::componentComplete()
 {
     for ( const auto& node : m_nodes )
@@ -434,6 +440,12 @@ StereoSource::StereoSource() : RoomSource(),
     m_right ( new MonoSource )
 {
 
+}
+
+StereoSource::~StereoSource()
+{
+    delete m_left;
+    delete m_right;
 }
 
 void StereoSource::componentComplete()

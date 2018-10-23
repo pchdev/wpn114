@@ -14,7 +14,6 @@ float** ForkEndpoint::process(float** buf, qint64 nsamples)
 
 Fork::Fork() : StreamNode(), m_parent(nullptr), m_target(nullptr), m_endpoint(nullptr)
 {
-    m_active = false;
 }
 
 void Fork::setTarget(StreamNode* target)
@@ -57,6 +56,7 @@ void Fork::preinitialize(StreamProperties properties)
 
     if ( m_endpoint ) m_endpoint->setNumOutputs(m_num_outputs);
     m_active_default = m_active;
+    m_active = false;
 
     QObject::connect(m_parent, SIGNAL(activeChanged()), this, SLOT(onSourceActiveChanged()));
 

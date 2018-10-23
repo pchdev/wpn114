@@ -30,6 +30,14 @@ MultiSampler::MultiSampler() : m_dir(nullptr)
     SETN_OUT    ( 0 );
 }
 
+MultiSampler::~MultiSampler()
+{
+    delete m_dir;
+
+    for ( const auto& sampler : m_samplers )
+        delete sampler;
+}
+
 void MultiSampler::setPath(QString path)
 {
     m_path = path;

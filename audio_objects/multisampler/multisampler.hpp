@@ -27,6 +27,7 @@ class MultiSampler : public StreamNode
 
     public:
     MultiSampler();   
+    ~MultiSampler() override;
 
     virtual void initialize ( qint64 ) override;
     virtual float** process ( float** buf, qint64 nsamples ) override;

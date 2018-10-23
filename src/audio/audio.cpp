@@ -247,9 +247,9 @@ void StreamNode::deleteBuffer(float**& buffer, quint16 nchannels, quint16 nsampl
     if ( ! buffer ) return;
 
     for ( uint16_t ch = 0; ch < nchannels; ++ch )
-        delete [] buffer[ch];
+        delete [ ] buffer[ch];
 
-    delete [] buffer;
+    delete [ ] buffer;
 }
 
 void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )

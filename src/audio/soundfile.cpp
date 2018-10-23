@@ -11,6 +11,7 @@ SoundfileStreamer::SoundfileStreamer(Soundfile* file) : m_soundfile(file)
 SoundfileStreamer::~SoundfileStreamer()
 {
     delete m_file;
+    delete m_soundfile;
 }
 
 void SoundfileStreamer::setStartSample(quint64 index)
@@ -104,6 +105,11 @@ void SoundfileStreamer::next(float* target)
 Soundfile::Soundfile() : m_file(nullptr)
 {
 
+}
+
+Soundfile::~Soundfile()
+{
+    delete m_file;
 }
 
 Soundfile::Soundfile(QString path) : m_file(new QFile(path))

@@ -116,6 +116,8 @@ class RoomSetup : public QObject, public QQmlParserStatus
 
     public:
     RoomSetup();
+    ~RoomSetup();
+
     quint16 nspeakers() const { return m_nspeakers; }
 
     virtual void classBegin() override {}
@@ -252,6 +254,7 @@ class StereoSource : public RoomSource
 
     public:
     StereoSource();
+    ~StereoSource();
 
     virtual void componentComplete() override;
 
@@ -299,7 +302,6 @@ class Rooms : public StreamNode
     virtual void initialize     ( qint64 ) override;
 
     private:    
-
     QVector<QVector4D> m_speakers;
     RoomSetup* m_setup;
 };

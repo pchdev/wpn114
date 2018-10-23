@@ -76,6 +76,8 @@ class Soundfile : public QObject
     Soundfile   ( );
     Soundfile   ( QString path );
 
+    ~Soundfile  ( );
+
     QString path        ( ) const { return m_path; }
     quint8 nchannels    ( ) const { return m_nchannels; }
     quint64 nframes     ( ) const { return m_nframes; }
