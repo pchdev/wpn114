@@ -4,6 +4,7 @@
 #include <cmath>
 #include <src/oscquery/node.hpp>
 #include <memory>
+#include <QtGlobal>
 
 static const QStringList g_ignore = {
     "parentStream", "subnodes", "exposeDevice", "objectName", "exposePath"
@@ -335,8 +336,8 @@ void WorldStream::componentComplete()
 
     format.setCodec           ( "audio/pcm" );
     format.setByteOrder       ( QAudioFormat::LittleEndian );
-    format.setSampleType      ( QAudioFormat::SignedInt );
-    format.setSampleSize      ( 16 );
+    format.setSampleType      ( QAudioFormat::Float );
+    format.setSampleSize      ( 32 );
     format.setSampleRate      ( m_sample_rate );
     format.setChannelCount    ( m_num_outputs );
 
@@ -454,15 +455,14 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
         {
             for ( quint16 ch = 0; ch < nout; ++ch )
             {
-                // convert to interleaved little endian int16
-                qint16 sdata = static_cast<qint16>(buf[ch][s] * 32767);
-                qToLittleEndian<qint16>(sdata, data);
-                data += 2;
+                // convert to interleaved little endian
+                qToLittleEndian<float>(buf[ch][s], data);
+                data += sizeof(float);
             }
         }
 
-    // i.e. block_size * 2bytes per value * numChannels
-    return ( bsize*2*nout );
+    // i.e. block_size * 4bytes per value * numChannels
+    return ( bsize*sizeof(float)*nout );
 
 }
 

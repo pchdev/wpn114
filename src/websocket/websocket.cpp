@@ -288,8 +288,7 @@ void WPNWebSocket::write(QByteArray message, Opcodes op)
     else data.append(message);
 
     m_tcp_con->flush();
-    auto nbytes = m_tcp_con->write(data);
-//    qDebug() << "WS Out:" << message << "writing" << nbytes << "bytes";
+    m_tcp_con->write(data);
 }
 
 void WPNWebSocket::writeBinary(QByteArray binary)

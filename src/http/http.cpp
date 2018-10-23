@@ -59,7 +59,15 @@ void ReplyManager::enqueue(Reply rep)
 
 void ReplyManager::onBytesWritten(qint64 bytes)
 {
-    auto rep = m_queue.head();
+    auto& rep = m_queue.head();
+
+    if ( bytes < rep.reply.size() )
+    {
+        rep.reply.remove(0, bytes);
+        rep.target->write(rep.reply);
+        return;
+    }
+
     rep.target->deleteLater();
 
     QObject::disconnect( rep.target, SIGNAL(bytesWritten(qint64)),
@@ -85,8 +93,7 @@ void ReplyManager::next()
     QObject::connect( rep.target, SIGNAL(error(QAbstractSocket::SocketError)),
                       this, SLOT(onSocketError(QAbstractSocket::SocketError)));
 
-    //rep.target->flush();
-    rep.target->write(rep.reply);
+    auto nbytes = rep.target->write(rep.reply);
     m_free = false;
 }
 

@@ -150,7 +150,7 @@ QString WPNQueryServer::hostInfoJson()
 
 QString WPNQueryServer::namespaceJson(QString method)
 {
-    qDebug() << "[OSCQUERY-SERVER] NAMESPACE requested for method:" << method ;
+//    qDebug() << "[OSCQUERY-SERVER] NAMESPACE requested for method:" << method ;
 
     if ( method.contains("?") )
     {

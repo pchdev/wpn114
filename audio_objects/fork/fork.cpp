@@ -73,8 +73,8 @@ float** Fork::preprocess(float**, qint64 nsamples)
     auto nout   = m_num_outputs;
     auto out    = m_out;
 
-    StreamNode::resetBuffer(out, m_num_outputs, nsamples);
-    StreamNode::mergeBuffers(out, in, m_num_outputs, m_num_outputs, nsamples);
+    StreamNode::resetBuffer(out, nout, nsamples);
+    StreamNode::mergeBuffers(out, in, nout, nout, nsamples);
 
     if ( m_prefader )
     {
@@ -84,11 +84,14 @@ float** Fork::preprocess(float**, qint64 nsamples)
         // this allows target not to make a copy of its output buffer and then apply gain
         // but then again, there's no telling when the fork is pulling the target's buffer
         // so it is still problematic when target's level changes
-        auto temp = 1.f - m_parent->level();
-        StreamNode::applyGain(out, m_num_outputs, nsamples, m_level+temp);
+        if ( m_parent->level() > 0.f )
+        {
+            float temp = 1.f/m_parent->level();
+            StreamNode::applyGain(out, nout, nsamples, m_level*temp);
+        }
     }
 
-    else StreamNode::applyGain(out, m_num_outputs, nsamples, m_level);
+    else StreamNode::applyGain(out, nout, nsamples, m_level);
 
     return out;
 }
