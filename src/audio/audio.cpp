@@ -21,7 +21,17 @@ StreamNode::StreamNode() : m_level(1.0), m_db_level(0.0),
     m_in(nullptr), m_out(nullptr),
     m_exp_device(nullptr), m_parent_stream(nullptr)
 {
+    m_stream_properties.block_size      = 0;
+    m_stream_properties.sample_rate     = 0;
+}
 
+StreamNode::~StreamNode()
+{
+    StreamNode::deleteBuffer( m_in, m_num_inputs, m_stream_properties.block_size );
+    StreamNode::deleteBuffer( m_out, m_num_outputs, m_stream_properties.block_size );
+
+    for ( const auto& subnode : m_subnodes )
+        delete subnode;
 }
 
 void StreamNode::componentComplete()
@@ -31,24 +41,30 @@ void StreamNode::componentComplete()
 
 void StreamNode::setNumInputs(uint16_t num_inputs)
 {
-    if ( m_num_inputs != num_inputs ) emit numInputsChanged();
-    m_num_inputs = num_inputs;
+    if ( m_num_inputs != num_inputs )
+    {
+        m_num_inputs = num_inputs;
+        emit numInputsChanged();
+    }
 }
 
 void StreamNode::setNumOutputs(uint16_t num_outputs)
-{
-    if ( m_num_outputs != num_outputs ) emit numOutputsChanged();
-    m_num_outputs = num_outputs;
-
-    QVariantList list;
-
-    for ( quint16 ch = 0; ch < num_outputs; ++ch)
+{    
+    if ( m_num_outputs != num_outputs )
     {
-        list.push_back(QVariant(ch));
-        m_parent_channels = list;
-    }
+        m_num_outputs = num_outputs;
 
-    if ( m_subnodes.isEmpty() ) setMaxOutputs(num_outputs);
+        QVariantList list;
+
+        for ( quint16 ch = 0; ch < num_outputs; ++ch)
+        {
+           list.push_back(QVariant(ch));
+            m_parent_channels = list;
+        }
+
+        if ( m_subnodes.isEmpty() ) setMaxOutputs(num_outputs);
+        emit numOutputsChanged();
+    }
 }
 
 void StreamNode::setMaxOutputs(uint16_t max_outputs)
@@ -63,14 +79,20 @@ void StreamNode::setMaxOutputs(uint16_t max_outputs)
 
 void StreamNode::setMute(bool mute)
 {
-    if ( mute != m_mute ) emit muteChanged();
-    m_mute = mute;
+    if ( mute != m_mute )
+    {
+        m_mute = mute;
+        emit muteChanged();
+    }
 }
 
 void StreamNode::setActive(bool active)
 {
-    if ( active != m_active ) emit activeChanged();
-    m_active = active;
+    if ( active != m_active )
+    {
+        m_active = active;
+        emit activeChanged();
+    }
 }
 
 void StreamNode::setLevel(qreal level)
@@ -215,9 +237,19 @@ int StreamNode::subnodesCount(QQmlListProperty<StreamNode>* list)
 
 void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
 {
-    buffer = new float* [ nchannels ];
+    buffer = new float* [ nchannels ]();
     for ( uint16_t ch = 0; ch < nchannels; ++ch )
-        buffer[ch] = (float*) std::calloc(nsamples, sizeof(float));
+        buffer[ch] = new float [ nsamples ]();
+}
+
+void StreamNode::deleteBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
+{
+    if ( ! buffer ) return;
+
+    for ( uint16_t ch = 0; ch < nchannels; ++ch )
+        delete [] buffer[ch];
+
+    delete [] buffer;
 }
 
 void StreamNode::resetBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
@@ -246,6 +278,13 @@ void StreamNode::mergeBuffers(float**& lhs, float** rhs, quint16 lnchannels,
 void StreamNode::preinitialize(StreamProperties properties)
 {
     m_stream_properties = properties;
+
+    if ( m_stream_properties.block_size != properties.block_size && m_out )
+    {
+        StreamNode::deleteBuffer(m_in, m_num_inputs, m_stream_properties.block_size );
+        StreamNode::deleteBuffer(m_out, m_num_outputs, m_stream_properties.block_size);
+    }
+
     StreamNode::allocateBuffer(m_in, m_num_inputs, properties.block_size);
     StreamNode::allocateBuffer(m_out, m_num_outputs, properties.block_size);
 
@@ -304,6 +343,7 @@ WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512)
 WorldStream::~WorldStream()
 {
     m_stream_thread.terminate();
+    delete m_stream;
 }
 
 void WorldStream::setSampleRate(uint32_t sample_rate)
@@ -357,32 +397,18 @@ void WorldStream::componentComplete()
     }
 
     if ( !device_info.isFormatSupported(format) )
-        qDebug() << "[AUDIO] Format not supported";
+        qDebug() << "[AUDIO] Format not supported by chosen device";
 
-    QAudioOutput* outp = new QAudioOutput(device_info, format);
-    m_stream = new AudioStream(*this, format, nullptr, outp);
-
+    m_stream = new AudioStream(*this, format, device_info);
     m_stream->moveToThread  ( &m_stream_thread );
+
+    QObject::connect(this, &WorldStream::startStream, m_stream, &AudioStream::start);
+    QObject::connect(this, &WorldStream::stopStream, m_stream, &AudioStream::stop);
+    QObject::connect(this, &WorldStream::configure, m_stream, &AudioStream::configure);
+
+    emit configure();
+
     m_stream_thread.start   ( QThread::TimeCriticalPriority );
-
-    QObject::connect ( outp, SIGNAL(stateChanged(QAudio::State)),
-                      this, SLOT(onAudioStateChanged(QAudio::State)));
-
-    QObject::connect ( this, SIGNAL(startStream()), m_stream, SLOT(start()));
-    QObject::connect ( this, SIGNAL(stopStream()), m_stream, SLOT(stop()));
-}
-
-void WorldStream::onAudioStateChanged(QAudio::State state)
-{
-    auto obj = qobject_cast<QAudioOutput*>(QObject::sender());
-    qDebug() << "[AUDIO]" << state;    
-
-    if ( obj->error() == QAudio::UnderrunError )
-    {
-        // restart stream
-        stop();
-        start();
-    }
 }
 
 void WorldStream::start()
@@ -397,29 +423,42 @@ void WorldStream::stop()
 
 // -----------------------------------------------------------------------------------------
 
-AudioStream::AudioStream(
-        const WorldStream& world, QAudioFormat format, QAudioInput* input, QAudioOutput* output) :
-    m_world(world), m_format(format), m_input(input), m_output(output)
+AudioStream::AudioStream(const WorldStream& world, QAudioFormat format, QAudioDeviceInfo device_info) :
+    m_world(world), m_format(format), m_device_info(device_info)
 {
-
 }
 
 AudioStream::~AudioStream()
 {
+    m_output->stop();
+
+    close();
     delete m_input;
     delete m_output;
     delete m_pool;
 }
 
+void AudioStream::configure()
+{
+    m_output = new QAudioOutput(m_device_info, m_format);
+
+    QObject::connect( m_output, &QAudioOutput::stateChanged,
+                      this, &AudioStream::onAudioStateChanged);
+}
+
 void AudioStream::start()
 {
     for ( const auto& input : m_world.m_subnodes )
-        input->preinitialize({m_world.m_sample_rate, m_world.m_block_size});
+        input->preinitialize({ m_world.m_sample_rate, m_world.m_block_size });
 
     StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
+    m_output->setBufferSize(m_world.m_block_size*m_world.numOutputs()*sizeof(float));
 
     open(QIODevice::ReadOnly);
     m_output->start(this);
+
+    qDebug() << "AudioStream buffer size initialized at"
+             << m_output->bufferSize() << "bytes";
 }
 
 void AudioStream::stop()
@@ -427,13 +466,28 @@ void AudioStream::stop()
     m_output->stop();
 }
 
+void AudioStream::onAudioStateChanged(QAudio::State state)
+{
+    auto obj = qobject_cast<QAudioOutput*>(QObject::sender());
+    qDebug() << "[AUDIO]" << state;
+
+    if ( obj->error() == QAudio::UnderrunError )
+    {
+        qDebug() << "QAudio::UnderrunError";
+
+        // restart stream
+        stop();
+        start();
+    }
+}
+
 qint64 AudioStream::readData(char* data, qint64 maxlen)
 {
     auto inputs     = m_world.m_subnodes;
     quint16 nout    = m_world.m_num_outputs;
     quint16 bsize   = m_world.m_block_size;
-    float** buf     = m_pool;
     qreal level     = m_world.m_level;
+    float** buf     = m_pool;
 
     StreamNode::resetBuffer(m_pool, nout, bsize);
 

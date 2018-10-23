@@ -49,7 +49,9 @@ class StreamNode : public QObject, public QQmlParserStatus
 
     public:
     StreamNode();
+    ~StreamNode() override;
 
+    static void deleteBuffer    ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void allocateBuffer  ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void resetBuffer     ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void applyGain       ( float**& buffer, quint16 nchannels, quint16 nsamples, float gain );
@@ -150,7 +152,7 @@ class AudioStream : public QIODevice
      Q_OBJECT
 
     public:
-    AudioStream  ( const WorldStream& world, QAudioFormat format, QAudioInput* input, QAudioOutput* output);
+    AudioStream  ( const WorldStream& world, QAudioFormat format, QAudioDeviceInfo info);
     ~AudioStream ( ) override;
 
     virtual qint64 readData  ( char*, qint64 )        override;
@@ -158,12 +160,17 @@ class AudioStream : public QIODevice
     virtual qint64 bytesAvailable ( )                 const override;
 
     public slots:
-    Q_INVOKABLE void start  ( );
-    Q_INVOKABLE void stop   ( );
+    void configure  ( );
+    void start      ( );
+    void stop       ( );
+
+    protected slots:
+    void onAudioStateChanged ( QAudio::State );
 
     private:
     WorldStream const& m_world;
     QAudioFormat m_format;
+    QAudioDeviceInfo m_device_info;
     QAudioInput* m_input;
     QAudioOutput* m_output;
     float** m_pool;
@@ -203,10 +210,8 @@ class WorldStream : public StreamNode
     void setInDevice     ( QString device );
     void setOutDevice    ( QString device );
 
-    protected slots:
-    void onAudioStateChanged ( QAudio::State );
-
-    signals:
+    signals:    
+    void configure          ( );
     void startStream        ( );
     void stopStream         ( );
     void sampleRateChanged  ( );
