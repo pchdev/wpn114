@@ -93,8 +93,6 @@ void ReplyManager::next()
     QObject::connect( rep.target, SIGNAL(error(QAbstractSocket::SocketError)),
                       this, SLOT(onSocketError(QAbstractSocket::SocketError)));
 
-    auto nbytes = rep.target->write(rep.reply);
+    rep.target->write(rep.reply);
     m_free = false;
 }
-
-

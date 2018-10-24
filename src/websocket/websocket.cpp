@@ -5,17 +5,21 @@
 
 // SERVER ----------------------------------------------------------------------------------------------
 
-WPNWebSocketServer::WPNWebSocketServer(quint16 port) : m_port(port),
-    m_tcp_server(new QTcpServer(this))
+WPNWebSocketServer::WPNWebSocketServer(quint16 port) : m_port(port) { }
+
+WPNWebSocketServer::~WPNWebSocketServer()
 {
-    QObject::connect(m_tcp_server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
+    delete m_tcp_server;
 }
 
-WPNWebSocketServer::~WPNWebSocketServer() {}
-
-void WPNWebSocketServer::start()
+void WPNWebSocketServer::listen()
 {
-    m_tcp_server->listen(QHostAddress::Any, m_port);
+    m_tcp_server = new QTcpServer;
+
+    QObject::connect( m_tcp_server, &QTcpServer::newConnection,
+                      this, &WPNWebSocketServer::onNewConnection );
+
+    m_tcp_server->listen( QHostAddress::Any, m_port );
 }
 
 void WPNWebSocketServer::stop()
@@ -56,15 +60,15 @@ void WPNWebSocketServer::onTcpReadyRead()
 void WPNWebSocketServer::onHandshakeRequest(QTcpSocket *sender, QByteArray data)
 {
     // parse the key
-    auto spl = data.split('\n');
+    auto contents = data.split('\n');
 
-    for ( const auto& line : spl )
+    for ( const auto& line : contents )
     {
         if ( line.startsWith ( "Sec-WebSocket-Key" ))
         {
-            auto spl2 = line.split(' ');
-            QString key = spl2[1];
-            key.replace( "\r", "" );
+            auto key_contents = line.split(' ');
+            QString key = key_contents[ 1 ];
+            key.remove( "\r" );
 
             sendHandshakeResponse(sender, key);
         }
@@ -99,14 +103,14 @@ void WPNWebSocketServer::sendHandshakeResponse ( QTcpSocket* target, QString key
 
 // CLIENT ----------------------------------------------------------------------------------------------
 
-WPNWebSocket::WPNWebSocket(QString host_addr, quint16 port) : m_seed(0), m_connected(false),
-    m_host_addr(host_addr), m_host_port(port), m_mask(true), m_tcp_con(new QTcpSocket(this))
+WPNWebSocket::WPNWebSocket() : m_seed(0), m_connected(false), m_host_port(0), m_mask(true),
+    m_tcp_con( new QTcpSocket )
 {
     // direct client case
-    QObject::connect(m_tcp_con, SIGNAL(connected()), this, SLOT(onConnected()));
-    QObject::connect(m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
-    QObject::connect(m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
-    QObject::connect(m_tcp_con, SIGNAL(bytesWritten(qint64)), this, SLOT(onBytesWritten(qint64)));
+    QObject::connect( m_tcp_con, SIGNAL(connected()), this, SLOT(onConnected()));
+    QObject::connect( m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
+    QObject::connect( m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
+    QObject::connect( m_tcp_con, SIGNAL(bytesWritten(qint64)), this, SLOT(onBytesWritten(qint64)));
 }
 
 WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con), m_mask(false), m_seed(0), m_connected(true)
@@ -116,8 +120,8 @@ WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con), m_mask(false), m_s
     m_host_addr = m_tcp_con->peerAddress().toString();
     m_host_addr.remove("::ffff:");
 
-    QObject::connect(m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
-    QObject::connect(m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
+    QObject::connect( m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
+    QObject::connect( m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
 }
 
 WPNWebSocket::~WPNWebSocket()
@@ -125,23 +129,19 @@ WPNWebSocket::~WPNWebSocket()
     delete m_tcp_con;
 }
 
+void WPNWebSocket::setHostAddr(QString addr)
+{
+    m_host_addr = addr;
+}
+
+void WPNWebSocket::setHostPort(quint16 port)
+{
+    m_host_port = port;
+}
+
 void WPNWebSocket::connect()
 {
-    m_tcp_con->connectToHost(m_host_addr, m_host_port);
-}
-
-void WPNWebSocket::connect(QString host)
-{
-    auto spl = host.split(':');
-    m_tcp_con->connectToHost(spl[0], spl[1].toInt());
-}
-
-void WPNWebSocket::connect(QString host, quint16 port)
-{
-    m_host_addr = host;
-    m_host_port = port;
-
-    connect();
+    m_tcp_con->connectToHost( m_host_addr, m_host_port );
 }
 
 void WPNWebSocket::disconnect()
@@ -164,6 +164,7 @@ void WPNWebSocket::onRawMessageReceived()
     while ( sender->bytesAvailable())
     {
         QByteArray data = sender->readAll();
+
         if ( data.contains("HTTP") )
         {
              if ( data.contains("Sec-WebSocket-Accept"))
@@ -176,18 +177,19 @@ void WPNWebSocket::onRawMessageReceived()
     }
 }
 
-void WPNWebSocket::onHandshakeResponseReceived(QString resp)
+void WPNWebSocket::onHandshakeResponseReceived(QString response)
 {
     // parse the key
     QString key;
-    auto spl = resp.split('\n');
-    for ( const auto& line : spl )
+
+    auto contents = response.split( '\n' );
+    for ( const auto& line : contents )
     {
         if ( line.startsWith("Sec-WebSocket-Accept"))
         {
-            auto spl2       = line.split(' ');
-            key             = spl2[1];
-            key.replace     ( '\r',"" );
+            auto accept_contents = line.split(' ');
+            key = accept_contents [ 1 ];
+            key.remove( '\r' );
         }
     }
 
@@ -198,7 +200,7 @@ void WPNWebSocket::onHandshakeResponseReceived(QString resp)
     }
 
     m_connected = true;
-    emit connected();
+    connected( );
 }
 
 void WPNWebSocket::generateEncryptedSecKey()
@@ -212,35 +214,35 @@ void WPNWebSocket::generateEncryptedSecKey()
         res.append(rdm);
     }
 
-    m_sec_key           = res.toBase64();
-    QByteArray key      = m_sec_key;
-    key.append          ( "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" );
-    auto hash           = QCryptographicHash::hash(key, QCryptographicHash::Sha1);
-    m_accept_key        = hash.toBase64();
+    m_sec_key         = res.toBase64();
+    QByteArray key    = m_sec_key;
+    key.append        ( "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" );
+    auto hash         = QCryptographicHash::hash(key, QCryptographicHash::Sha1);
+    m_accept_key      = hash.toBase64();
 }
 
 void WPNWebSocket::requestHandshake()
 {
-    QByteArray req;
+    QByteArray request;
 
-    QString host        = m_host_addr;
-    QString sec_key     = m_sec_key;
+    QString host      = m_host_addr;
+    QString sec_key   = m_sec_key;
 
-    req.append  ( "GET / HTTP/1.1\r\n" );
-    req.append  ( "Connection: Upgrade\r\n" );
-    req.append  ( host.replace("ws://", "").append("\r\n").prepend("Host: "));
-    req.append  ( "Sec-WebSocket-Key: " );
-    req.append  ( sec_key.append("\r\n") );
-    req.append  ( "Sec-WebSocket-Version: 13\r\n" );
-    req.append  ( "Upgrade: websocket\r\n" );
-    req.append  ( "User-Agent: Qt/5.1.1\r\n\r\n" );
+    request.append  ( "GET / HTTP/1.1\r\n" );
+    request.append  ( "Connection: Upgrade\r\n" );
+    request.append  ( host.remove( "ws://" ).append("\r\n").prepend("Host: "));
+    request.append  ( "Sec-WebSocket-Key: " );
+    request.append  ( sec_key.append("\r\n") );
+    request.append  ( "Sec-WebSocket-Version: 13\r\n" );
+    request.append  ( "Upgrade: websocket\r\n" );
+    request.append  ( "User-Agent: Qt/5.1.1\r\n\r\n" );
 
-    m_tcp_con->write(req);
+    m_tcp_con->write( request );
 }
 
-void WPNWebSocket::request(QString req)
+void WPNWebSocket::request(QString request)
 {
-    m_tcp_con->write(req.toUtf8());
+    m_tcp_con->write( request.toUtf8() );
 }
 
 void WPNWebSocket::onBytesWritten(qint64 nbytes)
@@ -274,15 +276,15 @@ void WPNWebSocket::write(QByteArray message, Opcodes op)
     {
         for ( quint8 i = 0; i < 4; ++i )
         {
-            QRandomGenerator rdm(m_seed);
-            mask[i] = rdm.bounded(256);
+            QRandomGenerator rdm( m_seed );
+            mask[i] = rdm.bounded( 256 );
             stream << mask[i];
             ++m_seed;
         }
 
         // ...and encode the message with it
         for ( quint8 i = 0; i < sz; ++i )
-            stream << (quint8) ( message[i] ^ mask[i%4]);
+              stream << (quint8) ( message[ i ] ^ mask[ i%4 ]);
     }
 
     else data.append(message);
@@ -293,12 +295,12 @@ void WPNWebSocket::write(QByteArray message, Opcodes op)
 
 void WPNWebSocket::writeBinary(QByteArray binary)
 {
-    write(binary, Opcodes::BINARY_FRAME);
+    write( binary, Opcodes::BINARY_FRAME );
 }
 
 void WPNWebSocket::writeText(QString message)
 {
-    write(message.toUtf8(), Opcodes::TEXT_FRAME);
+    write( message.toUtf8(), Opcodes::TEXT_FRAME );
 }
 
 void WPNWebSocket::decode(QByteArray data)
@@ -306,7 +308,7 @@ void WPNWebSocket::decode(QByteArray data)
     QDataStream stream(data);
     QByteArray decoded;
 
-    quint8 fbyte, fin, opcode, sbyte, maskbit, mask[4];
+    quint8 fbyte, fin, opcode, sbyte, maskbit, mask[ 4 ];
     quint64 payle;
 
     stream >> fbyte >> sbyte;
@@ -331,7 +333,7 @@ void WPNWebSocket::decode(QByteArray data)
         {
             quint8 byte;
             stream >> byte;
-            decoded.append(byte);
+            decoded.append( byte );
         }
     }
     else
@@ -360,14 +362,14 @@ void WPNWebSocket::decode(QByteArray data)
     switch(static_cast<Opcodes>(opcode))
     {
     case Opcodes::BINARY_FRAME: emit binaryFrameReceived(decoded); break;
-    case Opcodes::TEXT_FRAME: emit textMessageReceived(decoded); break;
+    case Opcodes::TEXT_FRAME:   emit textMessageReceived(decoded); break;
     }
 
     // check if another message is not hidden behind this one
     if ( !stream.atEnd() )
     {
         QByteArray next = data.remove(0, stream.device()->pos());
-        decode(next);
+        decode( next );
     }
 }
 

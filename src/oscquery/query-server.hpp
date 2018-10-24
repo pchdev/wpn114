@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QThread>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QObject>
@@ -34,6 +35,9 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     void setName    ( QString name ) { m_settings.name = name; }
 
     signals:
+    void startNetwork();
+    void stopNetwork();
+
     void newConnection(QString host);
     void disconnection(QString host);
     void unknownMethodRequested ( QString method );
@@ -43,13 +47,16 @@ class WPNQueryServer : public WPNDevice, public QQmlParserStatus
     void onCommand              ( QJsonObject command_obj );
     void onNewConnection        ( WPNWebSocket* client );
     void onDisconnection        ( );
-    void onHttpRequest          ( QTcpSocket* sender, QString req );
+    void onHttpRequestReceived  ( QTcpSocket* sender, QString req );
     void onNodeAdded            ( WPNNode *node );
     QString hostInfoJson        ( );
     QString namespaceJson       ( QString method );
     void onZConfError           ( QZeroConf::error_t err);
 
     private:        
+    QThread m_osc_thread;
+    QThread m_ws_thread;
+
     OSCHandler* m_osc_hdl;
     HostSettings m_settings;
     WPNWebSocketServer* m_ws_server;

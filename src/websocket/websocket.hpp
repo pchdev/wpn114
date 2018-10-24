@@ -24,24 +24,13 @@ class WPNWebSocket : public QObject
     Q_OBJECT
 
     public:
-    WPNWebSocket( QString host_addr, quint16 port );
+    WPNWebSocket( );
     WPNWebSocket( QTcpSocket* con );
 
     ~WPNWebSocket();
 
-    void connect      ( );
-    void connect      ( QString host );
-    void connect      ( QString host, quint16 port );
-    void disconnect   ( );
-
-    void request      ( QString http_req );
-    void writeText    ( QString message );
-    void writeBinary  ( QByteArray binary );
-
-    bool isConnected  ( ) const { return m_connected; }
-
-    QString hostAddr  ( ) const { return m_host_addr; }
-    QTcpSocket* tcpConnection() { return m_tcp_con; }
+    void setHostAddr    ( QString addr );
+    void setHostPort    ( quint16 port );
 
     signals:
     void httpMessageReceived    ( QString );
@@ -50,6 +39,18 @@ class WPNWebSocket : public QObject
 
     void connected              ( );
     void disconnected           ( );
+
+    public slots:
+    void connect      ( );
+    void disconnect   ( );
+
+    void request      ( QString http_req );
+    void writeText    ( QString message );
+    void writeBinary  ( QByteArray binary );
+
+    bool isConnected  ( ) const { return m_connected; }
+    QString hostAddr  ( ) const { return m_host_addr; }
+    QTcpSocket* tcpConnection() { return m_tcp_con; }
 
     protected slots:
     void onConnected                  ( );
@@ -86,15 +87,16 @@ class WPNWebSocketServer : public QObject
     WPNWebSocketServer(quint16 port);
     ~WPNWebSocketServer();
 
-    void start  ( );
-    void stop   ( );
-
     void setPort        ( quint16 port ) { m_port = port; }
 
     signals:
     void httpRequestReceived    ( QTcpSocket*, QString );
     void newConnection          ( WPNWebSocket* );
     void disconnection          ( WPNWebSocket* );
+
+    public slots:
+    void listen ( );
+    void stop   ( );
 
     protected slots:
     void onTcpReadyRead         ( );

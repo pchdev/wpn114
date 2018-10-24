@@ -7,35 +7,29 @@
 #include <QVariant>
 
 OSCHandler::OSCHandler() :
-    m_local_port(8888), m_remote_port(8889),m_remote_address("127.0.0.1"),
-    m_udpsocket(new QUdpSocket(this))
+    m_local_port(0), m_remote_port(0), m_remote_address("127.0.0.1"), m_udpsocket(new QUdpSocket)
 {
-    QObject::connect(m_udpsocket, SIGNAL(readyRead()), this, SLOT(readPendingDatagrams()));
+
+}
+
+OSCHandler::~OSCHandler()
+{
+    delete m_udpsocket;
 }
 
 void OSCHandler::componentComplete() {}
 
 void OSCHandler::listen()
 {
-    m_udpsocket->bind(QHostAddress::Any, m_local_port);
-    qDebug() << "[UDPSOCKET] Binding on port:" << m_local_port;
-}
+    QObject::connect ( m_udpsocket, &QUdpSocket::readyRead, this, &OSCHandler::readPendingDatagrams);
+    m_udpsocket->bind( QHostAddress::Any, m_local_port );
 
-void OSCHandler::listen(quint16 port)
-{
-    m_udpsocket->bind(QHostAddress::Any, port);
     m_local_port = m_udpsocket->localPort();
-
-    qDebug() << "[UDPSOCKET] Binding on port:" << m_local_port;
 }
 
 void OSCHandler::setLocalPort(uint16_t port)
 {
     m_local_port = port;
-    if ( m_udpsocket->isOpen() ) m_udpsocket->close();
-
-    m_udpsocket->bind(QHostAddress::Any, m_local_port);
-    qDebug() << "[UDPSOCKET] Binding on port:" << m_local_port;
 }
 
 void OSCHandler::setRemotePort(uint16_t port)
@@ -131,7 +125,7 @@ void OSCHandler::readOSCMessage(QByteArray data)
 {
     OSCMessage message = decode(data);
     emit messageReceived(message.address, message.arguments);
-    qDebug() << "OSCMessage received:" << message.address << message.arguments;
+//    qDebug() << "OSCMessage received:" << message.address << message.arguments;
 }
 
 void OSCHandler::readPendingDatagrams()

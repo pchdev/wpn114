@@ -5,7 +5,7 @@
 
 #define BUFSR m_soundfile->sampleRate()
 
-StreamSampler::StreamSampler()
+StreamSampler::StreamSampler() : StreamNode()
 {
     // building sin envelopes
     for ( int i = 0; i < ENV_RESOLUTION; ++ i )
@@ -15,7 +15,7 @@ StreamSampler::StreamSampler()
         m_release_env[i]  = 1.f-env_value;
     }
 
-    m_active = false;
+    setActive(false);
 }
 
 StreamSampler::~StreamSampler()
@@ -183,7 +183,7 @@ void StreamSampler::play()
     }
 
     else m_playing = true;
-    if ( !m_active ) m_active = true;
+    if ( !m_active ) setActive(true);
 }
 
 void StreamSampler::stop()
@@ -362,9 +362,9 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
 
                 reset();
 
-                m_playing           = false;
-                m_active            = false;
-                m_releasing         = false;
+                m_playing      = false;
+                setActive      ( false );
+                m_releasing    = false;
 
                 emit reset(m_current_buffer);
             }
@@ -388,7 +388,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
                 emit reset(m_current_buffer);
 
                 m_playing       = false;
-                m_active        = false;
+                setActive       ( false );
                 m_releasing     = false;
 
                 for ( quint16 ch = 0; ch < nch; ++ch )
@@ -420,7 +420,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
 
 //-----------------------------------------------------------------------------------
 
-Sampler::Sampler()
+Sampler::Sampler() : StreamNode()
 {    
     // building sin envelopes
     for ( int i = 0; i < ENV_RESOLUTION; ++ i )
@@ -430,7 +430,7 @@ Sampler::Sampler()
         m_release_env[i]  = 1.f-env_value;
     }
 
-    m_active = false;
+    setActive(false);
 }
 
 Sampler::~Sampler()
@@ -534,7 +534,7 @@ void Sampler::setRate(qreal rate)
 void Sampler::play()
 {
     m_playing = true;
-    if ( !m_active ) m_active = true;
+    if ( !m_active ) setActive(true);
 }
 
 void Sampler::stop()
@@ -662,7 +662,7 @@ float** Sampler::process(float**, qint64 le)
                 m_release_phase     = 0;
                 m_playing           = false;
                 m_first_play        = true;
-                m_active            = false;
+                setActive          ( false );
                 m_releasing         = false;
             }
         }
@@ -686,7 +686,7 @@ float** Sampler::process(float**, qint64 le)
                 m_release_phase     = 0;
                 m_playing           = false;
                 m_first_play        = true;
-                m_active            = false;
+                setActive          ( false );
                 m_releasing         = false;
 
                 for ( quint16 ch = 0; ch < nch; ++ch )

@@ -7,6 +7,7 @@
 #include <QQmlParserStatus>
 #include <qzeroconf.h>
 #include <QNetworkAccessManager>
+#include <QThread>
 
 class WPNQueryClient : public WPNDevice, public QQmlParserStatus
 {
@@ -23,6 +24,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     virtual void classBegin         ( ) {}
     virtual void pushNodeValue    ( WPNNode* node );
 
+    Q_INVOKABLE void connect      ( );
     Q_INVOKABLE void connect      ( QString host );
     Q_INVOKABLE void requestHttp  ( QString address );
     Q_INVOKABLE void sendMessage  ( QString address, QVariant arguments, bool critical );    
@@ -38,14 +40,20 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
 
     quint16 port        ( ) const { return m_host_port; }
     QString hostAddr    ( ) const { return m_host_addr; }
-    void setOscPort     ( quint16 port );
-    void setPort        ( quint16 port );
-    void setHostAddr    ( QString addr );
+
+    void setPort           ( quint16 port );
+    void setHostAddr       ( QString addr );
+    void setRemoteUdpPort  ( quint16 port );
 
     QString zeroConfHost ( ) const { return m_zconf_host; }
     void setZeroConfHost ( QString host ) { m_zconf_host = host; }
 
-    signals:
+    signals:    
+    void start    ( );
+    void stop     ( );
+    void OSCOut   ( const OSCMessage& message );
+    void WSOut    (  );
+
     void treeComplete           ( );
     void hostAddrChanged        ( );
     void connected              ( );
@@ -56,7 +64,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void valueUpdate            ( QString, QVariant );
 
     protected slots:
-    void onHttpReply            ( QNetworkReply* );
+    void onHttpReplyReceived    ( QNetworkReply* );
     void onZeroConfServiceAdded ( QZeroConfService srv );
     void onHostInfoReceived     ( QJsonObject host_info );
     void onNamespaceReceived    ( QJsonObject nspace );
@@ -70,6 +78,8 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
 
     private:
     bool m_direct;
+    QThread m_ws_thread;
+    QThread m_osc_thread;
     QNetworkAccessManager* m_http_manager;
     QZeroConf m_zconf;
     QString m_zconf_host;

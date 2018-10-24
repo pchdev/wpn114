@@ -6,84 +6,50 @@
 #include <src/http/http.hpp>
 #include <QNetworkReply>
 
-WPNQueryClient::WPNQueryClient() : WPNDevice(), m_osc_hdl(new OSCHandler()), m_direct(true)
+WPNQueryClient::WPNQueryClient() : WPNDevice(), m_direct(true),
+    m_ws_con(new WPNWebSocket), m_osc_hdl(new OSCHandler)
 {
     // direct client
-    m_ws_con = new WPNWebSocket("127.0.0.1", 5678);
-    QObject::connect(m_ws_con, SIGNAL(connected()), this, SIGNAL(connected()));
-    QObject::connect(m_ws_con, SIGNAL(connected()), this, SLOT(onConnected()));
-    QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
-    QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-    QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
-    QObject::connect(m_ws_con, SIGNAL(binaryFrameReceived(QByteArray)), this, SLOT(onBinaryMessageReceived(QByteArray)));
-    QObject::connect(this, SIGNAL(command(QJsonObject)), this, SLOT(onCommand(QJsonObject)));
+//    m_ws_con->moveToThread  ( &m_ws_thread );
+//    m_osc_hdl->moveToThread ( &m_osc_thread );
 
-    m_http_manager = new QNetworkAccessManager(this);
-    QObject::connect(m_http_manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onHttpReply(QNetworkReply*)));
+    QObject::connect( this, &WPNQueryClient::command, this, &WPNQueryClient::onCommand );
+    QObject::connect( m_ws_con, &WPNWebSocket::connected, this, &WPNQueryClient::onConnected );
+    QObject::connect( m_ws_con, &WPNWebSocket::disconnected, this, &WPNQueryClient::onDisconnected );
+    QObject::connect( m_ws_con, &WPNWebSocket::textMessageReceived, this, &WPNQueryClient::onTextMessageReceived );
+    QObject::connect( m_ws_con, &WPNWebSocket::binaryFrameReceived, this, &WPNQueryClient::onBinaryMessageReceived );
+
+    QObject::connect( this, SIGNAL(OSCOut(const OSCMessage&)), m_osc_hdl, SLOT(sendMessage(const OSCMessage&)));
     QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString,QVariant)), this, SLOT(onValueUpdate(QString,QVariant)));
 
-    m_osc_hdl->listen(0);
+    QObject::connect( this, &WPNQueryClient::start, m_ws_con, &WPNWebSocket::connect );
+    QObject::connect( this, &WPNQueryClient::start, m_osc_hdl, &OSCHandler::listen );
+
+    // TODO: put http_manager in websocket_con to include in thread
+    m_http_manager = new QNetworkAccessManager;
+
+    QObject::connect( m_http_manager, SIGNAL(finished(QNetworkReply*)),
+                      this, SLOT(onHttpReplyReceived(QNetworkReply*)));
+
 }
 
-WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_osc_hdl(new OSCHandler()), m_direct(false)
+WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_direct(false), m_osc_hdl(new OSCHandler)
 {
     // indirect client (server image)
     // no need for a local udp port
     m_ws_con = con;
-
     setHostAddr(m_ws_con->hostAddr());
-    QObject::connect(m_ws_con, SIGNAL(binaryFrameReceived(QByteArray)), this, SLOT(onBinaryMessageReceived(QByteArray)));
-    QObject::connect(m_ws_con, SIGNAL(textMessageReceived(QString)), this, SLOT(onTextMessageReceived(QString)));
-    QObject::connect(m_ws_con, SIGNAL(httpMessageReceived(QString)), this, SIGNAL(httpMessageReceived(QString)));
-    QObject::connect(m_ws_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
-}
 
-void WPNQueryClient::componentComplete()
-{
-    // if direct client: reach host
-    if ( !m_host_addr.isEmpty()) m_ws_con->connect();
-    else if ( !m_zconf_host.isEmpty() )
-    {
-        qDebug() << "[OSCQUERY-CLIENT] Starting zeroconf discovery";
-        m_zconf.startBrowser("_oscjson._tcp");
-        QObject::connect( &m_zconf, SIGNAL(serviceAdded(QZeroConfService)),
-                          this, SLOT(onZeroConfServiceAdded(QZeroConfService)) );
-    }
-}
-
-void WPNQueryClient::connect(QString host)
-{
-    auto spl    = host.split(':');
-    m_host_addr = spl[0];
-    m_host_port = spl[1].toInt();
-
-    m_ws_con->connect(m_host_addr, m_host_port);
-}
-
-void WPNQueryClient::onConnected()
-{    
-    m_host_url = m_host_addr.prepend("http://")+":"+QString::number(m_host_port);
-    requestHttp("/?HOST_INFO");
-    requestHttp("/");
-
-    qDebug() << "[OSCQUERY-CLIENT] Connected to host, requesting info & namespace";
-}
-
-void WPNQueryClient::onDisconnected()
-{
-    if ( !m_zconf_host.isEmpty() )
-    {
-        qDebug() << "[OSCQUERY-CLIENT] re-starting zeroconf discovery";
-        m_zconf.startBrowser("_oscjson._tcp");
-        QObject::connect( &m_zconf, SIGNAL(serviceAdded(QZeroConfService)),
-                          this, SLOT(onZeroConfServiceAdded(QZeroConfService)) );
-    }
+    QObject::connect( m_ws_con, &WPNWebSocket::textMessageReceived, this, &WPNQueryClient::onTextMessageReceived );
+    QObject::connect( m_ws_con, &WPNWebSocket::binaryFrameReceived, this, &WPNQueryClient::onBinaryMessageReceived );
+    QObject::connect( m_ws_con, &WPNWebSocket::httpMessageReceived, this, &WPNQueryClient::httpMessageReceived );
+    QObject::connect( m_ws_con, &WPNWebSocket::disconnected, this, &WPNQueryClient::disconnected );
 }
 
 void WPNQueryClient::setHostAddr(QString addr)
 {
     m_host_addr = addr;
-    m_osc_hdl->setRemoteAddress(addr);
+    m_osc_hdl->setRemoteAddress( addr );
 }
 
 void WPNQueryClient::setPort(quint16 port)
@@ -91,44 +57,103 @@ void WPNQueryClient::setPort(quint16 port)
     m_host_port = port;
 }
 
-void WPNQueryClient::setOscPort(quint16 port)
+void WPNQueryClient::setRemoteUdpPort(quint16 port)
 {
     m_osc_hdl->setRemotePort(port);
-    //m_osc_hdl->listen();
+}
+
+void WPNQueryClient::componentComplete()
+{
+    if      ( !m_host_addr.isEmpty()) start();
+    else if ( !m_zconf_host.isEmpty() )
+    {
+        QObject::connect( &m_zconf, &QZeroConf::serviceAdded,
+                          this, &WPNQueryClient::onZeroConfServiceAdded );
+
+        m_zconf.startBrowser( "_oscjson._tcp" );
+    }
 }
 
 void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
 {
     if ( service.name() == m_zconf_host )
-    {        
-        setHostAddr(service.ip().toString());
+    {
+        setHostAddr ( service.ip().toString() );
         m_host_port = service.port();
 
         m_zconf.stopBrowser ( );
-        m_ws_con->connect   ( m_host_addr, m_host_port );
+        connect();
 
-        qDebug() << "[OSCQUERY-CLIENT] zeroconf target acquired: "
+        qDebug() << "[OSCQUERY-CLIENT] Target acquired: "
                  << m_host_addr << m_host_port;
     }
+}
+
+void WPNQueryClient::connect()
+{
+    m_ws_con->setHostAddr( m_host_addr );
+    m_ws_con->setHostPort( m_host_port );
+
+//    m_ws_thread.start  ( );
+//    m_osc_thread.start ( );
+
+    start();
+}
+
+void WPNQueryClient::connect(QString host)
+{
+    auto host_address  = host.split(':');
+
+    m_host_addr   = host_address[ 0 ];
+    m_host_port   = host_address[ 1 ].toInt();
+
+    connect();
+}
+
+void WPNQueryClient::onConnected()
+{    
+    m_host_url = m_host_addr.prepend("http://")
+            .append(":").append(QString::number(m_host_port));
+
+    requestHttp( "/?HOST_INFO" );
+    requestHttp( "/" );
+
+    connected( );
+}
+
+void WPNQueryClient::requestHttp(QString address)
+{
+    QNetworkRequest request;
+
+    auto url = m_host_url+address;
+    request.setUrl( QUrl(url) );
+    m_http_manager->get(request);
+}
+
+void WPNQueryClient::onDisconnected()
+{
+    disconnected( );
 }
 
 void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
 {
     OSCMessage message = OSCHandler::decode(data);    
-    qDebug() << "WebSocket-OSC In:" << message.address << message.arguments;
 
-    if ( m_direct ) onValueUpdate(message.address, message.arguments);
-    else emit valueUpdate(message.address, message.arguments);
+    if ( m_direct ) onValueUpdate ( message.address, message.arguments );
+    else emit valueUpdate ( message.address, message.arguments );
+
+    qDebug() << "WebSocket-OSC In:" << message.address << message.arguments;
 }
 
 void WPNQueryClient::onTextMessageReceived(QString message)
 {
-    qDebug() << "Message In:" << message;
     auto obj = QJsonDocument::fromJson(message.toUtf8()).object();        
 
-    if      ( obj.contains("COMMAND")) emit command(obj);
-    else if ( obj.contains("FULL_PATH")) onNamespaceReceived(obj);
-    else if ( obj.contains("OSC_PORT")) onHostInfoReceived(obj);    
+    if       ( obj.contains("COMMAND")  )  emit command(obj);
+    else if  ( obj.contains("FULL_PATH"))  onNamespaceReceived(obj);
+    else if  ( obj.contains("OSC_PORT") )  onHostInfoReceived(obj);
+
+    qDebug() << "Message In:" << message;
 }
 
 void WPNQueryClient::onCommand(QJsonObject command)
@@ -140,8 +165,8 @@ void WPNQueryClient::onCommand(QJsonObject command)
     {
         for ( const auto& key : data.keys() )
         {
-            auto obj    = data[key].toObject();
-            auto node   = findOrCreateNode(obj["FULL_PATH"].toString());
+            auto obj  = data[key].toObject();
+            auto node = findOrCreateNode(obj["FULL_PATH"].toString());
 
             node->setDevice ( this );
             node->update ( obj );
@@ -149,7 +174,7 @@ void WPNQueryClient::onCommand(QJsonObject command)
     }
 }
 
-void WPNQueryClient::onHttpReply(QNetworkReply* reply)
+void WPNQueryClient::onHttpReplyReceived(QNetworkReply* reply)
 {
     QByteArray data = reply->readAll();
     onTextMessageReceived(data);
@@ -183,14 +208,6 @@ void WPNQueryClient::onHostInfoReceived(QJsonObject info)
     if ( ext.contains("PATH_REMOVED")) m_settings.extensions.path_removed = ext["PATH_REMOVED"].toBool();
 
     if ( m_settings.extensions.osc_streaming ) requestStreamStart();
-}
-
-void WPNQueryClient::requestHttp(QString address)
-{
-    QNetworkRequest req;
-
-    req.setUrl( QUrl(m_host_url+address) );
-    m_http_manager->get(req);
 }
 
 void WPNQueryClient::requestStreamStart()
@@ -231,7 +248,7 @@ void WPNQueryClient::sendMessage(QString address, QVariant arguments, bool criti
         m_ws_con->writeBinary(encoded);
     }
 
-    else m_osc_hdl->sendMessage(message);
+    else emit OSCOut( message );
 }
 
 void WPNQueryClient::writeOsc(QString method, QVariant arguments) { }
@@ -266,7 +283,7 @@ void WPNQueryClient::listen(QString method)
     command.insert("COMMAND", "LISTEN");
     command.insert("DATA", method );
 
-    m_ws_con->writeText  ( QJsonDocument(command).toJson(QJsonDocument::Compact) );
+    writeWebSocket(command);
 }
 
 void WPNQueryClient::ignore(QString method)
