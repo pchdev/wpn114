@@ -40,6 +40,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
 
     quint16 port        ( ) const { return m_host_port; }
     QString hostAddr    ( ) const { return m_host_addr; }
+    QString hostUrl     ( ) const { return m_host_url; }
 
     void setPort           ( quint16 port );
     void setHostAddr       ( QString addr );

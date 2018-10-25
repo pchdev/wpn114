@@ -94,17 +94,13 @@ void WPNFolderMirror::setDestination(QString destination)
 {
     m_destination = destination;
     m_abs_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).append(destination);
-    if ( !QDir(m_abs_path).exists())
-    {
-        qDebug() << "creating path" << m_abs_path;
-        QDir().mkpath(m_abs_path);
-    }
+    if ( !QDir(m_abs_path).exists()) QDir().mkpath(m_abs_path);
 }
 
 QUrl WPNFolderMirror::toUrl(QString file)
 {
     WPNQueryClient* device = qobject_cast<WPNQueryClient*>(m_device);
-    QString root = device->hostAddr().append(":").append(QString::number(device->port()));
+    QString root = device->hostUrl();
     root.append(file.prepend(m_destination+"/"));
 
     return QUrl(root);

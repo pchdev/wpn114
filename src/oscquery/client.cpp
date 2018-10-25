@@ -112,8 +112,9 @@ void WPNQueryClient::connect(QString host)
 
 void WPNQueryClient::onConnected()
 {    
-    m_host_url = m_host_addr.prepend("http://")
-            .append(":").append(QString::number(m_host_port));
+    m_host_url = m_host_addr;
+    m_host_url.prepend("http://").append(":")
+              .append(QString::number(m_host_port));
 
     requestHttp( "/?HOST_INFO" );
     requestHttp( "/" );

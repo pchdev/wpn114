@@ -143,6 +143,8 @@ public:
     Q_INVOKABLE void aftertouch(int channel, int index, int value);
     Q_INVOKABLE void sysex(QVariantList bytes);
 
+    Q_INVOKABLE void allNotesOff();
+
 signals:
     void pathChanged();
     void pluginLoaded();

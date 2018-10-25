@@ -234,6 +234,12 @@ void AudioPlugin::sysex(QVariantList bytes)
     // l2d
 }
 
+void AudioPlugin::allNotesOff()
+{
+    for ( quint8 i = 0; i < 128; ++i )
+        noteOff(0, i, 127);
+}
+
 // HDLS ----------------------------------------------------------------------------------------
 
 #define GET_2X_PNAME_STR(command) \
@@ -247,15 +253,15 @@ vst2x_plugin::vst2x_plugin(std::string path) : m_block_pos(0), m_event_queue(new
 #ifdef __APPLE__ //-----------------------------------------------------------------------------
 
     CFStringRef fns     = CFStringCreateWithCString
-                        (NULL, path.c_str(), kCFStringEncodingUTF8);
+                        ( NULL, path.c_str(), kCFStringEncodingUTF8 );
     if ( !fns  )        return;
 
     CFURLRef url        = CFURLCreateWithFileSystemPath
-                        (NULL, fns, kCFURLPOSIXPathStyle, false);
+                        ( NULL, fns, kCFURLPOSIXPathStyle, false );
     if ( !url  )        return;
 
     void* module        = (void*) CFBundleCreate
-                        (NULL, url);
+                        ( NULL, url );
     CFRelease           ( url );
 
     if      ( module && CFBundleLoadExecutable((CFBundleRef) module) == false )

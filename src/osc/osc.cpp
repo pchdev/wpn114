@@ -125,7 +125,7 @@ void OSCHandler::readOSCMessage(QByteArray data)
 {
     OSCMessage message = decode(data);
     emit messageReceived(message.address, message.arguments);
-//    qDebug() << "OSCMessage received:" << message.address << message.arguments;
+    qDebug() << "OSCMessage received:" << message.address << message.arguments;
 }
 
 void OSCHandler::readPendingDatagrams()
