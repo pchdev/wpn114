@@ -40,7 +40,7 @@ class StreamNode : public QObject, public QQmlParserStatus
     Q_PROPERTY  ( int numOutputs READ numOutputs WRITE setNumOutputs NOTIFY numOutputsChanged )
     Q_PROPERTY  ( QVariant parentChannels READ parentChannels WRITE setParentChannels )
     Q_PROPERTY  ( qreal level READ level WRITE setLevel NOTIFY levelChanged )
-    Q_PROPERTY  ( qreal dBlevel READ dBlevel WRITE setDBlevel )
+    Q_PROPERTY  ( qreal dBlevel READ dBlevel WRITE setDBlevel NOTIFY dBlevelChanged )
     Q_PROPERTY  ( QQmlListProperty<StreamNode> subnodes READ subnodes )
     Q_PROPERTY  ( StreamNode* parentStream READ parentStream WRITE setParentStream )
 
@@ -103,8 +103,9 @@ class StreamNode : public QObject, public QQmlParserStatus
     QVariant parentChannels ( ) const { return m_parent_channels; }
     void setParentChannels  ( QVariant pch );
 
-    void setLevel   ( qreal level );
-    void setDBlevel ( qreal db );
+    void setLevel       ( qreal level );
+    void setLevelNoDb   ( qreal level );
+    void setDBlevel     ( qreal db );
 
     signals:
     void muteChanged        ( );
@@ -113,6 +114,7 @@ class StreamNode : public QObject, public QQmlParserStatus
     void numOutputsChanged  ( );
     void levelChanged       ( );
     void exposePathChanged  ( );
+    void dBlevelChanged     ( );
 
     protected:
     static void appendSubnode     ( QQmlListProperty<StreamNode>*, StreamNode* );
@@ -159,7 +161,11 @@ class AudioStream : public QIODevice
     virtual qint64 writeData ( const char*, qint64 )  override;
     virtual qint64 bytesAvailable ( )                 const override;
 
+    signals:
+    void tick       ( qint64 );
+
     public slots:
+    void onNotifyInterval ( );
     void configure  ( );
     void start      ( );
     void stop       ( );
@@ -168,6 +174,7 @@ class AudioStream : public QIODevice
     void onAudioStateChanged ( QAudio::State );
 
     private:
+    qint64 m_notify_interval;
     WorldStream const& m_world;
     QAudioFormat m_format;
     QAudioDeviceInfo m_device_info;
@@ -211,6 +218,7 @@ class WorldStream : public StreamNode
     void setOutDevice    ( QString device );
 
     signals:    
+    void tick               ( qint64 tick );
     void configure          ( );
     void startStream        ( );
     void stopStream         ( );

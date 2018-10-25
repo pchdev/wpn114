@@ -116,8 +116,12 @@ network {
         src/oscquery/netexplorer.hpp
 }
 
-SOURCES += qml_plugin.cpp
-HEADERS += qml_plugin.hpp
+SOURCES += qml_plugin.cpp \
+    src/time/timeobject.cpp \
+    audio_objects/clock/audioclock.cpp
+HEADERS += qml_plugin.hpp \
+    src/time/timeobject.hpp \
+    audio_objects/clock/audioclock.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

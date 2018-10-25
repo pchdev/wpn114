@@ -21,6 +21,9 @@
 #include <audio_objects/fork/fork.hpp>
 #include <audio_objects/peakrms/peakrms.hpp>
 #include <audio_objects/convolver/convolver.hpp>
+
+#include <audio_objects/clock/audioclock.hpp>
+#include <src/time/timeobject.hpp>
 #endif
 
 #ifdef WPN114_MIDI
@@ -42,31 +45,35 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<StreamNode, 1>   ( "WPN114", 1, 0, "StreamNode","Coucou");
     qmlRegisterUncreatableType<RoomNode, 1>     ( "WPN114", 1, 0, "RoomNode", "Coucou" );
     qmlRegisterUncreatableType<RoomSource, 1>   ( "WPN114", 1, 0, "RoomSource", "Coucou");
-    qmlRegisterType<WorldStream, 1>             ( "WPN114", 1, 0, "AudioStream" );
-    qmlRegisterType<SinOsc, 1>                  ( "WPN114", 1, 0, "SinOsc" );
-    qmlRegisterType<StereoPanner, 1>            ( "WPN114", 1, 0, "StereoPanner" );
-    qmlRegisterType<Sampler, 1>                 ( "WPN114", 1, 0, "Sampler" );
-    qmlRegisterType<StreamSampler, 1>           ( "WPN114", 1, 0, "StreamSampler" );
-    qmlRegisterType<MultiSampler, 1>            ( "WPN114", 1, 0, "MultiSampler" );
-    qmlRegisterType<RoomSetup, 1>               ( "WPN114", 1, 0, "RoomSetup" );
-    qmlRegisterType<MonoSource, 1>              ( "WPN114", 1, 0, "MonoSource" );
-    qmlRegisterType<StereoSource, 1>            ( "WPN114", 1, 0, "StereoSource" );
-    qmlRegisterType<Rooms, 1>                   ( "WPN114", 1, 0, "Rooms" );
-    qmlRegisterType<SpeakerPair, 1>             ( "WPN114", 1, 0, "SpeakerPair" );
-    qmlRegisterType<SpeakerRing, 1>             ( "WPN114", 1, 0, "SpeakerRing" );
-    qmlRegisterType<Sharpen, 1>                 ( "WPN114", 1, 0, "Sharpen" );
-    qmlRegisterType<Mangler, 1>                 ( "WPN114", 1, 0, "Mangler" );
-    qmlRegisterType<Fork, 1>                    ( "WPN114", 1, 0, "Fork" );
-    qmlRegisterType<PeakRMS, 1>                 ( "WPN114", 1, 0, "PeakRMS" );
-    qmlRegisterType<Convolver, 1>               ( "WPN114", 1, 0, "Convolver" );
+
+    qmlRegisterType<WorldStream, 1>       ( "WPN114", 1, 0, "AudioStream" );
+    qmlRegisterType<SinOsc, 1>            ( "WPN114", 1, 0, "SinOsc" );
+    qmlRegisterType<StereoPanner, 1>      ( "WPN114", 1, 0, "StereoPanner" );
+    qmlRegisterType<Sampler, 1>           ( "WPN114", 1, 0, "Sampler" );
+    qmlRegisterType<StreamSampler, 1>     ( "WPN114", 1, 0, "StreamSampler" );
+    qmlRegisterType<MultiSampler, 1>      ( "WPN114", 1, 0, "MultiSampler" );
+    qmlRegisterType<RoomSetup, 1>         ( "WPN114", 1, 0, "RoomSetup" );
+    qmlRegisterType<MonoSource, 1>        ( "WPN114", 1, 0, "MonoSource" );
+    qmlRegisterType<StereoSource, 1>      ( "WPN114", 1, 0, "StereoSource" );
+    qmlRegisterType<Rooms, 1>             ( "WPN114", 1, 0, "Rooms" );
+    qmlRegisterType<SpeakerPair, 1>       ( "WPN114", 1, 0, "SpeakerPair" );
+    qmlRegisterType<SpeakerRing, 1>       ( "WPN114", 1, 0, "SpeakerRing" );
+    qmlRegisterType<Sharpen, 1>           ( "WPN114", 1, 0, "Sharpen" );
+    qmlRegisterType<Mangler, 1>           ( "WPN114", 1, 0, "Mangler" );
+    qmlRegisterType<Fork, 1>              ( "WPN114", 1, 0, "Fork" );
+    qmlRegisterType<PeakRMS, 1>           ( "WPN114", 1, 0, "PeakRMS" );
+    qmlRegisterType<Convolver, 1>         ( "WPN114", 1, 0, "Convolver" );
+    qmlRegisterType<TimeNode, 1>          ( "WPN114", 1, 0, "TimeNode" );
+    qmlRegisterType<Loop, 1>              ( "WPN114", 1, 0, "Loop" );
+    qmlRegisterType<Automation, 1>        ( "WPN114", 1, 0, "Automation" );
 #endif
 
 #ifdef WPN114_MIDI
-    qmlRegisterType<MIDIHandler, 1>             ( "WPN114", 1, 0, "MIDIHandler" );
+    qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
 #endif
 
 #ifdef WPN114_VST
-    qmlRegisterType<AudioPlugin, 1>             ( "WPN114", 1, 0, "AudioPlugin" );
+    qmlRegisterType<AudioPlugin, 1>       ( "WPN114", 1, 0, "AudioPlugin" );
 #endif
 
 #ifdef WPN114_NETWORK

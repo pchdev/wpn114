@@ -97,15 +97,31 @@ void StreamNode::setActive(bool active)
 
 void StreamNode::setLevel(qreal level)
 {
-    if ( level != m_level ) emit levelChanged();
-    m_level = level;
-    m_db_level = std::log10(level)*(qreal)20.f;
+    if ( level != m_level )
+    {
+        m_level = level;
+        m_db_level = std::log10(level)*(qreal)20.f;
+
+        emit levelChanged();
+        emit dBlevelChanged();
+    }
+}
+
+void StreamNode::setLevelNoDb(qreal level)
+{
+    if ( level != m_level )
+    {
+        m_level = level;
+
+        emit levelChanged();
+        emit dBlevelChanged();
+    }
 }
 
 void StreamNode::setDBlevel(qreal db)
 {
     m_db_level = db;
-    m_level = std::pow(10.f, db*.05);
+    setLevelNoDb(std::pow(10.f, db*.05));
 }
 
 void StreamNode::setExposePath(QString path)
@@ -405,10 +421,11 @@ void WorldStream::componentComplete()
     QObject::connect(this, &WorldStream::startStream, m_stream, &AudioStream::start);
     QObject::connect(this, &WorldStream::stopStream, m_stream, &AudioStream::stop);
     QObject::connect(this, &WorldStream::configure, m_stream, &AudioStream::configure);
+    QObject::connect(m_stream, &AudioStream::tick, this, &WorldStream::tick );
 
     emit configure();
 
-    m_stream_thread.start   ( QThread::TimeCriticalPriority );
+    m_stream_thread.start   ( QThread::HighestPriority );
 }
 
 void WorldStream::start()
@@ -424,26 +441,27 @@ void WorldStream::stop()
 // -----------------------------------------------------------------------------------------
 
 AudioStream::AudioStream(const WorldStream& world, QAudioFormat format, QAudioDeviceInfo device_info) :
-    m_world(world), m_format(format), m_device_info(device_info)
+    m_world(world), m_format(format), m_device_info(device_info),
+    m_output(nullptr), m_input(nullptr), m_pool(nullptr), m_notify_interval(0)
 {
 }
 
 AudioStream::~AudioStream()
 {
-    m_output->stop();
+    StreamNode::deleteBuffer(m_pool, m_world.numOutputs(), m_world.blockSize());
 
-    close();
     delete m_input;
     delete m_output;
-    delete m_pool;
 }
 
 void AudioStream::configure()
 {
     m_output = new QAudioOutput(m_device_info, m_format);
 
-    QObject::connect( m_output, &QAudioOutput::stateChanged,
-                      this, &AudioStream::onAudioStateChanged);
+    m_output->setNotifyInterval( 20 );
+
+    QObject::connect( m_output, &QAudioOutput::notify, this, &AudioStream::onNotifyInterval );
+    QObject::connect( m_output, &QAudioOutput::stateChanged, this, &AudioStream::onAudioStateChanged );
 }
 
 void AudioStream::start()
@@ -457,6 +475,8 @@ void AudioStream::start()
     open(QIODevice::ReadOnly);
     m_output->start(this);
 
+    m_notify_interval = m_output->notifyInterval();
+
     qDebug() << "AudioStream buffer size initialized at"
              << m_output->bufferSize() << "bytes";
 }
@@ -464,6 +484,11 @@ void AudioStream::start()
 void AudioStream::stop()
 {
     m_output->stop();
+}
+
+void AudioStream::onNotifyInterval()
+{
+    emit tick(m_notify_interval);
 }
 
 void AudioStream::onAudioStateChanged(QAudio::State state)
