@@ -48,21 +48,44 @@ void TimeNode::setCondition(bool condition)
 
 void TimeNode::setSource(WorldStream *source)
 {
-    m_source = source;
+    if ( source != m_source )
+    {
+        m_source = source;
+        for ( const auto& subnode : m_subnodes )
+             subnode->setSource(source);
+
+        emit sourceChanged();
+    }
 }
 
 void TimeNode::setFollow(TimeNode* follow)
 {
-    m_follow = follow;
-    QObject::connect( follow, &TimeNode::end, this, &TimeNode::onBegin );
-    QObject::disconnect( this, &TimeNode::start, this, &TimeNode::onBegin );
+    if ( follow != m_follow )
+    {
+        m_follow = follow;
+        emit afterChanged();
+
+        QObject::connect( follow, &TimeNode::end, this, &TimeNode::onBegin );
+        QObject::disconnect( this, &TimeNode::start, this, &TimeNode::onBegin );
+    }
+}
+
+void TimeNode::setParentNode(TimeNode* parent)
+{
+    if ( m_parent_node != parent)
+    {
+        m_parent_node = parent;
+        emit parentNodeChanged();
+    }
 }
 
 void TimeNode::componentComplete()
 {
-    if ( !m_source )
-    if ( auto parent_node = qobject_cast<TimeNode*>(QObject::parent()) )
-         setSource(parent_node->source());
+    if ( !m_parent_node )
+         setParentNode(qobject_cast<TimeNode*>(QObject::parent()));
+
+    if ( !m_source && m_parent_node )
+         setSource(m_parent_node->source());
 }
 
 void TimeNode::onTick(qint64 sz)
@@ -87,23 +110,25 @@ void TimeNode::onTick(qint64 sz)
         return;
     }
 
-    if ( !m_infinite &&
-         m_duration >= m_clock &&
-         m_duration < m_clock+sz )
-    {
-        emit end();
-    }
-
     for ( const auto& subnode : m_subnodes )
     {
         auto date = subnode->date();
 
         if ( date >= m_clock &&
              date < m_clock+sz &&
-             subnode->condition() )
+             subnode->condition() &&
+             !subnode->follow())
         {
             subnode->start();
         }
+    }
+
+    if ( !m_infinite &&
+         m_duration >= m_clock &&
+         m_duration < m_clock+sz )
+    {
+        emit end();
+        return;
     }
 
     m_clock += sz;
@@ -119,6 +144,7 @@ void TimeNode::onStop()
 {
     m_clock     = 0;
     m_running   = false;
+
     QObject::disconnect(m_source, &WorldStream::tick, this, &TimeNode::onTick);
 }
 
@@ -207,7 +233,7 @@ int TimeNode::subnodesCount(QQmlListProperty<TimeNode>* list)
 
 Loop::Loop() : TimeNode(), m_pattern(new TimeNode)
 {
-
+    QObject::connect( this, &TimeNode::sourceChanged, this, &Loop::onSourceChanged );
 }
 
 void Loop::setTimes(quint64 times)
@@ -220,11 +246,17 @@ void Loop::setPattern(TimeNode* pattern)
     // nothing to do here for now
 }
 
+void Loop::onSourceChanged()
+{
+    m_pattern->setSource(m_source);
+}
+
 void Loop::componentComplete()
 {
     TimeNode::componentComplete();
+    m_pattern->componentComplete();
+
     if ( m_times ) m_duration = m_pattern->duration()*m_times;
-    m_pattern->setSource(m_source);
 
     QObject::connect( this, &Loop::start, m_pattern, &TimeNode::start );
     QObject::connect( this, &Loop::end, m_pattern, &TimeNode::end );

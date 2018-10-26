@@ -14,11 +14,12 @@ class TimeNode : public QObject, public QQmlParserStatus
     Q_CLASSINFO     ( "DefaultProperty", "subnodes" )
     Q_INTERFACES    ( QQmlParserStatus )
 
-    Q_PROPERTY  ( WorldStream* source READ source WRITE setSource )
+    Q_PROPERTY  ( TimeNode* parentNode READ parentNode WRITE setParentNode NOTIFY parentNodeChanged )
+    Q_PROPERTY  ( WorldStream* source READ source WRITE setSource NOTIFY sourceChanged )
     Q_PROPERTY  ( qreal date READ date WRITE setDate )
     Q_PROPERTY  ( qreal duration READ duration WRITE setDuration )
     Q_PROPERTY  ( QQmlListProperty<TimeNode> subnodes READ subnodes )
-    Q_PROPERTY  ( TimeNode* after READ follow WRITE setFollow )
+    Q_PROPERTY  ( TimeNode* after READ follow WRITE setFollow NOTIFY afterChanged )
     Q_PROPERTY  ( bool condition READ condition WRITE setCondition NOTIFY conditionChanged )
     Q_PROPERTY  ( bool running READ running )
 
@@ -44,18 +45,20 @@ class TimeNode : public QObject, public QQmlParserStatus
     virtual TimeNode* subnode   ( int ) const;
     virtual void clearSubnodes  ( );
 
-    TimeNode* follow     ( ) const { return m_follow; }
-    WorldStream* source  ( ) const { return m_source; }
-    bool condition       ( ) const { return m_condition; }
-    bool running         ( ) const { return m_running; }
-    qreal date           ( ) const;
-    qreal duration       ( ) const;
+    TimeNode* parentNode  ( ) const { return m_parent_node; }
+    TimeNode* follow      ( ) const { return m_follow; }
+    WorldStream* source   ( ) const { return m_source; }
+    bool condition        ( ) const { return m_condition; }
+    bool running          ( ) const { return m_running; }
+    qreal date            ( ) const;
+    qreal duration        ( ) const;
 
     void setDate        ( qreal date );
     void setDuration    ( qreal duration );
     void setCondition   ( bool condition );
     void setSource      ( WorldStream* source );
     void setFollow      ( TimeNode* follow );
+    void setParentNode  ( TimeNode* node );
 
     Q_INVOKABLE void reset ( );
     Q_INVOKABLE void playFrom ( quint64 ms );
@@ -65,6 +68,9 @@ class TimeNode : public QObject, public QQmlParserStatus
     Q_INVOKABLE void resume  ( );
 
     signals:
+    void afterChanged  ( );
+    void sourceChanged ( );
+    void parentNodeChanged ( );
     void start    ( );
     void end      ( );
 
@@ -83,6 +89,7 @@ class TimeNode : public QObject, public QQmlParserStatus
 
     QVector<TimeNode*> m_subnodes;
     TimeNode* m_follow = nullptr;
+    TimeNode* m_parent_node = nullptr;
 
     bool m_suspended = false;
     bool m_running = false;
@@ -166,6 +173,7 @@ class Loop : public TimeNode
     public slots:
     virtual void onTick   ( qint64 sz ) override;
     void onPatternStop    ( );
+    void onSourceChanged  ( );
 
     private:
     TimeNode* m_pattern = nullptr;
