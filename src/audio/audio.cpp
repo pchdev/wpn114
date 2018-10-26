@@ -358,6 +358,8 @@ WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512)
 
 WorldStream::~WorldStream()
 {
+    emit stop();
+
     m_stream_thread.terminate();
     delete m_stream;
 }
@@ -442,13 +444,14 @@ void WorldStream::stop()
 
 AudioStream::AudioStream(const WorldStream& world, QAudioFormat format, QAudioDeviceInfo device_info) :
     m_world(world), m_format(format), m_device_info(device_info),
-    m_output(nullptr), m_input(nullptr), m_pool(nullptr), m_notify_interval(0)
+    m_output(nullptr), m_input(nullptr), m_pool(nullptr), m_clock(0)
 {
 }
 
 AudioStream::~AudioStream()
 {
     StreamNode::deleteBuffer(m_pool, m_world.numOutputs(), m_world.blockSize());
+    close();
 
     delete m_input;
     delete m_output;
@@ -457,25 +460,19 @@ AudioStream::~AudioStream()
 void AudioStream::configure()
 {
     m_output = new QAudioOutput(m_device_info, m_format);
-
-    m_output->setNotifyInterval( 20 );
-
-    QObject::connect( m_output, &QAudioOutput::notify, this, &AudioStream::onNotifyInterval );
     QObject::connect( m_output, &QAudioOutput::stateChanged, this, &AudioStream::onAudioStateChanged );
 }
 
 void AudioStream::start()
 {
     for ( const auto& input : m_world.m_subnodes )
-        input->preinitialize({ m_world.m_sample_rate, m_world.m_block_size });
+          input->preinitialize({ m_world.m_sample_rate, m_world.m_block_size });
 
     StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
     m_output->setBufferSize(m_world.m_block_size*m_world.numOutputs()*sizeof(float));
 
     open(QIODevice::ReadOnly);
     m_output->start(this);
-
-    m_notify_interval = m_output->notifyInterval();
 
     qDebug() << "AudioStream buffer size initialized at"
              << m_output->bufferSize() << "bytes";
@@ -486,28 +483,38 @@ void AudioStream::stop()
     m_output->stop();
 }
 
-void AudioStream::onNotifyInterval()
+void AudioStream::restart()
 {
-    emit tick(m_notify_interval);
+    // no need to reinitialize buffers
+    open(QIODevice::ReadOnly);
+    m_output->start(this);
+}
+
+void AudioStream::onBufferProcessed()
+{
+    qint64 msecs = floor(m_output->processedUSecs()/1000.0);
+    emit tick(msecs-m_clock);
+
+    m_clock = msecs;
 }
 
 void AudioStream::onAudioStateChanged(QAudio::State state)
 {
-    auto obj = qobject_cast<QAudioOutput*>(QObject::sender());
     qDebug() << "[AUDIO]" << state;
 
-    if ( obj->error() == QAudio::UnderrunError )
+    if ( m_output->error() == QAudio::UnderrunError )
     {
         qDebug() << "QAudio::UnderrunError";
-
-        // restart stream
-        stop();
-        start();
+        restart();
     }
+
+    else qDebug() << "QAudio::Error:" << m_output->error();
 }
 
 qint64 AudioStream::readData(char* data, qint64 maxlen)
 {
+    onBufferProcessed();
+
     auto inputs     = m_world.m_subnodes;
     quint16 nout    = m_world.m_num_outputs;
     quint16 bsize   = m_world.m_block_size;

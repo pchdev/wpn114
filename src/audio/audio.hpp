@@ -165,16 +165,18 @@ class AudioStream : public QIODevice
     void tick       ( qint64 );
 
     public slots:
-    void onNotifyInterval ( );
+    void onBufferProcessed ( );
     void configure  ( );
     void start      ( );
     void stop       ( );
+    void restart    ( );
 
     protected slots:
     void onAudioStateChanged ( QAudio::State );
 
     private:
-    qint64 m_notify_interval;
+    bool m_active = false;
+    qint64 m_clock;
     WorldStream const& m_world;
     QAudioFormat m_format;
     QAudioDeviceInfo m_device_info;

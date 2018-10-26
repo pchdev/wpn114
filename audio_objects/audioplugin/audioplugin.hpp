@@ -48,6 +48,7 @@ enum class MIDI
     virtual void                        set_program_name(const std::string name) pure; \
     virtual QByteArray                  get_chunk() pure; \
     virtual void                        set_chunk(QByteArray) pure; \
+    virtual void                        process_midi_offline() pure; \
     virtual void                        process_midi(const uint8_t data[4]) pure; \
     virtual void                        process_audio(float** inputs, float** outputs, const uint16_t nsamples) pure; \
     virtual void                        process_audio(float**& outputs, const uint16_t nsamples) pure; \
@@ -141,7 +142,7 @@ public:
     Q_INVOKABLE void bend(int channel, int value);
     Q_INVOKABLE void aftertouch(int channel, int value);
     Q_INVOKABLE void aftertouch(int channel, int index, int value);
-    Q_INVOKABLE void sysex(QVariantList bytes);
+    Q_INVOKABLE void sysex(QVariantList bytes);   
 
     Q_INVOKABLE void allNotesOff();
 

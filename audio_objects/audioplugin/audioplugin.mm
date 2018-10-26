@@ -207,6 +207,7 @@ void AudioPlugin::noteOff(int channel, int index, int value)
 void AudioPlugin::control(int channel, int index, int value)
 {
     MIDI_AR3 ( MIDI::CONTINUOUS_CONTROL );
+    if ( !m_active ) m_plugin_hdl->process_midi_offline();
 }
 
 void AudioPlugin::programChange(int channel, int value)
@@ -369,6 +370,12 @@ void vst2x_plugin::process_audio(float **&outputs, const uint16_t nsamples)
 
     m_event_queue->numEvents = 0;
     m_aeffect->processReplacing(m_aeffect, nullptr, outputs, nsamples);
+}
+
+void vst2x_plugin::process_midi_offline()
+{
+    if ( m_event_queue->numEvents )
+         m_aeffect->dispatcher(m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f);
 }
 
 void vst2x_plugin::process_midi(const uint8_t data[4])
@@ -569,6 +576,11 @@ void vst3x_plugin::process_audio(float **&outputs, const uint16_t nsamples)
 }
 
 void vst3x_plugin::process_midi(const uint8_t data[])
+{
+
+}
+
+void vst3x_plugin::process_midi_offline()
 {
 
 }
