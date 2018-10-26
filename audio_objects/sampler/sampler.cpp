@@ -151,7 +151,7 @@ void StreamSampler::initialize(qint64)
     m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
     m_attack_end    = ms_to_samples(m_attack, SAMPLERATE);
     m_release_inc   = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_release, SAMPLERATE));
-    m_release_end   = ms_to_samples(m_release, SAMPLERATE);
+    m_release_end   = ENV_RESOLUTION;
     m_xfade_length  = ms_to_samples(m_xfade, SAMPLERATE);
     m_xfade_point   = m_play_size-m_xfade_length;
 
@@ -546,7 +546,7 @@ void Sampler::initialize(qint64)
     m_attack_inc    = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_attack, SAMPLERATE));
     m_release_inc   = static_cast<float>(ENV_RESOLUTION/(float)ms_to_samples(m_release, SAMPLERATE));
 
-    m_release_end   = ms_to_samples(m_release, SAMPLERATE);
+    m_release_end   = ENV_RESOLUTION;
     m_attack_end    = ms_to_samples(m_attack, SAMPLERATE);
 
     m_xfade_length  = ms_to_samples(m_xfade, SAMPLERATE);
