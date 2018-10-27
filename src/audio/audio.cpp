@@ -420,14 +420,14 @@ void WorldStream::componentComplete()
     m_stream = new AudioStream(*this, format, device_info);
     m_stream->moveToThread  ( &m_stream_thread );
 
-    QObject::connect(this, &WorldStream::startStream, m_stream, &AudioStream::start);
-    QObject::connect(this, &WorldStream::stopStream, m_stream, &AudioStream::stop);
-    QObject::connect(this, &WorldStream::configure, m_stream, &AudioStream::configure);
-    QObject::connect(m_stream, &AudioStream::tick, this, &WorldStream::tick );
+    QObject::connect( this, &WorldStream::startStream, m_stream, &AudioStream::start);
+    QObject::connect( this, &WorldStream::stopStream, m_stream, &AudioStream::stop);
+    QObject::connect( this, &WorldStream::configure, m_stream, &AudioStream::configure);
+    QObject::connect( m_stream, &AudioStream::tick, this, &WorldStream::tick );
 
     emit configure();
 
-    m_stream_thread.start   ( QThread::HighestPriority );
+    m_stream_thread.start ( QThread::TimeCriticalPriority );
 }
 
 void WorldStream::start()

@@ -3,6 +3,8 @@
 #include <QJsonArray>
 #include "folder.hpp"
 
+#include <QQmlEngine>
+
 WPNNode* WPNNode::fromJson(QJsonObject obj, WPNDevice *dev)
 {
     WPNNode* node = nullptr;
@@ -49,12 +51,16 @@ WPNNode::WPNNode() :
     m_attributes.type           = Type::None;
     m_attributes.description    = "No description";
     m_attributes.critical       = false;
+
+    // prevents qml from destroying nodes when referenced in javascript functions
+    QQmlEngine::setObjectOwnership( this, QQmlEngine::CppOwnership );
+
 }
 
 WPNNode::~WPNNode()
 {
     for ( const auto& subnode : m_children )
-        delete subnode;
+          delete subnode;
 
     m_parent->removeSubnode(this);
 }
