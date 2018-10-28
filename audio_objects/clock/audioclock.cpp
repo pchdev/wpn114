@@ -79,6 +79,23 @@ void TimeNode::setParentNode(TimeNode* parent)
     }
 }
 
+void TimeNode::setStartExpression(bool expr)
+{
+    m_has_start_expression = true;
+    if ( m_running && expr ) start();
+}
+
+void TimeNode::setEndExpression(bool expr)
+{
+    m_has_end_expression = true;
+    if ( m_running && expr ) end();
+}
+
+void TimeNode::setRunning(bool run)
+{
+    m_running = run;
+}
+
 void TimeNode::componentComplete()
 {
     if ( !m_parent_node )
@@ -114,7 +131,10 @@ void TimeNode::onTick(qint64 sz)
     {
         auto date = subnode->date();
 
-        if ( date >= m_clock &&
+        if ( subnode->hasStartExpression() )
+             subnode->setRunning(true);
+
+        else if ( date >= m_clock &&
              date < m_clock+sz &&
              subnode->condition() &&
              !subnode->follow())

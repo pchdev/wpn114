@@ -22,6 +22,8 @@ class TimeNode : public QObject, public QQmlParserStatus
     Q_PROPERTY  ( TimeNode* after READ follow WRITE setFollow NOTIFY afterChanged )
     Q_PROPERTY  ( bool condition READ condition WRITE setCondition NOTIFY conditionChanged )
     Q_PROPERTY  ( bool running READ running )
+    Q_PROPERTY  ( bool startExpression READ startExpression WRITE setStartExpression NOTIFY startExpressionChanged )
+    Q_PROPERTY  ( bool endExpression READ endExpression WRITE setEndExpression NOTIFY endExpressionChanged )
 
     public:
     TimeNode();
@@ -45,6 +47,11 @@ class TimeNode : public QObject, public QQmlParserStatus
     virtual TimeNode* subnode   ( int ) const;
     virtual void clearSubnodes  ( );
 
+    bool hasStartExpression ( ) const { return m_has_start_expression; }
+    bool hasEndExpression   ( ) const { return m_has_end_expression; }
+
+    bool startExpression  ( ) const { return m_start_expression; }
+    bool endExpression    ( ) const { return m_end_expression; }
     TimeNode* parentNode  ( ) const { return m_parent_node; }
     TimeNode* follow      ( ) const { return m_follow; }
     WorldStream* source   ( ) const { return m_source; }
@@ -59,6 +66,10 @@ class TimeNode : public QObject, public QQmlParserStatus
     void setSource      ( WorldStream* source );
     void setFollow      ( TimeNode* follow );
     void setParentNode  ( TimeNode* node );
+    void setRunning     ( bool running );
+
+    void setStartExpression ( bool expr );
+    void setEndExpression   ( bool expr );
 
     Q_INVOKABLE void reset ( );
     Q_INVOKABLE void playFrom ( quint64 ms );
@@ -68,6 +79,8 @@ class TimeNode : public QObject, public QQmlParserStatus
     Q_INVOKABLE void resume  ( );
 
     signals:
+    void startExpressionChanged ( );
+    void endExpressionChanged ( );
     void afterChanged  ( );
     void sourceChanged ( );
     void parentNodeChanged ( );
@@ -91,6 +104,10 @@ class TimeNode : public QObject, public QQmlParserStatus
     TimeNode* m_follow = nullptr;
     TimeNode* m_parent_node = nullptr;
 
+    bool m_has_start_expression = false;
+    bool m_has_end_expression = false;
+    bool m_start_expression = false;
+    bool m_end_expression = false;
     bool m_suspended = false;
     bool m_running = false;
     bool m_condition = true;
