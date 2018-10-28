@@ -206,4 +206,27 @@ void Soundfile::buffer(float* buffer, quint64 start_sample, quint64 len )
     m_file->reset();
 }
 
+void Soundfile::buffer(float** buffer, quint64 start_sample, quint64 len )
+{
+    auto nch = m_nchannels;
+    quint64 start = start_sample*nch*(m_bits_per_sample/8)+m_metadata_size;
+
+    QDataStream stream  ( m_file );
+    stream.setByteOrder ( QDataStream::LittleEndian );
+    stream.skipRawData  ( start );
+
+    // de-interleave file
+
+    for ( quint32 s = 0; s < len; ++s )
+    {
+        for ( quint16 ch = 0; ch < nch; ++ch )
+        {
+            qint16 si16; stream >> si16;
+            buffer[ch][s] = si16/32767.f;
+        }
+    }
+
+    m_file->reset();
+}
+
 

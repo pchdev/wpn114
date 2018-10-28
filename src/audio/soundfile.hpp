@@ -85,8 +85,9 @@ class Soundfile : public QObject
     quint64 sampleRate  ( ) const { return m_sample_rate; }
     void metadataWav    ( );
 
-    void setPath      ( QString path );
-    void buffer       ( float* buffer, quint64 start_sample, quint64 len );
+    void setPath    ( QString path );
+    void buffer     ( float* buffer, quint64 start_sample, quint64 len );
+    void buffer     ( float** buffer, quint64 start_sample, quint64 len );
 
     protected:
     QFile* m_file;

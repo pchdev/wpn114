@@ -52,7 +52,7 @@ class StreamNode : public QObject, public QQmlParserStatus
     ~StreamNode() override;
 
     static void deleteBuffer    ( float**& buffer, quint16 nchannels, quint16 nsamples );
-    static void allocateBuffer  ( float**& buffer, quint16 nchannels, quint16 nsamples );
+    static void allocateBuffer  ( float**& buffer, quint16 nchannels, quint64 nsamples );
     static void resetBuffer     ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void applyGain       ( float**& buffer, quint16 nchannels, quint16 nsamples, float gain );
     static void mergeBuffers    ( float**& lhs, float **rhs, quint16 lnchannels,

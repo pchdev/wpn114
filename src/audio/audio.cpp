@@ -251,7 +251,7 @@ int StreamNode::subnodesCount(QQmlListProperty<StreamNode>* list)
 
 //-------------------------------------------------------------------------------------------
 
-void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
+void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint64 nsamples )
 {
     buffer = new float* [ nchannels ]();
     for ( uint16_t ch = 0; ch < nchannels; ++ch )
