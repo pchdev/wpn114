@@ -2,6 +2,7 @@
 #define AUDIOCLOCK_HPP
 
 #include <src/audio/audio.hpp>
+#include <src/oscquery/device.hpp>
 #include <math.h>
 
 #include <QQmlProperty>
@@ -24,6 +25,8 @@ class TimeNode : public QObject, public QQmlParserStatus
     Q_PROPERTY  ( bool running READ running )
     Q_PROPERTY  ( bool startExpression READ startExpression WRITE setStartExpression NOTIFY startExpressionChanged )
     Q_PROPERTY  ( bool endExpression READ endExpression WRITE setEndExpression NOTIFY endExpressionChanged )
+    Q_PROPERTY  ( QString exposePath READ exposePath WRITE setExposePath )
+    Q_PROPERTY  ( WPNDevice* exposeDevice READ exposeDevice WRITE setExposeDevice )
 
     public:
     TimeNode();
@@ -60,6 +63,9 @@ class TimeNode : public QObject, public QQmlParserStatus
     qreal date            ( ) const;
     qreal duration        ( ) const;
 
+    QString exposePath          ( ) const { return m_expose_path; }
+    WPNDevice* exposeDevice     ( ) const { return m_expose_device; }
+
     void setDate        ( qreal date );
     void setDuration    ( qreal duration );
     void setCondition   ( bool condition );
@@ -70,6 +76,9 @@ class TimeNode : public QObject, public QQmlParserStatus
 
     void setStartExpression ( bool expr );
     void setEndExpression   ( bool expr );
+
+    void setExposePath      ( QString path );
+    void setExposeDevice    ( WPNDevice* device );
 
     Q_INVOKABLE void reset ( );
     Q_INVOKABLE void playFrom ( quint64 ms );
@@ -114,6 +123,9 @@ class TimeNode : public QObject, public QQmlParserStatus
     bool m_infinite = false;
 
     WorldStream* m_source = nullptr;
+    WPNDevice* m_expose_device = nullptr;
+    QString m_expose_path;
+
     qreal m_date = 0;
     qreal m_duration = 0;
     quint64 m_clock = 0;

@@ -45,7 +45,7 @@ void Fork::onSourceActiveChanged()
     // if parent goes active again, this should go active ONLY IF
     // 'active' property has not been explicitely set to 'false' at startup
 
-    if ( ! parent_active ) setActive(false);
+    if ( !parent_active ) setActive(false);
     else if ( parent_active && m_active_default ) setActive(true);
 }
 

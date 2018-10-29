@@ -35,6 +35,30 @@ void TimeNode::setDate(qreal date)
     m_date = date;
 }
 
+
+void TimeNode::setExposeDevice(WPNDevice* device)
+{
+    m_expose_device = device;
+}
+
+void TimeNode::setExposePath(QString path)
+{
+    m_expose_path = path;
+
+    if ( !m_expose_device ) m_expose_device = WPNDevice::instance();
+    if ( !m_expose_device ) return;
+
+    auto root   = m_expose_device->findOrCreateNode(path);
+    auto start  = root->createSubnode("start");
+    auto end    = root->createSubnode("end");
+
+    start->setType  ( Type::Impulse );
+    end->setType    ( Type::Impulse );
+
+    QObject::connect( start, SIGNAL(valueReceived(QVariant)), this, SIGNAL(start()));
+    QObject::connect( end, SIGNAL(valueReceived(QVariant)), this, SIGNAL(end()));
+}
+
 void TimeNode::setDuration(qreal duration)
 {
     m_duration = duration;
