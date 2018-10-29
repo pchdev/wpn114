@@ -12,17 +12,18 @@ float** ForkEndpoint::process(float** buf, qint64 nsamples)
     return m_fork.preprocess(buf, nsamples);
 }
 
-Fork::Fork() : StreamNode(), m_parent(nullptr), m_target(nullptr), m_endpoint(nullptr)
-{
-}
+Fork::Fork() : StreamNode(), m_parent(nullptr), m_target(nullptr), m_endpoint(nullptr) { }
 
 void Fork::setTarget(StreamNode* target)
 {
-    m_target = target;
-    m_parent = qobject_cast<StreamNode*>(QObject::parent());
+    if ( target != m_target )
+    {
+        m_target = target;
+        m_parent = qobject_cast<StreamNode*>(QObject::parent());
 
-    m_endpoint = new ForkEndpoint(*this);
-    m_target->appendSubnode(m_endpoint);   
+        m_endpoint = new ForkEndpoint(*this);
+        m_target->appendSubnode(m_endpoint);
+    }
 }
 
 void Fork::setPrefader(bool prefader)
@@ -44,7 +45,6 @@ void Fork::onSourceActiveChanged()
     // if parent goes inactive, fork should be inactive too (and the endpoint)
     // if parent goes active again, this should go active ONLY IF
     // 'active' property has not been explicitely set to 'false' at startup
-
     if ( !parent_active ) setActive(false);
     else if ( parent_active && m_active_default ) setActive(true);
 }
