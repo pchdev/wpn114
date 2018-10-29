@@ -352,7 +352,7 @@ void RoomChannel::computeCoeffs()
 
             gain = qMax(qMax(qMax(qMax(ng,sg),eg),wg),cg);
 
-            //qDebug() << "Gain for speaker:" << spk << gain;
+//            qDebug() << "Gain for speaker:" << spk << gain;
         }
 
         coeffs[spk] = gain;

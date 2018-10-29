@@ -60,6 +60,18 @@ QVariant WPNNodeTree::data(const QModelIndex& index, int role) const
 
 }
 
+bool WPNNodeTree::setData(const QModelIndex& index, const QVariant& value, int role )
+{
+    if ( !index.isValid() )
+        return false;
+
+    auto node = static_cast<WPNNode*>(index.internalPointer());
+    if ( role == NodeName ) return false;
+
+    else if ( role == NodeValue ) node->setValue(value);
+    return true;
+}
+
 QModelIndex WPNNodeTree::index(int row, int column, const QModelIndex& parent) const
 {
     WPNNode* parent_node;
@@ -102,4 +114,9 @@ QVariant WPNNodeTree::headerData(int section, Qt::Orientation orientation, int r
          return m_root_node->description();
 
     return QVariant();
+}
+
+WPNNode* WPNNodeTree::get(const QModelIndex& index)
+{
+    return static_cast<WPNNode*>(index.internalPointer());
 }
