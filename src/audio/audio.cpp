@@ -466,7 +466,10 @@ void AudioStream::configure()
 void AudioStream::start()
 {
     for ( const auto& input : m_world.m_subnodes )
-          input->preinitialize({ m_world.m_sample_rate, m_world.m_block_size });
+    {
+        if ( !input ) continue;
+        input->preinitialize({ m_world.m_sample_rate, m_world.m_block_size });
+    }
 
     StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
     m_output->setBufferSize(m_world.m_block_size*m_world.numOutputs()*sizeof(float));

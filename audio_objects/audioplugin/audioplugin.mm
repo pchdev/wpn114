@@ -207,7 +207,7 @@ void AudioPlugin::noteOff(int channel, int index, int value)
 void AudioPlugin::control(int channel, int index, int value)
 {
     MIDI_AR3 ( MIDI::CONTINUOUS_CONTROL );
-    if ( !m_active ) m_plugin_hdl->process_midi_offline();
+//    if ( !m_active ) m_plugin_hdl->process_midi_offline();
 }
 
 void AudioPlugin::programChange(int channel, int value)

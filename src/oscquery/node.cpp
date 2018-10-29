@@ -101,6 +101,15 @@ void WPNNode::setParent(WPNNode* parent)
     if ( !m_device ) m_device = parent->device();
 }
 
+qint16 WPNNode::index() const
+{
+    for ( quint16 i = 0; i < m_parent->subnodes().size(); ++i )
+        if ( m_parent->subnodeAt(i) == this )
+             return i;
+
+    return -1;
+}
+
 QString WPNNode::parentPath() const
 {
     auto spl = m_attributes.path.split('/');
@@ -413,5 +422,6 @@ WPNNode* WPNNode::subnode(QString path)
 
 WPNNode* WPNNode::subnodeAt(int index)
 {
-    return m_children[index];
+    if ( index >= m_children.size() ) return nullptr;
+    else return m_children[index];
 }

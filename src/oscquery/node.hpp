@@ -118,6 +118,8 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     virtual void setTarget(const QQmlProperty& property);    
     void setTarget(QObject* target, const QMetaProperty& property);
 
+    qint16 index( ) const;
+
     QString name            ( ) const { return m_name; }
     WPNDevice* device       ( ) const { return m_device; }
     WPNNode* parent         ( ) { return m_parent; }

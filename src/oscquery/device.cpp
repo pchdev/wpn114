@@ -46,10 +46,12 @@ WPNDevice* WPNDevice::instance()
     return m_singleton;
 }
 
-WPNDevice::WPNDevice() : m_singleDevice(false)
+WPNDevice::WPNDevice() : m_singleDevice(false), m_node_tree(nullptr)
 {
     m_root_node = new WPNNode;
     m_root_node ->setPath   ( "/" );
+
+    m_node_tree = new WPNNodeTree(m_root_node);
 }
 
 WPNDevice::~WPNDevice() {}
@@ -95,11 +97,6 @@ WPNNode* WPNDevice::get(QString path)
     if ( !node ) qDebug() << path << "no node at that address";
 
     return node;
-}
-
-void WPNDevice::onValueUpdate(QJsonObject obj)
-{
-
 }
 
 void WPNDevice::onValueUpdate(QString method, QVariant arguments)

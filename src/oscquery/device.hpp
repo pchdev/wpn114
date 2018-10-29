@@ -1,6 +1,7 @@
 #pragma once
 
 #include "node.hpp"
+#include "nodetree.hpp"
 #include <QObject>
 
 class WPNNode;
@@ -64,7 +65,9 @@ class WPNDevice : public QObject
 
     Q_INVOKABLE void explore    ( ) const;   
     Q_INVOKABLE QVariant value  ( QString method ) const;
-    Q_INVOKABLE WPNNode* get    ( QString path );
+    Q_INVOKABLE WPNNode* get    ( QString path );    
+
+    Q_INVOKABLE WPNNodeTree* nodeTree ( ) const { return m_node_tree; }
 
     void link(WPNNode* node);
 
@@ -74,12 +77,12 @@ class WPNDevice : public QObject
 
     public slots:
     void onValueUpdate  ( QString method, QVariant arguments );
-    void onValueUpdate  ( QJsonObject obj );
 
     protected:
     bool m_singleDevice;
     static WPNDevice* m_singleton;
 
-    QString   m_name;
-    WPNNode*  m_root_node;
+    QString       m_name;
+    WPNNode*      m_root_node;
+    WPNNodeTree*  m_node_tree;
 };
