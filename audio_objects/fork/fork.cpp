@@ -20,7 +20,6 @@ void Fork::setTarget(StreamNode* target)
     {
         m_target = target;
         m_parent = qobject_cast<StreamNode*>(QObject::parent());
-
         m_endpoint = new ForkEndpoint(*this);
         m_target->appendSubnode(m_endpoint);
     }

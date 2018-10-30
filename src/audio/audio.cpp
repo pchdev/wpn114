@@ -6,7 +6,8 @@
 #include <memory>
 #include <QtGlobal>
 
-static const QStringList g_ignore = {
+static const QStringList g_ignore =
+{
     "parentStream", "subnodes", "exposeDevice", "objectName", "exposePath"
 };
 
@@ -100,7 +101,7 @@ void StreamNode::setLevel(qreal level)
     if ( level != m_level )
     {
         m_level = level;
-        m_db_level = std::log10(level)*(qreal)20.f;
+        m_db_level = std::log10(level)*20.0;
 
         emit levelChanged();
         emit dBlevelChanged();
@@ -443,6 +444,57 @@ void WorldStream::stop()
     emit stopStream();
 }
 
+QQmlListProperty<StreamNode> WorldStream::inserts()
+{
+    return QQmlListProperty<StreamNode>( this, this,
+                           &WorldStream::appendInsert,
+                           &WorldStream::insertsCount,
+                           &WorldStream::insert,
+                           &WorldStream::clearInserts );
+}
+
+StreamNode* WorldStream::insert(int index) const
+{
+    return m_inserts.at(index);
+}
+
+void WorldStream::appendInsert(StreamNode* insert)
+{
+    m_inserts.append(insert);
+}
+
+int WorldStream::insertsCount() const
+{
+    return m_inserts.count();
+}
+
+void WorldStream::clearInserts()
+{
+    m_inserts.clear();
+}
+
+// statics --
+
+void WorldStream::appendInsert(QQmlListProperty<StreamNode>* list, StreamNode* insert)
+{
+    reinterpret_cast<WorldStream*>(list->data)->appendInsert(insert);
+}
+
+void WorldStream::clearInserts(QQmlListProperty<StreamNode>* list )
+{
+    reinterpret_cast<WorldStream*>(list->data)->clearInserts();
+}
+
+StreamNode* WorldStream::insert(QQmlListProperty<StreamNode>* list, int i)
+{
+    return reinterpret_cast<WorldStream*>(list->data)->insert(i);
+}
+
+int WorldStream::insertsCount(QQmlListProperty<StreamNode>* list)
+{
+    return reinterpret_cast<WorldStream*>(list->data)->insertsCount();
+}
+
 // -----------------------------------------------------------------------------------------
 
 AudioStream::AudioStream(const WorldStream& world, QAudioFormat format, QAudioDeviceInfo device_info) :
@@ -470,6 +522,9 @@ void AudioStream::start()
 {
     for ( const auto& input : m_world.m_subnodes )
         input->preinitialize({ m_world.m_sample_rate, m_world.m_block_size });
+
+    for ( const auto& insert : m_world.m_inserts )
+        insert->preinitialize( { m_world.m_sample_rate, m_world.m_block_size });
 
     StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
     m_output->setBufferSize(m_world.m_block_size*m_world.numOutputs()*sizeof(float));
@@ -519,6 +574,7 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
     onBufferProcessed();
 
     auto inputs     = m_world.m_subnodes;
+    auto inserts    = m_world.m_inserts;
     quint16 nout    = m_world.m_num_outputs;
     quint16 bsize   = m_world.m_block_size;
     qreal level     = m_world.m_level;
@@ -537,18 +593,24 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
 
         for ( quint16 s = 0; s < bsize; ++s )
             for ( quint16 ch = 0; ch < pch.size(); ++ch )
-                buf[pch[ch]][s] += ( cdata[ch][s] *level );
+                buf[pch[ch]][s] += cdata[ch][s] *level;
+    }   
+
+    for ( const auto& insert : inserts )
+    {
+        if ( !insert->active() ) continue;
+        buf = insert->preprocess(buf, bsize);
     }
 
-        for ( quint16 s = 0; s < bsize; ++s )
+    for ( quint16 s = 0; s < bsize; ++s )
+    {
+        for ( quint16 ch = 0; ch < nout; ++ch )
         {
-            for ( quint16 ch = 0; ch < nout; ++ch )
-            {
-                // convert to interleaved little endian
-                qToLittleEndian<float>(buf[ch][s], data);
-                data += sizeof(float);
-            }
+            // convert to interleaved little endian
+            qToLittleEndian<float>(buf[ch][s], data);
+            data += sizeof(float);
         }
+    }
 
     // i.e. block_size * 4bytes per value * numChannels
     return ( bsize*sizeof(float)*nout );

@@ -7,7 +7,7 @@
 #include <QNetworkReply>
 
 WPNQueryClient::WPNQueryClient() : WPNDevice(), m_direct(true),
-    m_ws_con(new WPNWebSocket), m_osc_hdl(new OSCHandler)
+    m_ws_con(new WPNWebSocket), m_osc_hdl(new OSCHandler), m_http_manager(nullptr)
 {
     // direct client
 //    m_ws_con->moveToThread  ( &m_ws_thread );
@@ -33,7 +33,7 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_direct(true),
 
 }
 
-WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_direct(false), m_osc_hdl(new OSCHandler)
+WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_direct(false), m_osc_hdl(new OSCHandler), m_http_manager(nullptr)
 {
     // indirect client (server image)
     // no need for a local udp port
@@ -44,6 +44,13 @@ WPNQueryClient::WPNQueryClient(WPNWebSocket* con) : m_direct(false), m_osc_hdl(n
     QObject::connect( m_ws_con, &WPNWebSocket::binaryFrameReceived, this, &WPNQueryClient::onBinaryMessageReceived );
     QObject::connect( m_ws_con, &WPNWebSocket::httpMessageReceived, this, &WPNQueryClient::httpMessageReceived );
     QObject::connect( m_ws_con, &WPNWebSocket::disconnected, this, &WPNQueryClient::disconnected );
+}
+
+WPNQueryClient::~WPNQueryClient()
+{
+    delete m_ws_con;
+    delete m_osc_hdl;
+    delete m_http_manager;
 }
 
 void WPNQueryClient::setHostAddr(QString addr)

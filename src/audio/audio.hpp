@@ -190,10 +190,11 @@ class WorldStream : public StreamNode
 {
     Q_OBJECT
 
-    Q_PROPERTY      ( int sampleRate READ sampleRate WRITE setSampleRate NOTIFY sampleRateChanged )
-    Q_PROPERTY      ( int blockSize READ blockSize WRITE setBlockSize NOTIFY blockSizeChanged )
-    Q_PROPERTY      ( QString inDevice READ inDevice WRITE setInDevice NOTIFY inDeviceChanged )
-    Q_PROPERTY      ( QString outDevice READ outDevice WRITE setOutDevice NOTIFY outDeviceChanged )
+    Q_PROPERTY  ( int sampleRate READ sampleRate WRITE setSampleRate NOTIFY sampleRateChanged )
+    Q_PROPERTY  ( int blockSize READ blockSize WRITE setBlockSize NOTIFY blockSizeChanged )
+    Q_PROPERTY  ( QString inDevice READ inDevice WRITE setInDevice NOTIFY inDeviceChanged )
+    Q_PROPERTY  ( QString outDevice READ outDevice WRITE setOutDevice NOTIFY outDeviceChanged )
+    Q_PROPERTY  ( QQmlListProperty<StreamNode> inserts READ inserts )
 
     friend class AudioStream;
 
@@ -219,6 +220,14 @@ class WorldStream : public StreamNode
     void setInDevice     ( QString device );
     void setOutDevice    ( QString device );
 
+    QQmlListProperty<StreamNode>  inserts();
+    const QVector<StreamNode*>&   getInserts() const { return m_inserts; }
+
+    void appendInsert      ( StreamNode* );
+    int insertsCount       ( ) const;
+    StreamNode* insert     ( int ) const;
+    void clearInserts      ( );
+
     signals:    
     void tick               ( qint64 tick );
     void configure          ( );
@@ -229,6 +238,12 @@ class WorldStream : public StreamNode
     void inDeviceChanged    ( );
     void outDeviceChanged   ( );
 
+    protected:
+    static void appendInsert     ( QQmlListProperty<StreamNode>*, StreamNode* );
+    static int insertsCount      ( QQmlListProperty<StreamNode>* );
+    static StreamNode* insert    ( QQmlListProperty<StreamNode>*, int );
+    static void clearInserts     ( QQmlListProperty<StreamNode>* );
+
     private:
     uint32_t m_sample_rate;
     uint16_t m_block_size;
@@ -236,4 +251,6 @@ class WorldStream : public StreamNode
     QString m_out_device;
     AudioStream* m_stream;
     QThread m_stream_thread;
+
+    QVector<StreamNode*> m_inserts;
 };

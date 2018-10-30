@@ -293,6 +293,7 @@ vst2x_plugin::~vst2x_plugin()
 #endif //--------------------------------------------------------------------------
 
     delete m_aeffect;
+    delete m_event_queue;
 }
 
 void vst2x_plugin::configure(const uint32_t srate, const uint16_t bsize)
@@ -338,7 +339,7 @@ float vst2x_plugin::get_parameter_value(const uint16_t index) const
     return m_aeffect->getParameter(m_aeffect, index);
 }
 
-void vst2x_plugin::set_parameter_value(const uint16_t index, const float value)
+void vst2x_plugin::set_parameter_value(const uint16_t index, float value)
 {
     m_aeffect->setParameter(m_aeffect, index, value);
 }

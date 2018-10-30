@@ -19,6 +19,7 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     public:
     WPNQueryClient();
     WPNQueryClient(WPNWebSocket* con);
+    ~WPNQueryClient();
 
     virtual void componentComplete  ( );
     virtual void classBegin         ( ) {}

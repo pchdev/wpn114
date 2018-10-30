@@ -54,7 +54,11 @@ WPNDevice::WPNDevice() : m_singleDevice(false), m_node_tree(nullptr)
     m_node_tree = new WPNNodeTree(m_root_node);
 }
 
-WPNDevice::~WPNDevice() {}
+WPNDevice::~WPNDevice()
+{
+    delete m_root_node;
+    delete m_node_tree;
+}
 
 void WPNDevice::setSingleDevice(bool single)
 {

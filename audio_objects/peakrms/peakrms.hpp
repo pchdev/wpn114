@@ -13,9 +13,11 @@ class PeakRMS : public StreamNode
     virtual void initialize(qint64) override;
     virtual float** process(float**, qint64) override;
 
+    virtual void componentComplete() override;
+
     signals:
-    void rms  ( QVector<float> );
-    void peak ( QVector<float> );
+    void rms  ( QVariant value );
+    void peak ( QVariant value );
 };
 
 #endif // PEAKRMS_HPP
