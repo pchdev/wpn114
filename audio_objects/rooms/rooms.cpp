@@ -300,7 +300,7 @@ float** RoomSource::preprocess(float** buf, qint64 nsamples)
     if ( m_subnodes.size() == 1 && m_subnodes[0]->active())
         return m_subnodes[0]->preprocess(buf, nsamples);
 
-    auto out = m_out;
+    auto out  = m_out;
     auto nout = m_num_outputs;
     StreamNode::resetBuffer(out, nout, nsamples);
 
@@ -351,8 +351,6 @@ void RoomChannel::computeCoeffs()
             qreal wg = spgain(w, speaker);
 
             gain = qMax(qMax(qMax(qMax(ng,sg),eg),wg),cg);
-
-//            qDebug() << "Gain for speaker:" << spk << gain;
         }
 
         coeffs[spk] = gain;
@@ -580,6 +578,8 @@ float** Rooms::preprocess(float** buf, qint64 nsamples)
                     out[o][s] += in[ch][s] * coeffs[o];
         }
     }
+
+    StreamNode::applyGain(out, nout, nsamples, m_level);
 
     return out;
 }

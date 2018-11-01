@@ -340,7 +340,7 @@ void Loop::clearSubnodes()
 
 // AUTOMATION -----------------------------------------------------------------------------------------
 
-Automation::Automation() : TimeNode()
+Automation::Automation() : TimeNode(), m_target(nullptr)
 {
 
 }
@@ -381,8 +381,14 @@ void Automation::onBegin()
 {
     TimeNode::onBegin();
 
+    // this is to avoid qml's property bindings
+    // the values will be evaluated on startup
+
+    m_ex_from   = m_from;
+    m_ex_to     = m_to;
+
     if ( !m_follow && m_property.isWritable())
-         m_property.write(m_target, m_from);
+         m_property.write(m_target, m_ex_from);
 
     else if ( m_follow )
         QObject::connect( this, &TimeNode::start, this, &Automation::onFollowBegin );
@@ -391,7 +397,7 @@ void Automation::onBegin()
 void Automation::onFollowBegin()
 {
     if ( m_property.isWritable())
-         m_property.write(m_target, m_from);
+         m_property.write(m_target, m_ex_from);
 }
 
 void Automation::onStop()
@@ -399,7 +405,7 @@ void Automation::onStop()
     TimeNode::onStop();
 
     if ( m_property.isWritable())
-         m_property.write(m_target, m_to);
+         m_property.write(m_target, m_ex_to);
 
     if ( m_follow )
         QObject::disconnect( this, &TimeNode::start, this, &Automation::onFollowBegin );
@@ -414,5 +420,5 @@ void Automation::onTick(qint64 sz)
     m_phase = m_clock/m_duration;
 
     if ( m_property.isWritable())
-         m_property.write(m_target, m_from+(m_to-m_from)*m_phase);
+         m_property.write(m_target, m_ex_from+(m_ex_to-m_ex_from)*m_phase);
 }

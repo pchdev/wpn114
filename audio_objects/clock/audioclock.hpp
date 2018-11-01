@@ -165,8 +165,11 @@ class Automation : public TimeNode
 
     private:
     qreal m_phase;
-    qreal m_from = 0;
-    qreal m_to = 1;
+    qreal m_from        = 0;
+    qreal m_to          = 1;
+    qreal m_ex_from     = 0;
+    qreal m_ex_to       = 1;
+
     QObject* m_target;
     QString m_property_str;
     QMetaProperty m_property;
