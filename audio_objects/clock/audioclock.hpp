@@ -204,13 +204,14 @@ class Loop : public TimeNode
 
     public slots:
     virtual void onTick   ( qint64 sz ) override;
+    virtual void onBegin  ( ) override;
     void onPatternStop    ( );
     void onSourceChanged  ( );
 
     private:
     TimeNode* m_pattern = nullptr;
     quint64 m_times = 0;
-    quint64 m_count = 0;
+    quint64 m_count = 1;
     qreal m_pattern_clock = 0;
 
 };

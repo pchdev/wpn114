@@ -190,6 +190,9 @@ void TimeNode::onStop()
     m_running   = false;
 
     QObject::disconnect(m_source, &WorldStream::tick, this, &TimeNode::onTick);
+
+    for ( const auto& subnode : m_subnodes )
+          subnode->end();
 }
 
 void TimeNode::reset()
@@ -300,16 +303,25 @@ void Loop::componentComplete()
     TimeNode::componentComplete();
     m_pattern->componentComplete();
 
-    if ( m_times ) m_duration = m_pattern->duration()*m_times;
-
-    QObject::connect( this, &Loop::start, m_pattern, &TimeNode::start );
-    QObject::connect( this, &Loop::end, m_pattern, &TimeNode::end );
+    QObject::connect( this, &TimeNode::start, m_pattern, &TimeNode::start );
+    QObject::connect( this, &TimeNode::end, m_pattern, &TimeNode::end );
     QObject::connect( m_pattern, &TimeNode::end, this, &Loop::onPatternStop );
+}
+
+void Loop::onBegin()
+{
+    if ( m_times ) m_duration = m_pattern->duration()*m_times;
+    TimeNode::onBegin();
 }
 
 void Loop::onPatternStop()
 {
-    if ( m_running ) m_pattern->start();
+    if ( m_running )
+    {
+        m_pattern->start();
+        m_count++;
+        emit loop(m_count);
+    }
 }
 
 void Loop::onTick(qint64 sz)
