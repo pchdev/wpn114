@@ -46,9 +46,6 @@ WPNQueryServer::~WPNQueryServer()
 
 void WPNQueryServer::componentComplete()
 {    
-//    m_osc_hdl->moveToThread     ( &m_osc_thread );
-//    m_ws_server->moveToThread   ( &m_ws_thread );
-
     QObject::connect( this, &WPNQueryServer::startNetwork, m_ws_server, &WPNWebSocketServer::listen );
     QObject::connect( this, &WPNQueryServer::startNetwork, m_osc_hdl, &OSCHandler::listen);
     QObject::connect( this, &WPNQueryServer::stopNetwork, m_ws_server, &WPNWebSocketServer::stop);
@@ -64,9 +61,6 @@ void WPNQueryServer::componentComplete()
 
     QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString, QVariant)),
                       this, SLOT(onValueUpdate(QString, QVariant)) );
-
-//    m_ws_thread.start  ( QThread::NormalPriority );
-//    m_osc_thread.start ( QThread::NormalPriority );
 
     startNetwork( );
     m_zeroconf.startServicePublish( m_settings.name.toStdString().c_str(),

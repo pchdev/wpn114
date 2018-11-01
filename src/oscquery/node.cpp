@@ -59,6 +59,8 @@ WPNNode::WPNNode() :
 
 WPNNode::~WPNNode()
 {
+    m_parent->removeSubnode(this);
+
     for ( const auto& subnode : m_children )
           if ( !subnode->qml() ) delete subnode;
 }

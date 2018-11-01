@@ -148,7 +148,7 @@ void WPNQueryClient::onDisconnected()
 
 void WPNQueryClient::onBinaryMessageReceived(QByteArray data)
 {
-    OSCMessage message = OSCHandler::decode(data);    
+    OSCMessage message = OSCHandler::decode(data);
 
     if ( m_direct ) onValueUpdate ( message.address, message.arguments );
     else emit valueUpdate ( message.address, message.arguments );

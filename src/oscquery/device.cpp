@@ -90,7 +90,12 @@ WPNNode* WPNDevice::findOrCreateNode(QString path)
 void WPNDevice::link(WPNNode* node)
 {
     auto parent = findOrCreateNode(node->parentPath());
-    parent->addSubnode(node);
+    if ( parent ) parent->addSubnode(node);
+    else
+    {
+        qDebug() << "[DEVICE] Couldn't link node" << node->path();
+        return;
+    }
 
     emit nodeAdded(node);
 }

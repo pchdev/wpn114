@@ -371,7 +371,7 @@ void WPNWebSocket::decode(QByteArray data)
         {
             quint8 byte;
             stream >> byte;
-            decoded.append ( byte^mask[i%4] );
+            decoded.append ( byte^mask[ i%4 ] );
         }
     }    
 
