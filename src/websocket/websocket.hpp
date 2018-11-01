@@ -53,7 +53,10 @@ class WPNWebSocket : public QObject
     QTcpSocket* tcpConnection() { return m_tcp_con; }
 
     protected slots:
-    void onConnected                  ( );
+    void onConnected     ( );
+    void onDisconnected  ( );
+    void onError         ( QAbstractSocket::SocketError );
+
     void onBytesWritten               ( qint64 );
     void onRawMessageReceived         ( );
     void onHandshakeResponseReceived  ( QString resp );

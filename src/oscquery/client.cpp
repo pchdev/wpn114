@@ -5,14 +5,12 @@
 #include <QDataStream>
 #include <src/http/http.hpp>
 #include <QNetworkReply>
+#include <QTimer>
 
 WPNQueryClient::WPNQueryClient() : WPNDevice(), m_direct(true),
     m_ws_con(new WPNWebSocket), m_osc_hdl(new OSCHandler), m_http_manager(nullptr)
 {
     // direct client
-//    m_ws_con->moveToThread  ( &m_ws_thread );
-//    m_osc_hdl->moveToThread ( &m_osc_thread );
-
     QObject::connect( this, &WPNQueryClient::command, this, &WPNQueryClient::onCommand );
     QObject::connect( m_ws_con, &WPNWebSocket::connected, this, &WPNQueryClient::onConnected );
     QObject::connect( m_ws_con, &WPNWebSocket::disconnected, this, &WPNQueryClient::onDisconnected );
@@ -25,7 +23,6 @@ WPNQueryClient::WPNQueryClient() : WPNDevice(), m_direct(true),
     QObject::connect( this, &WPNQueryClient::start, m_ws_con, &WPNWebSocket::connect );
     QObject::connect( this, &WPNQueryClient::start, m_osc_hdl, &OSCHandler::listen );
 
-    // TODO: put http_manager in websocket_con to include in thread
     m_http_manager = new QNetworkAccessManager;
 
     QObject::connect( m_http_manager, SIGNAL(finished(QNetworkReply*)),
@@ -77,8 +74,13 @@ void WPNQueryClient::componentComplete()
         QObject::connect( &m_zconf, &QZeroConf::serviceAdded,
                           this, &WPNQueryClient::onZeroConfServiceAdded );
 
-        m_zconf.startBrowser( "_oscjson._tcp" );
+        startDiscovery();
     }
+}
+
+void WPNQueryClient::startDiscovery()
+{
+    m_zconf.startBrowser( "_oscjson._tcp" );
 }
 
 void WPNQueryClient::onZeroConfServiceAdded(QZeroConfService service)
@@ -100,9 +102,6 @@ void WPNQueryClient::connect()
 {
     m_ws_con->setHostAddr( m_host_addr );
     m_ws_con->setHostPort( m_host_port );
-
-//    m_ws_thread.start  ( );
-//    m_osc_thread.start ( );
 
     start();
 }
@@ -140,7 +139,11 @@ void WPNQueryClient::requestHttp(QString address)
 
 void WPNQueryClient::onDisconnected()
 {
-    disconnected( );
+    m_ws_con->tcpConnection()->disconnectFromHost();
+    disconnected( );   
+
+    if ( !m_zconf_host.isEmpty() )
+         QTimer::singleShot(5000, this, SLOT(startDiscovery()));
 }
 
 void WPNQueryClient::onBinaryMessageReceived(QByteArray data)

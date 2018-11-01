@@ -78,6 +78,8 @@ class WPNQueryClient : public WPNDevice, public QQmlParserStatus
     void onTextMessageReceived   ( QString message );
     void onCommand  ( QJsonObject command );
 
+    void startDiscovery ( );
+
     private:
     bool m_direct;
     QThread m_ws_thread;

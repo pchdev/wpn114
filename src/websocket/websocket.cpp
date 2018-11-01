@@ -107,10 +107,14 @@ WPNWebSocket::WPNWebSocket() : m_seed(0), m_connected(false), m_host_port(0), m_
     m_tcp_con( new QTcpSocket )
 {
     // direct client case
-    QObject::connect( m_tcp_con, SIGNAL(connected()), this, SLOT(onConnected()));
-    QObject::connect( m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
-    QObject::connect( m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
-    QObject::connect( m_tcp_con, SIGNAL(bytesWritten(qint64)), this, SLOT(onBytesWritten(qint64)));
+
+    QObject::connect( m_tcp_con, &QTcpSocket::connected, this, &WPNWebSocket::onConnected );
+    QObject::connect( m_tcp_con, &QTcpSocket::disconnected, this, &WPNWebSocket::onDisconnected );
+    QObject::connect( m_tcp_con, SIGNAL(error(QAbstractSocket::SocketError)),
+                      this, SLOT(onError(QAbstractSocket::SocketError )));
+
+    QObject::connect( m_tcp_con, &QTcpSocket::readyRead, this, &WPNWebSocket::onRawMessageReceived );
+    QObject::connect( m_tcp_con, &QTcpSocket::bytesWritten, this, &WPNWebSocket::onBytesWritten );
 }
 
 WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con), m_mask(false), m_seed(0), m_connected(true)
@@ -120,8 +124,8 @@ WPNWebSocket::WPNWebSocket(QTcpSocket* con) : m_tcp_con(con), m_mask(false), m_s
     m_host_addr = m_tcp_con->peerAddress().toString();
     m_host_addr.remove("::ffff:");
 
-    QObject::connect( m_tcp_con, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
-    QObject::connect( m_tcp_con, SIGNAL(readyRead()), this, SLOT(onRawMessageReceived()));
+    QObject::connect( m_tcp_con, &QTcpSocket::disconnected, this, &WPNWebSocket::disconnected );
+    QObject::connect( m_tcp_con, &QTcpSocket::readyRead, this, &WPNWebSocket::onRawMessageReceived );
 }
 
 WPNWebSocket::~WPNWebSocket()
@@ -155,6 +159,18 @@ void WPNWebSocket::onConnected()
     // send http 'handshake' upgrade request to server
     generateEncryptedSecKey();
     requestHandshake();
+}
+
+void WPNWebSocket::onDisconnected()
+{
+    m_tcp_con->disconnectFromHost();
+    emit disconnected();
+}
+
+void WPNWebSocket::onError(QAbstractSocket::SocketError err)
+{
+    qDebug() << m_tcp_con->errorString();
+    m_tcp_con->disconnectFromHost();
 }
 
 void WPNWebSocket::onRawMessageReceived()
