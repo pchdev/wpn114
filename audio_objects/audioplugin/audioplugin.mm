@@ -15,7 +15,7 @@
 
 // QT INSTANCE --------------------------------------------------------------------
 
-AudioPlugin::AudioPlugin() : m_path(""), m_view(0), m_plugin_hdl(0) {}
+AudioPlugin::AudioPlugin() : m_path(""), m_view(nullptr), m_plugin_hdl(nullptr) {}
 AudioPlugin::~AudioPlugin()
 {    
     delete m_view;
@@ -261,19 +261,19 @@ vst2x_plugin::vst2x_plugin(std::string path) : m_block_pos(0), m_event_queue(new
                         ( NULL, fns, kCFURLPOSIXPathStyle, false );
     if ( !url  )        return;
 
-    void* module        = (void*) CFBundleCreate
+    m_module            = (void*) CFBundleCreate
                         ( NULL, url );
     CFRelease           ( url );
 
-    if      ( module && CFBundleLoadExecutable((CFBundleRef) module) == false )
+    if      ( m_module && CFBundleLoadExecutable((CFBundleRef) m_module) == false )
     return  ;
 
     PluginEntryProc main_proc   = 0;
     main_proc                   = (PluginEntryProc) CFBundleGetFunctionPointerForName
-                                ((CFBundleRef) module, CFSTR("VSTPluginMain"));
+                                ((CFBundleRef) m_module, CFSTR("VSTPluginMain"));
     if  (!main_proc)
         main_proc               = (PluginEntryProc) CFBundleGetFunctionPointerForName
-                                ((CFBundleRef) module, CFSTR("main_macho"));
+                                ((CFBundleRef) m_module, CFSTR("main_macho"));
 
 #endif //------------------------------------------------------------------------------------
 
@@ -289,10 +289,8 @@ vst2x_plugin::~vst2x_plugin()
 
 #ifdef __APPLE__ // ---------------------------------------------------------------
     CFBundleUnloadExecutable( (CFBundleRef) m_aeffect);
-    CFRelease( (CFBundleRef) m_aeffect);
+    CFRelease( (CFBundleRef) m_module );
 #endif //--------------------------------------------------------------------------
-
-    delete m_aeffect;
     delete m_event_queue;
 }
 
@@ -507,6 +505,11 @@ VstIntPtr VSTCALLBACK HostCallback
 // ----------------------------------------------------------------------------------------------
 
 vst3x_plugin::vst3x_plugin(const std::string path)
+{
+
+}
+
+vst3x_plugin::~vst3x_plugin()
 {
 
 }

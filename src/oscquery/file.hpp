@@ -11,6 +11,8 @@ class WPNFileNode : public WPNNode
 
     public:
     WPNFileNode();
+    ~WPNFileNode();
+
     QString filePath() const { return m_filepath; }
     void setFilePath(QString path);
 

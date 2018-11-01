@@ -60,9 +60,12 @@ WPNNode::WPNNode() :
 WPNNode::~WPNNode()
 {
     for ( const auto& subnode : m_children )
-          delete subnode;
+          if ( !subnode->qml() ) delete subnode;
+}
 
-    m_parent->removeSubnode(this);
+void WPNNode::classBegin()
+{
+    m_qml = true;
 }
 
 void WPNNode::componentComplete()

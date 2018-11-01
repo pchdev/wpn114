@@ -8,6 +8,12 @@ WPNFileNode::WPNFileNode() : WPNNode(), m_file(nullptr)
     m_attributes.access     = Access::READ;
 }
 
+WPNFileNode::~WPNFileNode()
+{
+    m_file->close();
+    delete m_file;
+}
+
 void WPNFileNode::setFilePath(QString path)
 {
     m_filepath = path;

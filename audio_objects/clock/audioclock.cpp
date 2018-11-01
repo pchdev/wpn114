@@ -171,6 +171,9 @@ void TimeNode::onTick(qint64 sz)
          m_duration >= m_clock &&
          m_duration < m_clock+sz )
     {
+        // we have to set running false before emitting the end() signal
+        // in case the end signal kills the node's parent
+        m_running = false;
         emit end();
         return;
     }
@@ -181,7 +184,7 @@ void TimeNode::onTick(qint64 sz)
 void TimeNode::onBegin()
 {
     if ( !m_follow ) m_running = true;
-    QObject::connect(m_source, &WorldStream::tick, this, &TimeNode::onTick);
+    QObject::connect( m_source, &WorldStream::tick, this, &TimeNode::onTick );
 }
 
 void TimeNode::onStop()
@@ -189,10 +192,11 @@ void TimeNode::onStop()
     m_clock     = 0;
     m_running   = false;
 
-    QObject::disconnect(m_source, &WorldStream::tick, this, &TimeNode::onTick);
+    QObject::disconnect( m_source, &WorldStream::tick, this, &TimeNode::onTick );
 
     for ( const auto& subnode : m_subnodes )
-          subnode->end();
+          if ( subnode->running() )
+               subnode->end();
 }
 
 void TimeNode::reset()

@@ -59,6 +59,7 @@ enum class MIDI
 class plugin_hdl
 {
     AUDIO_PLUGIN_INTERFACE( =0 )
+    virtual ~plugin_hdl() {}
     protected:
         std::string m_path;
 };
@@ -83,6 +84,7 @@ class vst2x_plugin : public plugin_hdl
     ~vst2x_plugin();
 
     private:
+    void* m_module = nullptr;
     quint16 m_block_pos;
     VstEvents* m_event_queue;
     AEffect* m_aeffect;

@@ -113,7 +113,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     static WPNNode* fromJson(QJsonObject, WPNDevice* dev);
 
     virtual void componentComplete  ( );
-    virtual void classBegin         ( ) { }
+    virtual void classBegin         ( );
 
     virtual void setTarget(const QQmlProperty& property);    
     void setTarget(QObject* target, const QMetaProperty& property);
@@ -124,6 +124,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     WPNDevice* device       ( ) const { return m_device; }
     WPNNode* parent         ( ) { return m_parent; }
     void post               ( ) const;
+    bool qml                ( ) const { return m_qml; }
 
     QString parentPath ( ) const;
     void setName    ( QString name );
@@ -204,6 +205,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     QMetaProperty   m_meta_property;
     QObject*        m_target;
 
+    bool  m_qml = false;
     bool  m_listening;
 
     QVector<WPNNode*>      m_children;

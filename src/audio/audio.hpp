@@ -64,7 +64,7 @@ class StreamNode : public QObject, public QQmlParserStatus
     virtual float** process     ( float** buf, qint64 le ) = 0;
 
     virtual void componentComplete  ( ) override;
-    virtual void classBegin         ( ) override {}
+    virtual void classBegin         ( ) override;
 
     virtual void expose(WPNNode*)   { }
 
@@ -84,7 +84,8 @@ class StreamNode : public QObject, public QQmlParserStatus
     qreal level          ( ) const { return m_level; }
     bool mute            ( ) const { return m_mute; }
     bool active          ( ) const { return m_active; }
-    qreal dBlevel        ( ) const { return m_db_level; }
+    qreal dBlevel        ( ) const { return m_db_level; }    
+    bool qml             ( ) const { return m_qml; }
 
     QString exposePath          ( ) const { return m_exp_path; }
     WPNDevice* exposeDevice     ( ) const { return m_exp_device; }
@@ -130,6 +131,7 @@ class StreamNode : public QObject, public QQmlParserStatus
     uint16_t m_max_outputs;
     bool m_mute;
     bool m_active;
+    bool m_qml = false;
 
     float** m_in;
     float** m_out;
@@ -169,6 +171,7 @@ class AudioStream : public QIODevice
     void configure  ( );
     void start      ( );
     void stop       ( );
+    void exit       ( );
     void restart    ( );
 
     protected slots:
@@ -233,6 +236,7 @@ class WorldStream : public StreamNode
     void configure          ( );
     void startStream        ( );
     void stopStream         ( );
+    void exit               ( );
     void sampleRateChanged  ( );
     void blockSizeChanged   ( );
     void inDeviceChanged    ( );

@@ -23,7 +23,6 @@ StreamSampler::~StreamSampler()
     m_streamer_thread.terminate();
 
     delete m_streamer;
-    delete m_soundfile;
     delete m_xfade_buffer;
     delete m_current_buffer;
     delete m_next_buffer;

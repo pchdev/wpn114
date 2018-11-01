@@ -32,7 +32,12 @@ StreamNode::~StreamNode()
     StreamNode::deleteBuffer( m_out, m_num_outputs, m_stream_properties.block_size );
 
     for ( const auto& subnode : m_subnodes )
-        delete subnode;
+          if ( !subnode->qml() ) delete subnode;
+}
+
+void StreamNode::classBegin()
+{
+    m_qml = true;
 }
 
 void StreamNode::componentComplete()
@@ -362,10 +367,15 @@ WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512)
 
 WorldStream::~WorldStream()
 {
-    emit stop();
+    emit exit();
+    m_stream_thread.quit();
 
-    m_stream_thread.terminate();
-    delete m_stream;
+    if ( !m_stream_thread.wait(3000) )
+    {
+        m_stream_thread.terminate();
+        m_stream_thread.wait();
+        m_stream->deleteLater();
+    }
 }
 
 void WorldStream::setSampleRate(uint32_t sample_rate)
@@ -506,10 +516,14 @@ AudioStream::AudioStream(const WorldStream& world, QAudioFormat format, QAudioDe
 AudioStream::~AudioStream()
 {
     StreamNode::deleteBuffer(m_pool, m_world.numOutputs(), m_world.blockSize());
-    close();
-
     delete m_input;
     delete m_output;
+}
+
+void AudioStream::exit()
+{
+    m_output->stop();
+    close();
 }
 
 void AudioStream::configure()
