@@ -288,7 +288,7 @@ vst2x_plugin::~vst2x_plugin()
     m_aeffect->dispatcher(m_aeffect, effClose, 0, 0, nullptr, 0.f);
 
 #ifdef __APPLE__ // ---------------------------------------------------------------
-    CFBundleUnloadExecutable( (CFBundleRef) m_aeffect);
+    CFBundleUnloadExecutable( (CFBundleRef) m_module );
     CFRelease( (CFBundleRef) m_module );
 #endif //--------------------------------------------------------------------------
     delete m_event_queue;

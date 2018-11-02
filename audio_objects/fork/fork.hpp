@@ -28,6 +28,7 @@ class Fork : public StreamNode
 
     public:
     Fork();
+    ~Fork();
 
     virtual void preinitialize(StreamProperties properties) override;
     virtual void initialize(qint64) override {}

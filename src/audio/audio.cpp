@@ -8,12 +8,13 @@
 
 static const QStringList g_ignore =
 {
-    "parentStream", "subnodes", "exposeDevice", "objectName", "exposePath"
+    "parentStream", "subnodes", "exposeDevice", "objectName", "exposePath",
+    "numInputs", "numOutputs", "parentChannels"
 };
 
 static const QStringList g_stream =
 {
-    "active", "mute", "numInputs", "numOutputs", "parentChannels", "level", "dBlevel"
+    "active", "mute", "level", "dBlevel"
 };
 
 StreamNode::StreamNode() : m_level(1.0), m_db_level(0.0),
@@ -269,7 +270,7 @@ void StreamNode::allocateBuffer(float**& buffer, quint16 nchannels, quint64 nsam
 
 void StreamNode::deleteBuffer(float**& buffer, quint16 nchannels, quint16 nsamples )
 {
-    if ( ! buffer ) return;
+    if ( !buffer ) return;
 
     for ( uint16_t ch = 0; ch < nchannels; ++ch )
         delete [ ] buffer[ch];

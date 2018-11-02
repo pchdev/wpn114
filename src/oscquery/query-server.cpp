@@ -49,22 +49,16 @@ void WPNQueryServer::componentComplete()
     QObject::connect( this, &WPNQueryServer::startNetwork, m_ws_server, &WPNWebSocketServer::listen );
     QObject::connect( this, &WPNQueryServer::startNetwork, m_osc_hdl, &OSCHandler::listen);
     QObject::connect( this, &WPNQueryServer::stopNetwork, m_ws_server, &WPNWebSocketServer::stop);
-    QObject::connect( this, &WPNDevice::nodeAdded, this, &WPNQueryServer::onNodeAdded);
+    QObject::connect( this, &WPNDevice::nodeAdded, this, &WPNQueryServer::onNodeAdded );
+    QObject::connect( this, &WPNDevice::nodeRemoved, this, &WPNQueryServer::onNodeRemoved );
 
-    QObject::connect( m_ws_server, &WPNWebSocketServer::newConnection,
-                      this, &WPNQueryServer::onNewConnection );
-
-    QObject::connect( m_ws_server, &WPNWebSocketServer::httpRequestReceived,
-                      this, &WPNQueryServer::onHttpRequestReceived );
-
-    QObject::connect( &m_zeroconf, &QZeroConf::error, this, &WPNQueryServer::onZConfError);
-
-    QObject::connect( m_osc_hdl, SIGNAL(messageReceived(QString, QVariant)),
-                      this, SLOT(onValueUpdate(QString, QVariant)) );
+    QObject::connect( m_ws_server, &WPNWebSocketServer::newConnection, this, &WPNQueryServer::onNewConnection );
+    QObject::connect( m_ws_server, &WPNWebSocketServer::httpRequestReceived, this, &WPNQueryServer::onHttpRequestReceived );
+    QObject::connect( &m_zeroconf, &QZeroConf::error, this, &WPNQueryServer::onZConfError);    
+    QObject::connect( m_osc_hdl, &OSCHandler::messageReceived, this, &WPNDevice::onValueUpdate );
 
     startNetwork( );
-    m_zeroconf.startServicePublish( m_settings.name.toStdString().c_str(),
-                                   "_oscjson._tcp", "local", m_settings.tcp_port );
+    m_zeroconf.startServicePublish( m_settings.name.toStdString().c_str(), "_oscjson._tcp", "local", m_settings.tcp_port );
 }
 
 void WPNQueryServer::onZConfError(QZeroConf::error_t err)
@@ -92,9 +86,7 @@ void WPNQueryServer::onNewConnection(WPNWebSocket* con)
     QObject::connect( client, &WPNQueryClient::command, this, &WPNQueryServer::onCommand);
     QObject::connect( client, &WPNQueryClient::disconnected, this, &WPNQueryServer::onDisconnection);
     QObject::connect( client, &WPNQueryClient::httpMessageReceived, this, &WPNQueryServer::onClientHttpQuery);
-
-    QObject::connect ( client, SIGNAL(valueUpdate(QJsonObject)), this, SLOT(onValueUpdate(QJsonObject)));
-    QObject::connect ( client, SIGNAL(valueUpdate(QString, QVariant)), this, SLOT(onValueUpdate(QString, QVariant)));
+    QObject::connect( client, SIGNAL(valueUpdate(QString, QVariant)), this, SLOT(onValueUpdate(QString, QVariant)));
 
     QString host = client->hostAddr().append(":")
             .append( QString::number(client->port()) );
@@ -220,6 +212,20 @@ void WPNQueryServer::onNodeAdded(WPNNode* node)
         command.insert   ( "COMMAND", "PATH_ADDED" );
         data.insert      ( node->name(), node->toJson() );
         command.insert   ( "DATA", data );
+
+        for ( const auto& client : m_clients )
+              client->writeWebSocket( command );
+    }
+}
+
+void WPNQueryServer::onNodeRemoved(QString path)
+{
+    if ( !m_clients.isEmpty() )
+    {
+        QJsonObject command;
+
+        command.insert  ( "COMMAND", "PATH_REMOVED" );
+        command.insert  ( "DATA", path );
 
         for ( const auto& client : m_clients )
               client->writeWebSocket( command );

@@ -86,6 +86,14 @@ struct Attributes
     QString             extended_type;
 };
 
+class WPNNode;
+
+struct WPNNodePointer
+{
+    QString     path;
+    WPNNode*    ptr;
+};
+
 class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValueSource
 {
     Q_OBJECT
@@ -108,9 +116,10 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
 
     public:
     WPNNode();
-    ~WPNNode();
+    virtual ~WPNNode();
 
     static WPNNode* fromJson(QJsonObject, WPNDevice* dev);
+    static QString parentPath(QString path);
 
     virtual void componentComplete  ( );
     virtual void classBegin         ( );
@@ -175,27 +184,28 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     Q_INVOKABLE WPNNode* subnodeAt  ( int index );
     Q_INVOKABLE quint16 nsubnodes   ( ) const { return m_children.size(); }
 
-    QVector<WPNNode*> subnodes ( ) const { return m_children; }
+    QVector<WPNNodePointer> subnodes ( ) const { return m_children; }
 
-    WPNNode*createSubnode   ( QString name );
+    WPNNode* createSubnode  ( QString name );
+    bool hasSubnode         ( WPNNode* node );
     void addSubnode         ( WPNNode* node );
-    void removeSubnode      ( WPNNode* node );
-    void removeSubnode      ( QString name );
+    void removeSubnode      ( QString path );
     void update             ( QJsonObject obj );
 
     bool listening          ( ) const { return m_listening; }
     void setListening       ( bool listen, WPNDevice* target );
 
     signals:
+    void nodeRemoved        ( QString path );
     void nameChanged        ( );
     void valueChanged       ( QVariant newValue );
     void valueReceived      ( QVariant newValue );
 
     public slots:
-    void propertyChanged     ( );
-    void metaPropertyChanged ( );
+    void propertyChanged      ( );
+    void metaPropertyChanged  ( );
 
-    protected:
+    protected:            
     Attributes      m_attributes;
     QString         m_name;
     WPNDevice*      m_device;
@@ -208,8 +218,8 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     bool  m_qml = false;
     bool  m_listening;
 
-    QVector<WPNNode*>      m_children;
-    QVector<WPNDevice*>    m_listeners;
+    QVector<WPNNodePointer>  m_children;
+    QVector<WPNDevice*>      m_listeners;
 };
 
 

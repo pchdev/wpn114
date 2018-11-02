@@ -183,6 +183,9 @@ void WPNQueryClient::onCommand(QJsonObject command)
             node->update ( obj );
         }
     }
+
+    else if ( type == "PATH_REMOVED" )
+              onNodeRemoved(command["DATA"].toString());
 }
 
 void WPNQueryClient::onHttpReplyReceived(QNetworkReply* reply)

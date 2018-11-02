@@ -5,6 +5,8 @@ ForkEndpoint::ForkEndpoint(Fork& fork) : StreamNode(), m_fork(fork)
 {
     SETN_IN     ( 0 );
     SETN_OUT    ( fork.numOutputs() );
+
+    m_qml       = true;
 }
 
 float** ForkEndpoint::process(float** buf, qint64 nsamples)
@@ -13,6 +15,12 @@ float** ForkEndpoint::process(float** buf, qint64 nsamples)
 }
 
 Fork::Fork() : StreamNode(), m_parent(nullptr), m_target(nullptr), m_endpoint(nullptr) { }
+
+Fork::~Fork()
+{
+    m_endpoint->setNumOutputs(0);
+    delete m_endpoint;
+}
 
 void Fork::setTarget(StreamNode* target)
 {

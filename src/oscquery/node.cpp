@@ -2,8 +2,8 @@
 #include <QtDebug>
 #include <QJsonArray>
 #include "folder.hpp"
-
 #include <QQmlEngine>
+#include <QTimer>
 
 WPNNode* WPNNode::fromJson(QJsonObject obj, WPNDevice *dev)
 {
@@ -14,7 +14,8 @@ WPNNode* WPNNode::fromJson(QJsonObject obj, WPNDevice *dev)
     else node = new WPNNode;
 
     node->setDevice ( dev );
-    node->update ( obj );
+    node->update    ( obj );
+
     return node;
 }
 
@@ -43,8 +44,7 @@ void WPNNode::update(QJsonObject obj)
 
 }
 
-WPNNode::WPNNode() :
-    m_device(nullptr), m_parent(nullptr), m_target_property(nullptr), m_target(nullptr)
+WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr), m_target_property(nullptr), m_target(nullptr)
 {
     m_attributes.access         = Access::NONE;
     m_attributes.clipmode       = Clipmode::NONE;
@@ -54,15 +54,17 @@ WPNNode::WPNNode() :
 
     // prevents qml from destroying nodes when referenced in javascript functions
     QQmlEngine::setObjectOwnership( this, QQmlEngine::CppOwnership );
-
 }
 
 WPNNode::~WPNNode()
 {
-    m_parent->removeSubnode(this);
+    qDebug() << "REMOVING NODE" << m_attributes.path;
+    if ( m_qml ) emit nodeRemoved( m_attributes.path );
 
+    // if node is qml-instantiated, do not delete it
+    // as the engine will take care of it itself
     for ( const auto& subnode : m_children )
-          if ( !subnode->qml() ) delete subnode;
+          if ( !subnode.ptr->qml() ) delete subnode.ptr;
 }
 
 void WPNNode::classBegin()
@@ -73,7 +75,7 @@ void WPNNode::classBegin()
 void WPNNode::componentComplete()
 {
     if ( m_name.isEmpty() )
-        m_name = m_attributes.path.split('/').last();
+         m_name = m_attributes.path.split('/').last();
 
     if ( m_attributes.type != Type::None )
          m_attributes.access = Access::RW;
@@ -87,7 +89,7 @@ void WPNNode::componentComplete()
     }
 
     if ( !m_device ) m_device = WPNDevice::instance();
-    if ( m_device && !m_parent ) m_device->link(this);
+    if ( m_device && !m_parent ) m_device->link( this );
 }
 
 void WPNNode::setAccess         ( Access::Values access ) { m_attributes.access = access; }
@@ -197,10 +199,10 @@ void WPNNode::setTarget(QObject* sender, const QMetaProperty& property)
 
     for ( int i = 0; i < mmcount; ++i )
         if ( metaObject()->method(i).name() == QString("metaPropertyChanged"))
-            mmethod = metaObject()->method(i);
+             mmethod = metaObject()->method(i);
 
     if ( property.hasNotifySignal() )
-        QObject::connect(sender, property.notifySignal(), this, mmethod );
+         QObject::connect(sender, property.notifySignal(), this, mmethod );
 }
 
 void WPNNode::metaPropertyChanged()
@@ -260,11 +262,11 @@ void WPNNode::setTypeFromTag(QString tag)
     else if ( tag == "T" || tag == "F" ) m_attributes.type = Type::Bool;
     else if ( tag == "i" ) m_attributes.type = Type::Int;
     else if ( tag == "" ) m_attributes.type = Type::List;
-    else if ( tag == "I") m_attributes.type = Type::Impulse;
-    else if ( tag == "s") m_attributes.type = Type::String;
-    else if ( tag == "ff") m_attributes.type = Type::Vec2f;
-    else if ( tag == "fff") m_attributes.type = Type::Vec3f;
-    else if ( tag == "ffff") m_attributes.type = Type::Vec4f;
+    else if ( tag == "I" ) m_attributes.type = Type::Impulse;
+    else if ( tag == "s" ) m_attributes.type = Type::String;
+    else if ( tag == "ff" ) m_attributes.type = Type::Vec2f;
+    else if ( tag == "fff" ) m_attributes.type = Type::Vec3f;
+    else if ( tag == "ffff" ) m_attributes.type = Type::Vec4f;
 }
 
 QJsonValue WPNNode::jsonValue() const
@@ -296,8 +298,8 @@ QJsonObject WPNNode::toJson() const
 
     QJsonObject contents;
 
-    for ( const auto& child : m_children )
-        contents.insert(child->name(), child->toJson());
+    for ( const auto& subnode : m_children )
+        contents.insert(subnode.ptr->name(), subnode.ptr->toJson());
 
     attr.insert("CONTENTS", contents);
     return attr;
@@ -307,8 +309,8 @@ void WPNNode::post() const
 {
     qDebug() << toJson();
 
-    for ( const auto& child : m_children )
-        child->post();
+    for ( const auto& subnode : m_children )
+          subnode.ptr->post();
 }
 
 void WPNNode::setPath(QString path)
@@ -370,63 +372,85 @@ void WPNNode::setListening(bool listen, WPNDevice *target)
     else if ( !listen ) m_listeners.removeAll(target);
 }
 
+//------------------------------------------------------------------------------------------------------
+
 void WPNNode::addSubnode(WPNNode *node)
 {    
-    if ( m_children.contains(node)) return;
+    if ( hasSubnode(node) ) return;
 
-    if ( node->name().isEmpty())
-        node->setName("undefined");
+    if ( node->name().isEmpty() )
+         node->setName("untitled");
 
     if ( node->path().isEmpty() )
-         node->setPath(m_attributes.path +"/"+node->name());
+         node->setPath(m_attributes.path+"/"+node->name());
 
     node->setParent         ( this );
     node->setDevice         ( m_device );
-    m_children.push_back    ( node );
+    m_children.push_back    ( { node->path(), node });
 }
 
 WPNNode* WPNNode::createSubnode(QString name)
 {
     auto node = new WPNNode;
 
-    if ( !path().endsWith("/") ) node->setPath( path()+"/"+name );
-    else node->setPath( path()+name );
+    if ( !path().endsWith('/') )
+         node->setPath( path().append('/').append( name ));
+    else node->setPath( path().append(name));
 
-    node->setName       ( name );
-    node->setParent     ( this );
+    node->setName    ( name );
+    node->setParent  ( this );
 
-    m_children.push_back ( node );
-
+    m_children.push_back ({ node->path(), node });
     return node;
 }
 
-void WPNNode::removeSubnode(WPNNode *node)
+void WPNNode::removeSubnode(QString path)
 {
-    m_children.removeAll(node);
-}
+    qint16 idx = -1;
 
-void WPNNode::removeSubnode(QString name)
-{
+    for ( qint16 i = 0; i < m_children.size(); ++i )
+        if ( m_children[i].path == path )
+        {
+            idx = i;
+            delete m_children[i].ptr;
+            break;
+        }
 
+    if ( idx >= 0 ) m_children.removeAt(idx);
 }
 
 WPNNode* WPNNode::subnode(QString path)
 {
-    for ( const auto& child : m_children )
-        if ( child->path() == path )
-            return child;
+    for ( const auto& subnode : m_children )
+        if ( subnode.path == path )
+             return subnode.ptr;
 
-    for ( const auto& child : m_children )
-        if ( auto sub = child->subnode(path) )
-            return sub;
+    for ( const auto& subnode : m_children )
+        if ( auto sub = subnode.ptr->subnode(path) )
+             return sub;
 
     if ( path == m_attributes.path ) return this;
-
     return nullptr;
+}
+
+bool WPNNode::hasSubnode(WPNNode* node)
+{
+    for ( const auto& subnode : m_children )
+        if ( subnode.ptr == node ) return true;
+
+    return false;
 }
 
 WPNNode* WPNNode::subnodeAt(int index)
 {
     if ( index >= m_children.size() ) return nullptr;
-    else return m_children[index];
+    else return m_children[index].ptr;
+}
+
+QString WPNNode::parentPath(QString path)
+{
+    auto splitted_path = path.split( '/' );
+    splitted_path.removeLast();
+
+    return splitted_path.join( '/' );
 }

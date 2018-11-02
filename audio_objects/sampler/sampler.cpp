@@ -20,9 +20,15 @@ StreamSampler::StreamSampler() : StreamNode()
 
 StreamSampler::~StreamSampler()
 {
-    m_streamer_thread.terminate();
+    m_streamer_thread.quit();
 
-    delete m_streamer;
+    if ( !m_streamer_thread.wait( 3000 ) )
+    {
+        m_streamer_thread.terminate();
+        m_streamer_thread.wait();
+        m_streamer->deleteLater();
+    }
+
     delete m_xfade_buffer;
     delete m_current_buffer;
     delete m_next_buffer;

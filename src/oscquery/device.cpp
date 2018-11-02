@@ -74,9 +74,9 @@ WPNNode* WPNDevice::findOrCreateNode(QString path)
     for ( const auto& node : split )
     {
         for ( const auto& sub : target->subnodes() )
-            if ( sub->name() == node )
+            if ( sub.ptr->name() == node )
             {
-                target = sub;
+                target = sub.ptr;
                 goto next;
             }
 
@@ -96,6 +96,9 @@ void WPNDevice::link(WPNNode* node)
         qDebug() << "[DEVICE] Couldn't link node" << node->path();
         return;
     }
+
+    QObject::connect( node, &WPNNode::nodeRemoved, this,
+                      &WPNDevice::nodeRemoved, Qt::QueuedConnection );
 
     emit nodeAdded(node);
 }
@@ -132,8 +135,10 @@ QVariant WPNDevice::value(QString method) const
     else return QVariant();
 }
 
-void WPNDevice::removeNode(QString path)
+void WPNDevice::onNodeRemoved(QString path)
 {
-    auto node = m_root_node->subnode(path);
-    if ( node ) node->parent()->removeSubnode(node);
+    auto parent = get(WPNNode::parentPath(path));
+    if ( parent ) parent->removeSubnode(path);
+
+    emit nodeRemoved(path);
 }

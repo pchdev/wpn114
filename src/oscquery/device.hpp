@@ -54,11 +54,9 @@ class WPNDevice : public QObject
     bool singleDevice() { return m_singleDevice; }
     void setSingleDevice(bool single);
 
-    virtual void pushNodeValue(WPNNode* node) = 0;
+    virtual void pushNodeValue  ( WPNNode* node ) = 0;
 
     WPNNode* findOrCreateNode   ( QString path );
-    void removeNode             ( QString path );
-
     QString deviceName          ( ) const { return m_name; }
     WPNNode* rootNode           ( ) { return m_root_node; }
     void setDeviceName          ( QString name );
@@ -76,6 +74,7 @@ class WPNDevice : public QObject
     void nodeRemoved    ( QString );
 
     public slots:
+    void onNodeRemoved  ( QString );
     void onValueUpdate  ( QString method, QVariant arguments );
 
     protected:
