@@ -97,8 +97,8 @@ void WPNDevice::link(WPNNode* node)
         return;
     }
 
-    QObject::connect( node, &WPNNode::nodeRemoved, this,
-                      &WPNDevice::nodeRemoved, Qt::QueuedConnection );
+    QObject::connect( node, &WPNNode::nodeRemoved, this, &WPNDevice::onNodeRemoved,
+                      Qt::QueuedConnection );
 
     emit nodeAdded(node);
 }
@@ -137,7 +137,7 @@ QVariant WPNDevice::value(QString method) const
 
 void WPNDevice::onNodeRemoved(QString path)
 {
-    auto parent = get(WPNNode::parentPath(path));
+    auto parent = get( WPNNode::parentPath(path) );
     if ( parent ) parent->removeSubnode(path);
 
     emit nodeRemoved(path);

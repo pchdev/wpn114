@@ -50,7 +50,7 @@ void WPNQueryServer::componentComplete()
     QObject::connect( this, &WPNQueryServer::startNetwork, m_osc_hdl, &OSCHandler::listen);
     QObject::connect( this, &WPNQueryServer::stopNetwork, m_ws_server, &WPNWebSocketServer::stop);
     QObject::connect( this, &WPNDevice::nodeAdded, this, &WPNQueryServer::onNodeAdded );
-    QObject::connect( this, &WPNDevice::nodeRemoved, this, &WPNQueryServer::onNodeRemoved );
+    QObject::connect( this, &WPNDevice::nodeRemoved, this, &WPNQueryServer::onQueryNodeRemoved );
 
     QObject::connect( m_ws_server, &WPNWebSocketServer::newConnection, this, &WPNQueryServer::onNewConnection );
     QObject::connect( m_ws_server, &WPNWebSocketServer::httpRequestReceived, this, &WPNQueryServer::onHttpRequestReceived );
@@ -191,6 +191,7 @@ void WPNQueryServer::onCommand(QJsonObject command_obj)
     if ( command == "LISTEN" || command == "IGNORE" )
     {
         QString method = command_obj["DATA"].toString();
+
         auto node = m_root_node->subnode(method);
         if ( node ) node->setListening(command == "LISTEN", listener);
         else qDebug() << "[OSCQUERY-SERVER] LISTEN/IGNORE command ignored"
@@ -218,7 +219,7 @@ void WPNQueryServer::onNodeAdded(WPNNode* node)
     }
 }
 
-void WPNQueryServer::onNodeRemoved(QString path)
+void WPNQueryServer::onQueryNodeRemoved(QString path)
 {
     if ( !m_clients.isEmpty() )
     {

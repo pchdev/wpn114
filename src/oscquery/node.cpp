@@ -412,7 +412,6 @@ void WPNNode::removeSubnode(QString path)
         if ( m_children[i].path == path )
         {
             idx = i;
-            delete m_children[i].ptr;
             break;
         }
 
