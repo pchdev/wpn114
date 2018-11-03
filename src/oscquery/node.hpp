@@ -162,7 +162,8 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     Clipmode::Values clipmode   ( ) const { return m_attributes.clipmode; }
     QString extended_type       ( ) const { return m_attributes.extended_type; }
 
-    Q_INVOKABLE void setValue   ( QVariant value );
+    Q_INVOKABLE void setValue ( QVariant value );
+    Q_INVOKABLE void collect  ( QString pattern, QVector<WPNNode *> &rec );
 
     void setPath            ( QString path );
     void setType            ( Type::Values type );

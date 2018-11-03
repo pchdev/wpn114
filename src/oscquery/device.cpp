@@ -1,5 +1,9 @@
 #include "device.hpp"
 #include <QtDebug>
+#include <QStandardPaths>
+#include <QDir>
+#include <QJsonArray>
+#include <QJsonDocument>
 
 QJsonObject HostExtensions::toJson() const
 {
@@ -190,5 +194,66 @@ void WPNDevice::unmap(WPNDevice* device, QString source, QString destination)
     }
 
     if ( idx >= 0 ) m_maps.removeAt(idx);
+}
+
+void WPNDevice::savePreset(QString name, QStringList filters)
+{
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+            .append("/presets/");
+
+     if ( !QDir(path).exists()) QDir().mkpath(path);
+
+     QFile file( path+name );
+
+     if ( !file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text ))
+     {
+         qDebug() << "ERROR, COULD NOT SAVE PRESET at location"
+                  << path+name;
+
+         return;
+     }
+
+     QVector<WPNNode*> nodes;
+
+     for ( const auto& filter : filters )
+           m_root_node->collect(filter, nodes);
+
+     QJsonArray arr;
+
+     for ( const auto& node : nodes )
+     {
+         QJsonObject obj;
+         obj.insert( "FULL_PATH", node->path()  );
+         obj.insert( "VALUE", node->jsonValue() );
+
+         arr.append( obj );
+     }
+
+     file.write(QJsonDocument(arr).toJson(QJsonDocument::Compact));
+}
+
+void WPNDevice::loadPreset(QString name)
+{
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+            .append("/presets/");
+
+    QFile file( path+name );
+
+    if ( !file.open(QIODevice::ReadOnly | QIODevice::Text ))
+    {
+        qDebug() << "ERROR, COULD NOT SAVE PRESET at location"
+                 << path+name;
+        return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+
+    for ( const auto& object : doc.array())
+    {
+        auto node = m_root_node->subnode(object.toObject()["FULL_PATH"].toString());
+        if ( !node ) continue;
+
+        node->setValue(object.toObject()["VALUE"].toVariant());
+    }
 }
 

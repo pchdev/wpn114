@@ -23,7 +23,7 @@ WPNQueryServer::WPNQueryServer() : WPNDevice (),
     m_settings.extensions.listen            = true;
     m_settings.extensions.path_added        = true;
     m_settings.extensions.path_changed      = false;
-    m_settings.extensions.path_removed      = false;
+    m_settings.extensions.path_removed      = true;
     m_settings.extensions.path_renamed      = false;
     m_settings.extensions.range             = false;
     m_settings.extensions.tags              = true;
@@ -129,7 +129,7 @@ void WPNQueryServer::onHttpRequestReceived(QTcpSocket* sender, QString data)
             response.target  = sender;
 
             auto namespace_path = request.split(' ', QString::SkipEmptyParts )[0];
-            response.reply  = namespaceJson(namespace_path).toUtf8();
+            response.reply = namespaceJson(namespace_path).toUtf8();
             m_reply_manager.enqueue(response);
         }
     }

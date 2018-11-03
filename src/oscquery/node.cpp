@@ -41,7 +41,6 @@ void WPNNode::update(QJsonObject obj)
     setAccess         ( static_cast<Access::Values>(obj["ACCESS"].toInt()) );
     setDescription    ( obj["DESCRIPTION"].toString()) ;
     setValue          ( obj["VALUE"].toVariant() );
-
 }
 
 WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr), m_target_property(nullptr), m_target(nullptr)
@@ -71,6 +70,52 @@ void WPNNode::classBegin()
     m_qml = true;
 }
 
+void WPNNode::setAccess( Access::Values access )
+{
+    m_attributes.access = access;
+}
+
+void WPNNode::setClipmode( Clipmode::Values mode )
+{
+    m_attributes.clipmode = mode;
+}
+
+void WPNNode::setCritical( bool critical )
+{
+    m_attributes.critical = critical;
+}
+
+void WPNNode::setDescription( QString description )
+{
+    m_attributes.description = description;
+}
+
+void WPNNode::setTags( QStringList tags )
+{
+    m_attributes.tags = tags;
+}
+
+void WPNNode::setRange( Range range )
+{
+    m_attributes.range = range;
+}
+
+void WPNNode::setName( QString name )
+{
+    m_name = name;
+}
+
+void WPNNode::setDevice( WPNDevice* device )
+{
+    m_device = device;
+}
+
+void WPNNode::setParent(WPNNode* parent)
+{
+    m_parent = parent;
+    if ( !m_device ) m_device = parent->device();
+}
+
 void WPNNode::componentComplete()
 {
     if ( m_name.isEmpty() )
@@ -89,22 +134,6 @@ void WPNNode::componentComplete()
 
     if ( !m_device ) m_device = WPNDevice::instance();
     if ( m_device && !m_parent ) m_device->link( this );
-}
-
-void WPNNode::setAccess         ( Access::Values access ) { m_attributes.access = access; }
-void WPNNode::setClipmode       ( Clipmode::Values mode ) { m_attributes.clipmode = mode; }
-void WPNNode::setCritical       ( bool critical ) { m_attributes.critical = critical; }
-void WPNNode::setDescription    ( QString description ) { m_attributes.description = description; }
-void WPNNode::setTags           ( QStringList tags ) { m_attributes.tags = tags; }
-void WPNNode::setRange          ( Range range ) { m_attributes.range = range; }
-
-void WPNNode::setName           ( QString name ) { m_name = name; }
-void WPNNode::setDevice         ( WPNDevice* device) { m_device = device; }
-
-void WPNNode::setParent(WPNNode* parent)
-{
-    m_parent = parent;
-    if ( !m_device ) m_device = parent->device();
 }
 
 qint16 WPNNode::index() const
@@ -181,7 +210,7 @@ void WPNNode::setTarget(const QQmlProperty& property)
     setTypeFromMetaType(property.propertyType());
 
     m_attributes.value = property.read();
-    m_target_property.connectNotifySignal(this, SLOT(propertyChanged()));
+    m_target_property.connectNotifySignal( this, SLOT(propertyChanged()) );
 }
 
 void WPNNode::setTarget(QObject* sender, const QMetaProperty& property)
@@ -205,23 +234,13 @@ void WPNNode::setTarget(QObject* sender, const QMetaProperty& property)
 }
 
 void WPNNode::metaPropertyChanged()
-{
-    QVariant value = m_meta_property.read(m_target);
-    emit valueReceived(value);
-
-    if ( value != m_attributes.value )
-    {
-        emit valueChanged(value);
-        m_attributes.value = value;
-    }
-
-    for ( const auto& listener : m_listeners )
-         listener->pushNodeValue(this);
+{    
+    setValue( m_meta_property.read( m_target ));
 }
 
 void WPNNode::propertyChanged()
 {
-    // no need to push it back to qmlproperty
+    // no need to push it back to qmlproperty       
     QVariant value = m_target_property.read();
     emit valueReceived(value);
 
@@ -232,7 +251,7 @@ void WPNNode::propertyChanged()
     }
 
     for ( const auto& listener : m_listeners )
-         listener->pushNodeValue(this);
+          listener->pushNodeValue(this);
 }
 
 QString WPNNode::typeTag() const
@@ -298,7 +317,7 @@ QJsonObject WPNNode::toJson() const
     QJsonObject contents;
 
     for ( const auto& subnode : m_children )
-        contents.insert(subnode.ptr->name(), subnode.ptr->toJson());
+          contents.insert(subnode.ptr->name(), subnode.ptr->toJson());
 
     attr.insert("CONTENTS", contents);
     return attr;
@@ -320,29 +339,24 @@ void WPNNode::setPath(QString path)
 void WPNNode::setValueQuiet(QVariant value)
 {   
     if ( m_target_property.isWritable())
-        m_target_property.write(value);
+         m_target_property.write( value );
 
-    if ( m_target )
-    {
-        //m_meta_property.write(m_target, value);
-        m_target->setProperty(m_meta_property.name(), value);
-    }
-
-    emit valueReceived(value);
+    if ( m_target ) m_target->setProperty( m_meta_property.name(), value );
+    emit valueReceived( value );
 
     if ( m_attributes.value != value )
     {
         m_attributes.value = value;
-        emit valueChanged(value);
+        emit valueChanged( value );
     }
 }
 
 void WPNNode::setValue(QVariant value)
 {    
-    setValueQuiet(value);
+    setValueQuiet( value );
 
     for ( const auto& listener : m_listeners )
-         listener->pushNodeValue(this);
+          listener->pushNodeValue(this);
 }
 
 void WPNNode::setType(Type::Values type)
@@ -456,4 +470,15 @@ QString WPNNode::parentPath(QString path)
     splitted_path.removeLast();
 
     return splitted_path.join( '/' );
+}
+
+void WPNNode::collect(QString name, QVector<WPNNode*>& rec )
+{
+    for ( const auto& subnode : m_children )
+    {
+        if ( subnode.ptr->name() == name )
+             rec << subnode.ptr;
+
+        subnode.ptr->collect( name, rec );
+    }
 }
