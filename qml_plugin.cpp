@@ -23,7 +23,6 @@
 #include <audio_objects/convolver/convolver.hpp>
 
 #include <audio_objects/clock/audioclock.hpp>
-#include <src/time/timeobject.hpp>
 #endif
 
 #ifdef WPN114_MIDI
