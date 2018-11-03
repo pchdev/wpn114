@@ -58,7 +58,6 @@ WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr), m_target_property(nul
 
 WPNNode::~WPNNode()
 {
-    qDebug() << "REMOVING NODE" << m_attributes.path;
     if ( m_qml ) emit nodeRemoved( m_attributes.path );
 
     // if node is qml-instantiated, do not delete it

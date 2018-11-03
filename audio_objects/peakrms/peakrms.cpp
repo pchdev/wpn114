@@ -32,7 +32,7 @@ void PeakRMS::initialize(qint64 nsamples)
 
 void PeakRMS::bufferComplete()
 {
-    auto nout   = m_num_outputs;
+    auto nout   = m_source->numOutputs();
     auto pos    = m_pos;
     auto block  = m_block;
     auto bsize  = m_block_size;
@@ -69,7 +69,7 @@ void PeakRMS::bufferComplete()
 
 float** PeakRMS::process(float** in, qint64 nsamples)
 {
-    auto nout   = m_num_outputs;
+    auto nout   = m_source->numOutputs();
     auto pos    = m_pos;
     auto block  = m_block;
     auto bsize  = m_block_size;
