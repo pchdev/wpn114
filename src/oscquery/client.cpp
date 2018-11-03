@@ -297,7 +297,16 @@ void WPNQueryClient::listen(QString method)
     command.insert("COMMAND", "LISTEN");
     command.insert("DATA", method );
 
-    writeWebSocket(command);
+    writeWebSocket( command );
+}
+
+void WPNQueryClient::listenAll(QString method)
+{
+    QJsonObject command;
+    command.insert("COMMAND", "LISTEN_ALL");
+    command.insert("DATA", method );
+
+    writeWebSocket( command );
 }
 
 void WPNQueryClient::ignore(QString method)
@@ -307,5 +316,14 @@ void WPNQueryClient::ignore(QString method)
     command.insert("DATA", method);
 
     writeWebSocket(command);
+}
+
+void WPNQueryClient::ignoreAll(QString method)
+{
+    QJsonObject command;
+    command.insert("COMMAND", "IGNORE_ALL");
+    command.insert("DATA", method );
+
+    writeWebSocket( command );
 }
 

@@ -363,12 +363,17 @@ void WPNNode::setExtendedType(QString type)
     m_attributes.extended_type = type;
 }
 
-void WPNNode::setListening(bool listen, WPNDevice *target)
+void WPNNode::setListening(bool listen, WPNDevice *target, bool recursive)
 {
     if ( listen && !m_listeners.contains(target) )
-        m_listeners.push_back(target);
+         m_listeners.push_back(target);
 
-    else if ( !listen ) m_listeners.removeAll(target);
+    else if ( !listen )
+        m_listeners.removeAll(target);
+
+    if ( recursive )
+         for ( const auto& subnode : m_children )
+              subnode.ptr->setListening(listen, target, recursive);
 }
 
 //------------------------------------------------------------------------------------------------------

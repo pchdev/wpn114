@@ -192,11 +192,24 @@ void WPNQueryServer::onCommand(QJsonObject command_obj)
     {
         QString method = command_obj["DATA"].toString();
 
-        auto node = m_root_node->subnode(method);
-        if ( node ) node->setListening(command == "LISTEN", listener);
+        if ( auto node = m_root_node->subnode(method) )
+             node->setListening(command == "LISTEN", listener);
+
         else qDebug() << "[OSCQUERY-SERVER] LISTEN/IGNORE command ignored"
                       << "cannot find node:" << method;
     }
+
+    else if ( command == "LISTEN_ALL" || command == "IGNORE_ALL" )
+    {
+        QString method = command_obj["DATA"].toString();
+
+        if ( auto node = m_root_node->subnode(method) )
+             node->setListening(command == "LISTEN_ALL", listener, true);
+
+        else qDebug() << "[OSCQUERY-SERVER] LISTEN/IGNORE command ignored"
+                      << "cannot find node:" << method;
+    }
+
     else if ( command == "START_OSC_STREAMING" )
     {
         quint16 port = command_obj["DATA"].toObject()["LOCAL_SERVER_PORT"].toInt();
@@ -236,5 +249,5 @@ void WPNQueryServer::onQueryNodeRemoved(QString path)
 void WPNQueryServer::pushNodeValue(WPNNode* node)
 {
     for ( const auto& client : m_clients )
-        client->pushNodeValue(node);
+          client->pushNodeValue(node);
 }

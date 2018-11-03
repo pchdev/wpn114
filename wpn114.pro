@@ -118,8 +118,10 @@ network {
         src/oscquery/netexplorer.hpp
 }
 
-SOURCES += qml_plugin.cpp
-HEADERS += qml_plugin.hpp
+SOURCES += qml_plugin.cpp \
+    audio_objects/bursts/bursts.cpp
+HEADERS += qml_plugin.hpp \
+    audio_objects/bursts/bursts.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

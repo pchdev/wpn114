@@ -49,9 +49,9 @@ WPNDevice* WPNDevice::instance()
 WPNDevice::WPNDevice() : m_singleDevice(false), m_node_tree(nullptr)
 {
     m_root_node = new WPNNode;
-    m_root_node ->setPath   ( "/" );
+    m_root_node ->setPath("/");
 
-    m_node_tree = new WPNNodeTree(m_root_node);
+    m_node_tree = new WPNNodeTree( m_root_node );
 }
 
 WPNDevice::~WPNDevice()
@@ -114,7 +114,20 @@ WPNNode* WPNDevice::get(QString path)
 void WPNDevice::onValueUpdate(QString method, QVariant arguments)
 {
     auto node = m_root_node->subnode(method);
-    if ( node ) node->setValueQuiet(arguments);
+    if ( node )
+    {
+        node->setValueQuiet( arguments );
+
+        for( const auto& map : m_maps )
+        {
+            if ( map.listen_all && method.startsWith(map.source) )
+                 map.target->onValueUpdate(method, arguments );
+
+            else if ( map.source == method && map.target )
+                      map.target->onValueUpdate(method, arguments);
+        }
+    }
+
     else qDebug() << "[WPNDEVICE] Node" << method << "not found";
 }
 
@@ -142,3 +155,40 @@ void WPNDevice::onNodeRemoved(QString path)
 
     emit nodeRemoved(path);
 }
+
+void WPNDevice::map(WPNDevice* device, QString source, QString destination)
+{
+    m_maps.push_back({ device, source, destination, false });
+}
+
+void WPNDevice::mapAll(WPNDevice* device, QString source)
+{
+    m_maps.push_back({ device, source, source, true });
+}
+
+void WPNDevice::unmap(WPNDevice* device, QString source, QString destination)
+{
+    qint32 idx = -1;
+
+    for ( qint32 i = 0; i < m_maps.size(); ++i )
+    {
+        auto map = m_maps[ i ];
+
+        if ( map.listen_all && map.source == source )
+        {
+             idx = i;
+             break;
+        }
+
+        else if ( map.source == source &&
+             map.destination == destination &&
+             map.target == device )
+        {
+            idx = i;
+            break;
+        }
+    }
+
+    if ( idx >= 0 ) m_maps.removeAt(idx);
+}
+

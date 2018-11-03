@@ -5,6 +5,7 @@
 #include <QObject>
 
 class WPNNode;
+class WPNDevice;
 
 struct HostExtensions
 {
@@ -40,6 +41,14 @@ struct HostSettings
     QJsonObject toJson() const;
 };
 
+struct WPNValueMap
+{
+    WPNDevice* target;
+    QString source;
+    QString destination;
+    bool listen_all;
+};
+
 class WPNDevice : public QObject
 {
     Q_OBJECT
@@ -65,6 +74,10 @@ class WPNDevice : public QObject
     Q_INVOKABLE QVariant value  ( QString method ) const;
     Q_INVOKABLE WPNNode* get    ( QString path );    
 
+    Q_INVOKABLE void map       ( WPNDevice*, QString source, QString destination );
+    Q_INVOKABLE void mapAll    ( WPNDevice*, QString source );
+    Q_INVOKABLE void unmap     ( WPNDevice*, QString source, QString destination );
+
     Q_INVOKABLE WPNNodeTree* nodeTree ( ) const { return m_node_tree; }
 
     void link(WPNNode* node);
@@ -84,4 +97,5 @@ class WPNDevice : public QObject
     QString       m_name;
     WPNNode*      m_root_node;
     WPNNodeTree*  m_node_tree;
+    QVector<WPNValueMap> m_maps;
 };
