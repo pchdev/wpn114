@@ -8,21 +8,15 @@ Mangler::Mangler()
 }
 
 void Mangler::initialize(qint64)
-{
-    float itm1 = 0, itm2 = 0, otm1 = 0, otm2 = 0;
-    float dcshift = 1;
-
-    float relgain = 0;
-    float shaper_amt = 0.857;
-    float shaper_amt_2 = 0.9;
-
-    float lut_start = 128;
-    float lut = lut_start;
+{    
+    // initialize bit patterns
 
 }
 
-float** Mangler::process(float**, qint64)
+float** Mangler::process(float** in, qint64 nsamples)
 {
+
+    StreamNode::resetBuffer(m_out, m_num_outputs, nsamples);
 
     float gate_amt          = m_gate/100.0;
     float gate_open_time    = (0.05 + (1.f-gate_amt)*0.3) * SAMPLERATE;
@@ -41,8 +35,75 @@ float** Mangler::process(float**, qint64)
     float mix               = m_thermonuclear-left_bit_slider;
     int right_bit_slider    = (mix > 0) ? left_bit_slider + 1 : left_bit_slider;
 
-//    float bit_1             = lut_start + left_bit_slider*16;
-//    float bit_2             = lut_start + right_bit_slider*16;
+    float bit_1    = lut_start + left_bit_slider*16;
+    float bit_2    = lut_start + right_bit_slider*16;
+
+    for ( int i = 0; i < 8-bitdepth; ++i ) // ?
+    {
+        bit_1 += 1;
+        bit_2 += 1;
+    }
+
+    for ( int i = 0; i < bitdepth-8; ++i ) // ?
+    {
+        bit_1 -= 1;
+        bit_2 -= 1;
+    }
+
+    float clear_mask_1 = 0, clear_mask_2 = 0;
+    float xor_mask_1 = 0, xor_mask_2 = 0;
+
+    for ( int i = 0; i < bitdepth; ++i )
+    {
+        // ?
+    }
+
+//    float post_bit_gain = relgain[left_bit_slider] * (1-mix) + relgain[right_bit_slider]*mix;
+
+    // RC filter params (hi/lo)
+    float LPF_c = pow( 0.5, 5.0-m_love/25 );
+    float LPF_r = pow( 0.5, m_jive/40-0.6 );
+    float HPF_c = pow( 0.5, 5.0-m_love/32 );
+    float HPF_r = pow( 0.5, 3.0 - m_jive/40 );
+
+    float LRC = LPF_r*LPF_c;
+    float HRC = HPF_r*HPF_c;
+
+    for ( quint16 ch = 0; ch < numOutputs(); ++ch )
+    {
+        for( qint64 s = 0; s < nsamples; ++s )
+        {
+            float dry = in[ch][s];
+            per_sample =  0.9995 * per_sample + 0.0005 * target_per_sample;
+
+            // deliberately broken resampler
+            // (BAD DIGITAL)
+
+            sample_csr += 1.f;
+            if ( sample_csr < next_sample && m_jive < 33150 )
+            {
+                m_out[ch][s] = last_sample;
+            }
+            else
+            {
+                next_sample += per_sample;
+                if ( m_jive == 33150 ) sample_csr = next_sample;
+
+                float s0 = m_out[ch][s]*gain;
+
+            }
+
+
+
+
+        }
+    }
+
+
+
+
+
+
 
 
 

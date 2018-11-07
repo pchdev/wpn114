@@ -52,7 +52,7 @@ void AudioPlugin::componentComplete()
 
 #ifdef __APPLE__ //----------------------------------------------------------
     m_view              = new QMacNativeWidget();
-    m_view_container    = new QMacCocoaViewContainer(m_view->nativeView());
+    m_view_container    = new QMacCocoaViewContainer( m_view->nativeView() );
 #endif //--------------------------------------------------------------------
 
     auto size           = m_plugin_hdl->get_editor_size();    
@@ -75,7 +75,8 @@ void AudioPlugin::showEditorWindow()
 
 void AudioPlugin::initialize(qint64 nsamples)
 {
-    m_plugin_hdl->configure(m_stream_properties.sample_rate, m_stream_properties.block_size);
+    m_plugin_hdl->configure( m_stream_properties.sample_rate, m_stream_properties.block_size );
+    m_plugin_hdl->set_world( m_world_stream );
 }
 
 float** AudioPlugin::process(float**input, qint64 nsamples)
@@ -90,11 +91,11 @@ float** AudioPlugin::process(float**input, qint64 nsamples)
 void AudioPlugin::expose(WPNNode* root)
 {
     // TODO: expose parameters and programs
-    auto funcs = m_exp_node->createSubnode("functions");
-    auto show = funcs->createSubnode("show");
+    auto funcs  = m_exp_node->createSubnode("functions");
+    auto show   = funcs->createSubnode("show");
 
     show->setType(Type::Impulse);
-    QObject::connect(show, SIGNAL(valueReceived(QVariant)), this, SLOT(showEditorWindow()));
+    QObject::connect( show, SIGNAL(valueReceived(QVariant)), this, SLOT(showEditorWindow()) );
 }
 
 QString AudioPlugin::path() const
@@ -138,14 +139,14 @@ float AudioPlugin::get(int index) const
     return m_plugin_hdl->get_parameter_value(index);
 }
 
-void AudioPlugin::set(QString name, float value)
+void AudioPlugin::set(QString name, float value, bool normalized)
 {
-    m_plugin_hdl->set_parameter_value(m_parameters.indexOf(name), value);
+    m_plugin_hdl->set_parameter_value(m_parameters.indexOf(name), value, normalized);
 }
 
 void AudioPlugin::set(int index, float value)
 {
-    m_plugin_hdl->set_parameter_value(index, value);
+    m_plugin_hdl->set_parameter_value(index, value, false);
 }
 
 void AudioPlugin::save(QString name)
@@ -161,8 +162,8 @@ void AudioPlugin::setChunk(QString name)
 void AudioPlugin::saveChunk(QString name)
 {
     // write to file
-    QFile out(name);
-    out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QFile out( name );
+    out.open ( QIODevice::WriteOnly | QIODevice::Truncate );
 
     QDataStream stream(&out);
     auto chunk = m_plugin_hdl->get_chunk();
@@ -183,51 +184,56 @@ void AudioPlugin::loadChunk(QString name)
     in.close();
 }
 
-#define MIDI_AR2(cmd) \
-    uint8_t command = static_cast<uint8_t>( cmd ); \
-    uint8_t data[4] = { static_cast<uint8_t>(command + channel), (uint8_t) value, 0, 0 }; \
-    m_plugin_hdl->process_midi(data);
+inline void AudioPlugin::push(MIDI command, int channel, int value )
+{
+    push( command, channel, value, 0 );
+}
 
-#define MIDI_AR3(cmd) \
-    uint8_t command = static_cast<uint8_t>( cmd ); \
-    uint8_t data[4] = { static_cast<uint8_t>(command + channel), (uint8_t) index, (uint8_t) value, 0 }; \
-    m_plugin_hdl->process_midi(data);
+inline void AudioPlugin::push(MIDI command, int channel, int index, int value)
+{
+    uint8_t cmd = static_cast<uint8_t>(command);
+    std::array<uint8_t, 4> data = { static_cast<uint8_t>(cmd+channel),
+                                    static_cast<uint8_t>(index),
+                                    static_cast<uint8_t>(value), 0 };
+
+    m_plugin_hdl->process_midi( data.data() );
+//    if ( !m_active ) m_plugin_hdl->process_midi_offline();
+}
 
 
 void AudioPlugin::noteOn(int channel, int index, int value)
-{
-    MIDI_AR3 ( MIDI::NOTE_ON );
+{   
+    push( MIDI::NOTE_ON, channel, index, value );
 }
 
 void AudioPlugin::noteOff(int channel, int index, int value)
 {
-    MIDI_AR3 ( MIDI::NOTE_OFF );
+    push( MIDI::NOTE_OFF, channel, index, value );
 }
 
 void AudioPlugin::control(int channel, int index, int value)
 {
-    MIDI_AR3 ( MIDI::CONTINUOUS_CONTROL );
-//    if ( !m_active ) m_plugin_hdl->process_midi_offline();
+    push( MIDI::CONTINUOUS_CONTROL, channel, index, value );
 }
 
 void AudioPlugin::programChange(int channel, int value)
 {
-    MIDI_AR2 ( MIDI::PATCH_CHANGE );
+    push( MIDI::PATCH_CHANGE, channel, value );
 }
 
 void AudioPlugin::bend(int channel, int value)
 {
-    MIDI_AR2 ( MIDI::PITCH_BEND );
+    push( MIDI::PITCH_BEND, channel, value );
 }
 
 void AudioPlugin::aftertouch(int channel, int index, int value)
 {
-    MIDI_AR3 ( MIDI::AFTERTOUCH );
+    push( MIDI::AFTERTOUCH, channel, index, value );
 }
 
 void AudioPlugin::aftertouch(int channel, int value)
 {
-    MIDI_AR2 ( MIDI::CHANNEL_PRESSURE );
+    push( MIDI::CHANNEL_PRESSURE, channel, value );
 }
 
 void AudioPlugin::sysex(QVariantList bytes)
@@ -237,8 +243,10 @@ void AudioPlugin::sysex(QVariantList bytes)
 
 void AudioPlugin::allNotesOff()
 {
-    for ( quint8 i = 0; i < 128; ++i )
-        noteOff(0, i, 127);
+    control( 0, 123, 0 );
+
+//    for ( int i = 0; i < 128; ++i )
+//          noteOff( 0, i, 127 );
 }
 
 // HDLS ----------------------------------------------------------------------------------------
@@ -248,7 +256,7 @@ void AudioPlugin::allNotesOff()
     m_aeffect->dispatcher(m_aeffect, command, index, 0, &name, 0); \
     return (std::string) name;
 
-vst2x_plugin::vst2x_plugin(std::string path) : m_block_pos(0), m_event_queue(new VstEvents)
+vst2x_plugin::vst2x_plugin(std::string path) : m_event_queue(new VstEvents)
 {
 
 #ifdef __APPLE__ //-----------------------------------------------------------------------------
@@ -265,27 +273,27 @@ vst2x_plugin::vst2x_plugin(std::string path) : m_block_pos(0), m_event_queue(new
                         ( NULL, url );
     CFRelease           ( url );
 
-    if      ( m_module && CFBundleLoadExecutable((CFBundleRef) m_module) == false )
+    if      ( m_module && CFBundleLoadExecutable( (CFBundleRef) m_module) == false )
     return  ;
 
     PluginEntryProc main_proc   = 0;
     main_proc                   = (PluginEntryProc) CFBundleGetFunctionPointerForName
-                                ((CFBundleRef) m_module, CFSTR("VSTPluginMain"));
+                                ( (CFBundleRef) m_module, CFSTR("VSTPluginMain") );
     if  (!main_proc)
         main_proc               = (PluginEntryProc) CFBundleGetFunctionPointerForName
-                                ((CFBundleRef) m_module, CFSTR("main_macho"));
-
-#endif //------------------------------------------------------------------------------------
+                                ( (CFBundleRef) m_module, CFSTR("main_macho") );
 
     m_aeffect  = main_proc(HostCallback);
+
+#endif //------------------------------------------------------------------------------------    
     m_aeffect -> dispatcher(m_aeffect, effOpen, 0, 0, nullptr, 0.f);
 }
 
 vst2x_plugin::~vst2x_plugin()
 {
-    m_aeffect->dispatcher(m_aeffect, effStopProcess, 0, 0, nullptr, 0.f);
-    m_aeffect->dispatcher(m_aeffect, effMainsChanged, 0, 0, nullptr, 0.f);
-    m_aeffect->dispatcher(m_aeffect, effClose, 0, 0, nullptr, 0.f);
+    m_aeffect->dispatcher( m_aeffect, effStopProcess, 0, 0, nullptr, 0.f );
+    m_aeffect->dispatcher( m_aeffect, effMainsChanged, 0, 0, nullptr, 0.f );
+    m_aeffect->dispatcher( m_aeffect, effClose, 0, 0, nullptr, 0.f );
 
 #ifdef __APPLE__ // ---------------------------------------------------------------
     CFBundleUnloadExecutable( (CFBundleRef) m_module );
@@ -296,10 +304,10 @@ vst2x_plugin::~vst2x_plugin()
 
 void vst2x_plugin::configure(const uint32_t srate, const uint16_t bsize)
 {
-    m_aeffect->dispatcher(m_aeffect, effSetSampleRate, 0, 0, nullptr, srate);
-    m_aeffect->dispatcher(m_aeffect, effSetBlockSize, 0, bsize, nullptr, 0.f);
-    m_aeffect->dispatcher(m_aeffect, effMainsChanged, 0, 1, nullptr, 0.f);
-    m_aeffect->dispatcher(m_aeffect, effStartProcess, 0, 0, nullptr, 0.0);
+    m_aeffect->dispatcher( m_aeffect, effSetSampleRate, 0, 0, nullptr, srate );
+    m_aeffect->dispatcher( m_aeffect, effSetBlockSize, 0, bsize, nullptr, 0.f );
+    m_aeffect->dispatcher( m_aeffect, effMainsChanged, 0, 1, nullptr, 0.f );
+    m_aeffect->dispatcher( m_aeffect, effStartProcess, 0, 0, nullptr, 0.0 );
 }
 
 uint16_t vst2x_plugin::get_nparameters() const
@@ -324,12 +332,12 @@ uint16_t vst2x_plugin::get_noutputs() const
 
 std::string vst2x_plugin::get_parameter_name(uint16_t index) const
 {
-    GET_2X_PNAME_STR(effGetParamName);
+    GET_2X_PNAME_STR( effGetParamName );
 }
 
 std::string vst2x_plugin::get_program_name(uint16_t index) const
 {
-    GET_2X_PNAME_STR(effGetProgramName);
+    GET_2X_PNAME_STR( effGetProgramName );
 }
 
 float vst2x_plugin::get_parameter_value(const uint16_t index) const
@@ -337,8 +345,8 @@ float vst2x_plugin::get_parameter_value(const uint16_t index) const
     return m_aeffect->getParameter(m_aeffect, index);
 }
 
-void vst2x_plugin::set_parameter_value(const uint16_t index, float value)
-{
+void vst2x_plugin::set_parameter_value(const uint16_t index, float value, bool normalized)
+{             
     m_aeffect->setParameter(m_aeffect, index, value);
 }
 
@@ -356,40 +364,50 @@ void vst2x_plugin::set_program_name(const std::string name)
 void vst2x_plugin::process_audio(float** inputs, float **outputs, const uint16_t nsamples)
 {
     if ( m_event_queue->numEvents )
-        m_aeffect->dispatcher(m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f);
+    {
+         m_aeffect->dispatcher( m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f );
+         m_event_queue->numEvents = 0;
+//         set_delta( 0 );
+    }
 
-    m_event_queue->numEvents = 0;
     m_aeffect->processReplacing(m_aeffect, inputs, outputs, nsamples);
 }
 
 void vst2x_plugin::process_audio(float **&outputs, const uint16_t nsamples)
 {
     if ( m_event_queue->numEvents )
-        m_aeffect->dispatcher(m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f);
+         m_aeffect->dispatcher( m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f );
 
     m_event_queue->numEvents = 0;
+
     m_aeffect->processReplacing(m_aeffect, nullptr, outputs, nsamples);
 }
 
 void vst2x_plugin::process_midi_offline()
 {
     if ( m_event_queue->numEvents )
-         m_aeffect->dispatcher(m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f);
+         m_aeffect->dispatcher( m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f );
+}
+
+void vst2x_plugin::set_delta(quint16 delta)
+{
+    QMutexLocker locker( &m_delta_mtx );
+    m_delta_frames = delta;
 }
 
 void vst2x_plugin::process_midi(const uint8_t data[4])
 {
     auto midiev = new VstMidiEvent;
-    std::memset ( midiev, 0, sizeof(VstMidiEvent) );
+    std::memset ( midiev, 0, sizeof( VstMidiEvent ) );
     std::copy_n ( data, 4, midiev->midiData );
 
-    midiev->deltaFrames = 0;
-    midiev->flags       = kVstMidiEventIsRealtime;
-    midiev->byteSize    = sizeof(VstMidiEvent);
-    midiev->type        = kVstMidiType;
+    midiev->deltaFrames  = 0;
+    midiev->flags        = kVstMidiEventIsRealtime;
+    midiev->byteSize     = sizeof(VstMidiEvent);
+    midiev->type         = kVstMidiType;
 
     auto nevents = m_event_queue->numEvents;
-    m_event_queue->events[nevents] = reinterpret_cast<VstEvent*>(midiev);
+    m_event_queue->events[ nevents ] = reinterpret_cast<VstEvent*>(midiev);
     m_event_queue->numEvents++;
 }
 
@@ -554,7 +572,7 @@ float vst3x_plugin::get_parameter_value(const uint16_t index) const
     return 0.f;
 }
 
-void vst3x_plugin::set_parameter_value(const uint16_t index, float value)
+void vst3x_plugin::set_parameter_value(const uint16_t index, float value, bool normalized)
 {
 
 }

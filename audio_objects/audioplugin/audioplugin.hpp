@@ -8,6 +8,8 @@
 #include <QMacNativeWidget>
 #include <QMacCocoaViewContainer>
 #include <QQueue>
+#include <QMutex>
+#include <QMutexLocker>
 
 static VstIntPtr VSTCALLBACK HostCallback
 (AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void* ptr, float opt);
@@ -43,7 +45,7 @@ enum class MIDI
     virtual std::string                 get_parameter_name(uint16_t index) const pure; \
     virtual std::string                 get_program_name(uint16_t index) const pure; \
     virtual float                       get_parameter_value(const uint16_t index) const pure ; \
-    virtual void                        set_parameter_value(const uint16_t index, float value) pure; \
+    virtual void                        set_parameter_value(const uint16_t index, float value, bool normalized) pure; \
     virtual void                        set_program(const uint16_t index) pure ; \
     virtual void                        set_program_name(const std::string name) pure; \
     virtual QByteArray                  get_chunk() pure; \
@@ -60,8 +62,13 @@ class plugin_hdl
 {
     AUDIO_PLUGIN_INTERFACE( =0 )
     virtual ~plugin_hdl() {}
+
+    void set_world(WorldStream* world) { m_world = world; }
+
     protected:
-        std::string m_path;
+    WorldStream* m_world = nullptr;
+    qint64 m_clock = 0;
+    std::string m_path;
 };
 
 class vst3x_plugin : public plugin_hdl
@@ -84,8 +91,11 @@ class vst2x_plugin : public plugin_hdl
     ~vst2x_plugin();
 
     private:
+    void set_delta(quint16 clock);
+
     void* m_module = nullptr;
-    quint16 m_block_pos;
+    QMutex m_delta_mtx;
+    qint64 m_delta_frames = 0;
     VstEvents* m_event_queue;
     AEffect* m_aeffect;
 };
@@ -101,6 +111,7 @@ class AudioPlugin : public StreamNode
     Q_PROPERTY      ( QStringList programs READ programs )
     Q_PROPERTY      ( QStringList parameters READ parameters )
     Q_PROPERTY      ( QString chunk READ chunk WRITE setChunk )
+    Q_PROPERTY      ( WorldStream* world READ world WRITE setWorld )
 
 public:
     AudioPlugin();
@@ -112,22 +123,23 @@ public:
     virtual void componentComplete() override;
     virtual void expose(WPNNode*) override;
 
-    quint16 program() const;
-    QString path() const;
-    QStringList programs();
-    QStringList parameters();
-    QString chunk() { return m_chunk; }
+    WorldStream* world      ( ) const { return m_world_stream; }
+    QString chunk           ( ) { return m_chunk; }
+    quint16 program         ( ) const;
+    QString path            ( ) const;
+    QStringList programs    ( );
+    QStringList parameters  ( );
 
-    void setChunk(QString name);
-
-    void setPath(const QString);
-    void setProgram(const quint16);
+    void setWorld       ( WorldStream* world ) { m_world_stream = world; }
+    void setChunk       ( QString name  );
+    void setPath        ( const QString );
+    void setProgram     ( const quint16 );
 
     public slots:
 
     Q_INVOKABLE void showEditorWindow();
 
-    Q_INVOKABLE void set(QString name, float value);
+    Q_INVOKABLE void set(QString name, float value, bool normalized = false );
     Q_INVOKABLE void set(int index, float value);
 
     Q_INVOKABLE float get(QString name) const;
@@ -155,12 +167,16 @@ signals:
     void parameterChanged();
 
 private:
+    void push( MIDI command, int channel, int value );
+    void push( MIDI command, int channel, int index, int value );
+
     quint16             m_program;
     QString             m_path;
     plugin_hdl*         m_plugin_hdl;
     QStringList         m_programs;
     QStringList         m_parameters;
     QString             m_chunk;
+    WorldStream*        m_world_stream;
 
 #ifdef __APPLE__
     QMacNativeWidget*           m_view;

@@ -163,6 +163,8 @@ class AudioStream : public QIODevice
     virtual qint64 writeData ( const char*, qint64 )  override;
     virtual qint64 bytesAvailable ( )                 const override;
 
+    qint64 uclock( ) const;
+
     signals:
     void tick       ( qint64 );
 
@@ -223,6 +225,8 @@ class WorldStream : public StreamNode
     void setInDevice     ( QString device );
     void setOutDevice    ( QString device );
 
+    AudioStream* stream () { return m_stream; }
+
     QQmlListProperty<StreamNode>  inserts();
     const QVector<StreamNode*>&   getInserts() const { return m_inserts; }
 
@@ -255,6 +259,7 @@ class WorldStream : public StreamNode
     QString m_out_device;
     AudioStream* m_stream;
     QThread m_stream_thread;
+    qint64 m_clock;
 
     QVector<StreamNode*> m_inserts;
 };

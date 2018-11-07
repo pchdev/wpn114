@@ -143,7 +143,7 @@ void WPNQueryClient::onDisconnected()
     disconnected( );   
 
     if ( !m_zconf_host.isEmpty() )
-         QTimer::singleShot(5000, this, SLOT(startDiscovery()));
+         QTimer::singleShot( 5000, this, SLOT(startDiscovery()) );
 }
 
 void WPNQueryClient::onBinaryMessageReceived(QByteArray data)

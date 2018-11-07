@@ -61,7 +61,8 @@ audio {
         audio_objects/convolver/FFTConvolver.cpp    \
         audio_objects/convolver/TwoStageFFTConvolver.cpp \
         audio_objects/convolver/Utilities.cpp       \
-        audio_objects/clock/audioclock.cpp
+        audio_objects/clock/audioclock.cpp          \
+        audio_objects/bursts/bursts.cpp
     HEADERS +=                                      \
         src/audio/audio.hpp                         \
         audio_objects/sine/sine.hpp                 \
@@ -79,7 +80,8 @@ audio {
         audio_objects/convolver/FFTConvolver.h      \
         audio_objects/convolver/TwoStageFFTConvolver.h \
         audio_objects/convolver/Utilities.h         \
-        audio_objects/clock/audioclock.hpp
+        audio_objects/clock/audioclock.hpp          \
+        audio_objects/bursts/bursts.hpp
 }
 
 midi {
@@ -118,10 +120,8 @@ network {
         src/oscquery/netexplorer.hpp
 }
 
-SOURCES += qml_plugin.cpp \
-    audio_objects/bursts/bursts.cpp
-HEADERS += qml_plugin.hpp \
-    audio_objects/bursts/bursts.hpp
+SOURCES += qml_plugin.cpp
+HEADERS += qml_plugin.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

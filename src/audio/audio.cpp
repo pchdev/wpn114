@@ -563,6 +563,11 @@ void AudioStream::restart()
     m_output->start(this);
 }
 
+qint64 AudioStream::uclock() const
+{
+    return m_output->processedUSecs();
+}
+
 void AudioStream::onBufferProcessed()
 {
     qint64 msecs = floor(m_output->processedUSecs()/1000.0);
@@ -608,7 +613,8 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
 
         for ( quint16 s = 0; s < bsize; ++s )
             for ( quint16 ch = 0; ch < pch.size(); ++ch )
-                buf[pch[ch]][s] += cdata[ch][s] *level;
+                buf[pch[ch]][s] += cdata[ch][s] * level;
+//                buf[pch[ch]][s] += qMax(qMin(cdata[ch][s]*(float)level, 1.f), 0.f);
     }   
 
     for ( const auto& insert : inserts )

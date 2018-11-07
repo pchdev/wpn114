@@ -43,6 +43,9 @@ void TimeNode::setExposeDevice(WPNDevice* device)
 
 void TimeNode::setExposePath(QString path)
 {
+    if ( path == m_expose_path ||
+         path.isEmpty() ) return;
+
     m_expose_path = path;
 
     if ( !m_expose_device ) m_expose_device = WPNDevice::instance();
@@ -55,8 +58,8 @@ void TimeNode::setExposePath(QString path)
     start->setType  ( Type::Impulse );
     end->setType    ( Type::Impulse );
 
-    QObject::connect( start, SIGNAL(valueReceived(QVariant)), this, SIGNAL(start()));
-    QObject::connect( end, SIGNAL(valueReceived(QVariant)), this, SIGNAL(end()));
+    QObject::connect( start, SIGNAL( valueReceived(QVariant) ), this, SIGNAL(start()));
+    QObject::connect( end, SIGNAL( valueReceived(QVariant) ), this, SIGNAL(end()));
 }
 
 void TimeNode::setDuration(qreal duration)
@@ -183,7 +186,9 @@ void TimeNode::onTick(qint64 sz)
 
 void TimeNode::onBegin()
 {
+    if ( m_running && !m_has_start_expression ) return;
     if ( !m_follow ) m_running = true;
+
     QObject::connect( m_source, &WorldStream::tick, this, &TimeNode::onTick );
 }
 

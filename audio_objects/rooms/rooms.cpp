@@ -287,7 +287,7 @@ void RoomSource::initialize(qint64 nsamples)
 
     // if single source, link 'active' property
     onSingleSourceActiveChanged();
-    QObject::connect(m_subnodes[0], SIGNAL(activeChanged()), this, SLOT(onSingleSourceActiveChanged()));
+    QObject::connect( m_subnodes[0], SIGNAL(activeChanged()), this, SLOT(onSingleSourceActiveChanged()) );
 }
 
 void RoomSource::onSingleSourceActiveChanged()

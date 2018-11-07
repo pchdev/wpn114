@@ -51,17 +51,34 @@ class Mangler : public StreamNode
     void setAttitude        ( int attitude ) { m_attitude = attitude; }
 
     private:
-    qreal m_input_gain;
-    qreal m_dry_out;
-    qreal m_wet_out;
-    qreal m_bad_resampler;
-    bool m_bitcrusher;
-    qreal m_thermonuclear;
-    int m_bitdepth;
-    qreal m_gate;
-    qreal m_love;
-    qreal m_jive;
-    int m_attitude;
+    qreal m_input_gain      = 0.0;
+    qreal m_dry_out         = -3.0;
+    qreal m_wet_out         = -3.0;
+    qreal m_bad_resampler   = 12000.0;
+    bool m_bitcrusher       = true;
+    qreal m_thermonuclear   = 0.0;
+    int m_bitdepth          = 8.0;
+    qreal m_gate            = 0.0;
+    qreal m_love            = 75.0;
+    qreal m_jive            = 15.0;
+    int m_attitude          = 1;
+
+    // -----
+    float itm1 = 0, itm2 = 0, otm1 = 0, otm2 = 0;
+    float dcshift = 1;
+    float relgain = 0;
+    float lut_start = 128;
+    float* lut; //??
+    float shaper_amt = 0.857f;
+    float shaper_amt_2 = 0.9f;
+
+    //-------
+
+    float sample_csr = 0;
+    float per_sample = 0;
+    float last_sample = 0;
+    float next_sample = 0;
+
 };
 
 #endif // MANGLER_HPP
