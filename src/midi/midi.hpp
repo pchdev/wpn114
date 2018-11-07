@@ -42,10 +42,10 @@ class MIDIHandler : public QObject, public QQmlParserStatus
     int outPort  ( ) const { return m_out_port; }
     int inPort   ( ) const { return m_in_port;  }
 
-    QString outDevice       () const { return m_out_device; }
-    QString inDevice        () const { return m_in_device; }
-    QString inVirtualPort   () const { return m_virtual_port; }
-    QString outVirtualPort  () const { return m_virtual_port; }
+    QString outDevice       ( ) const { return m_out_device; }
+    QString inDevice        ( ) const { return m_in_device; }
+    QString inVirtualPort   ( ) const { return m_virtual_port; }
+    QString outVirtualPort  ( ) const { return m_virtual_port; }
 
     void setOutPort         ( int8_t port );
     void setInPort          ( int8_t port );

@@ -134,7 +134,7 @@ void MIDIHandler::setInDevice(QString device)
         for ( const auto& indev : inDevices() )
         {
             if ( indev == device )
-                setInPort(i);
+                setInPort( i );
             ++i;
         }
     }
@@ -151,7 +151,7 @@ void MIDIHandler::setOutDevice(QString device)
         for ( const auto& outdev : outDevices() )
         {
             if ( outdev == device )
-                setOutPort(i);
+                setOutPort( i );
             ++i;
         }
     }

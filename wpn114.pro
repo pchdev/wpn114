@@ -10,12 +10,10 @@ CONFIG += c++11 dll
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += QZEROCONF_STATIC
-DEFINES += "ANDROID_JSON=0"
 
 android {
     CONFIG += network
     DESTDIR = /Users/pchd/Qt/5.11.1/android_armv7/qml/WPN114
-    DEFINES += "ANDROID_JSON=1"
 }
 
 macx {
@@ -86,10 +84,12 @@ audio {
 
 midi {
     DEFINES += WPN114_MIDI
+    DEFINES += __MACOSX_CORE__
     HEADERS += src/midi/midi.hpp
     SOURCES += src/midi/midi.cpp
     HEADERS += src/midi/RtMidi.h
     SOURCES += src/midi/RtMidi.cpp
+    HEADERS += src/midi/devices/push/device_enums.hpp
 }
 
 network {

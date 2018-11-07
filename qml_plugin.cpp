@@ -27,6 +27,7 @@
 
 #ifdef WPN114_MIDI
 #include <src/midi/midi.hpp>
+#include <src/midi/devices/push/device_enums.hpp>
 #endif
 
 #ifdef WPN114_VST
@@ -69,6 +70,14 @@ void qml_plugin::registerTypes(const char *uri)
 
 #ifdef WPN114_MIDI
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
+
+    qmlRegisterUncreatableType<CommandButtons, 1>       ( "WPNPush", 1, 0, "CommandButtons", "Coucou" );
+    qmlRegisterUncreatableType<ToggleLightingMode, 1>   ( "WPNPush", 1, 0, "ToggleLightingMode", "Coucou" );
+    qmlRegisterUncreatableType<ButtonLightingMode, 1>   ( "WPNPush", 1, 0, "ButtonLightingMode", "Coucou" );
+    qmlRegisterUncreatableType<ToggleContext, 1>        ( "WPNPush", 1, 0, "ToggleContext", "Coucou" );
+    qmlRegisterUncreatableType<PadLightingMode, 1>      ( "WPNPush", 1, 0, "PadLightingMode", "Coucou" );
+    qmlRegisterUncreatableType<PadColor, 1>             ( "WPNPush", 1, 0, "PadColor", "Coucou" );
+    qmlRegisterUncreatableType<ToggleRow, 1>            ( "WPNPush", 1, 0, "ToggleRow", "Coucou" );
 #endif
 
 #ifdef WPN114_VST
