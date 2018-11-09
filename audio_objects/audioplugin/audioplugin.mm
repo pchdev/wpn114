@@ -141,7 +141,10 @@ float AudioPlugin::get(int index) const
 
 void AudioPlugin::set(QString name, float value, bool normalized)
 {
-    m_plugin_hdl->set_parameter_value(m_parameters.indexOf(name), value, normalized);
+    auto idx = m_parameters.indexOf(name);
+    if ( idx < 0 ) return;
+
+    m_plugin_hdl->set_parameter_value(idx, value, normalized);
 }
 
 void AudioPlugin::set(int index, float value)

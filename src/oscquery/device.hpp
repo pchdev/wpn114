@@ -78,7 +78,7 @@ class WPNDevice : public QObject
     Q_INVOKABLE void mapAll    ( WPNDevice*, QString source );
     Q_INVOKABLE void unmap     ( WPNDevice*, QString source, QString destination );
 
-    Q_INVOKABLE void savePreset ( QString name, QStringList filters);
+    Q_INVOKABLE void savePreset ( QString name, QStringList filters, QStringList attributes );
     Q_INVOKABLE void loadPreset ( QString name );
 
     Q_INVOKABLE WPNNodeTree* nodeTree ( ) const { return m_node_tree; }

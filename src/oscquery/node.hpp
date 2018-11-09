@@ -78,6 +78,7 @@ struct Attributes
     Type::Values        type;
     Access::Values      access;
     QVariant            value;
+    QVariant            default_value;
     Range               range;
     QString             description;
     QStringList         tags;
@@ -108,6 +109,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     Q_PROPERTY      ( Type::Values type READ type WRITE setType )
     Q_PROPERTY      ( Access::Values access READ access WRITE setAccess )
     Q_PROPERTY      ( QVariant value READ value WRITE setValue NOTIFY valueChanged )
+    Q_PROPERTY      ( QVariant defaultValue READ defaultValue WRITE setDefaultValue )
     Q_PROPERTY      ( Range range READ range WRITE setRange )
     Q_PROPERTY      ( QString description READ description WRITE setDescription )
     Q_PROPERTY      ( QStringList tags READ tags WRITE setTags )
@@ -142,6 +144,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
 
     // attributes & json -------------------------------------------------
 
+    QJsonValue attributeValue     ( QString attr ) const;
     QJsonObject attributeJson     ( QString attr ) const;
     QJsonObject attributesJson    ( ) const;
     const Attributes& attributes  ( ) const;
@@ -161,9 +164,11 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     bool critical               ( ) const { return m_attributes.critical; }
     Clipmode::Values clipmode   ( ) const { return m_attributes.clipmode; }
     QString extended_type       ( ) const { return m_attributes.extended_type; }
+    QVariant defaultValue       ( ) const { return m_attributes.default_value; }
 
-    Q_INVOKABLE void setValue ( QVariant value );
-    Q_INVOKABLE void collect  ( QString pattern, QVector<WPNNode *> &rec );
+    Q_INVOKABLE void resetValue  ( bool recursive = false );
+    Q_INVOKABLE void setValue    ( QVariant value );
+    Q_INVOKABLE void collect     ( QString pattern, QVector<WPNNode*>& rec );
 
     void setPath            ( QString path );
     void setType            ( Type::Values type );
@@ -175,15 +180,18 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     void setCritical        ( bool critical );    
     void setClipmode        ( Clipmode::Values clipmode );
     void setExtendedType    ( QString extended_type );
+    void setDefaultValue    ( QVariant value );
 
     void setTypeFromTag         ( QString tag );
     void setTypeFromMetaType    ( int type );
 
     // tree/hierarchy ----------------------------------------------------
 
-    Q_INVOKABLE WPNNode* subnode    ( QString path );
-    Q_INVOKABLE WPNNode* subnodeAt  ( int index );
-    Q_INVOKABLE quint16 nsubnodes   ( ) const { return m_children.size(); }
+    Q_INVOKABLE WPNNode* subnodeFromName ( QString name );
+
+    Q_INVOKABLE WPNNode* subnode     ( QString path );
+    Q_INVOKABLE WPNNode* subnodeAt   ( int index );
+    Q_INVOKABLE quint16 nsubnodes    ( ) const { return m_children.size(); }
 
     QVector<WPNNodePointer> subnodes ( ) const { return m_children; }
 

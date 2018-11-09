@@ -196,40 +196,38 @@ void WPNDevice::unmap(WPNDevice* device, QString source, QString destination)
     if ( idx >= 0 ) m_maps.removeAt(idx);
 }
 
-void WPNDevice::savePreset(QString name, QStringList filters)
+void WPNDevice::savePreset(QString name, QStringList filters, QStringList attributes)
 {
     QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
             .append("/presets/");
 
      if ( !QDir(path).exists()) QDir().mkpath(path);
-
      QFile file( path+name );
 
      if ( !file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text ))
      {
          qDebug() << "ERROR, COULD NOT SAVE PRESET at location"
                   << path+name;
-
          return;
      }
 
      QVector<WPNNode*> nodes;
-
      for ( const auto& filter : filters )
            m_root_node->collect(filter, nodes);
 
      QJsonArray arr;
-
      for ( const auto& node : nodes )
      {
          QJsonObject obj;
          obj.insert( "FULL_PATH", node->path()  );
-         obj.insert( "VALUE", node->jsonValue() );
+
+         for ( const auto& attribute : attributes )
+             obj.insert( attribute, node->attributeValue(attribute) );
 
          arr.append( obj );
      }
 
-     file.write(QJsonDocument(arr).toJson(QJsonDocument::Compact));
+     file.write( QJsonDocument(arr).toJson(QJsonDocument::Compact) );
 }
 
 void WPNDevice::loadPreset(QString name)
@@ -241,7 +239,7 @@ void WPNDevice::loadPreset(QString name)
 
     if ( !file.open(QIODevice::ReadOnly | QIODevice::Text ))
     {
-        qDebug() << "ERROR, COULD NOT SAVE PRESET at location"
+        qDebug() << "ERROR, COULD NOT LOAD PRESET at location"
                  << path+name;
         return;
     }
@@ -250,10 +248,11 @@ void WPNDevice::loadPreset(QString name)
 
     for ( const auto& object : doc.array())
     {
-        auto node = m_root_node->subnode(object.toObject()["FULL_PATH"].toString());
+        auto obj  = object.toObject();
+        auto node = m_root_node->subnode(obj["FULL_PATH"].toString());
         if ( !node ) continue;
 
-        node->setValue(object.toObject()["VALUE"].toVariant());
+        node->update( obj );
     }
 }
 

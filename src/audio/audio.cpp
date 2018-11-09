@@ -153,7 +153,7 @@ void StreamNode::setExposePath(QString path)
 
     for ( quint16 i = 0; i < pcount; ++i )
     {
-        auto property = metaObject()->property(i);
+        auto property = metaObject()->property( i );
         QString name = property.name();
 
         WPNNode* node;
@@ -164,9 +164,12 @@ void StreamNode::setExposePath(QString path)
         else node = parameters->createSubnode(property.name());
 
         node->setTarget ( this, property );
-    }
+    }    
 
-    expose(m_exp_node);
+    auto dblevel = stream->subnodeFromName("dBlevel");
+    dblevel->setDefaultValue( 0 );
+
+    expose( m_exp_node );
 }
 
 void StreamNode::setExposeDevice(WPNDevice* device)
@@ -179,7 +182,7 @@ void StreamNode::setParentStream(StreamNode* stream)
     if ( stream != m_parent_stream)
     {
         m_parent_stream = stream;
-        m_parent_stream->appendSubnode(this);
+        m_parent_stream->appendSubnode( this );
     }
 }
 
@@ -314,10 +317,10 @@ void StreamNode::preinitialize(StreamProperties properties)
     StreamNode::allocateBuffer(m_in, m_num_inputs, properties.block_size);
     StreamNode::allocateBuffer(m_out, m_num_outputs, properties.block_size);
 
-    initialize(properties.block_size);
+    initialize( properties.block_size );
 
     for ( const auto& subnode : m_subnodes )
-        subnode->preinitialize(properties);
+          subnode->preinitialize(properties);
 }
 
 float** StreamNode::preprocess(float** buf, qint64 le)
@@ -329,7 +332,7 @@ float** StreamNode::preprocess(float** buf, qint64 le)
 
         for ( const auto& subnode : m_subnodes )
             if ( subnode->active() && subnode->numInputs() == m_num_outputs )
-                ubuf = subnode->preprocess(ubuf, le);
+                 ubuf = subnode->preprocess(ubuf, le);
 
         return ubuf;
     }
@@ -544,7 +547,7 @@ void AudioStream::start()
     StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
     m_output->setBufferSize(m_world.m_block_size*m_world.numOutputs()*sizeof(float));
 
-    open(QIODevice::ReadOnly);
+    open( QIODevice::ReadOnly );
     m_output->start(this);
 
     qDebug() << "AudioStream buffer size initialized at"
@@ -559,7 +562,7 @@ void AudioStream::stop()
 void AudioStream::restart()
 {
     // no need to reinitialize buffers
-    open(QIODevice::ReadOnly);
+    open( QIODevice::ReadOnly );
     m_output->start(this);
 }
 

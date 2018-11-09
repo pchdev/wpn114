@@ -21,8 +21,8 @@ WPNNode* WPNNode::fromJson(QJsonObject obj, WPNDevice *dev)
 
 void WPNNode::update(QJsonObject obj)
 {
-    setPath           ( obj["FULL_PATH"].toString() );
-    setTypeFromTag    ( obj["TYPE"].toString() );
+    if ( obj.contains("FULL_PATH" )) setPath( obj["FULL_PATH"].toString() );
+    if ( obj.contains("TYPE") ) setTypeFromTag( obj["TYPE"].toString() );
 
     // recursively parse children
     if ( obj.contains("CONTENTS") )
@@ -37,10 +37,11 @@ void WPNNode::update(QJsonObject obj)
         }
     }
 
-    setExtendedType   ( obj["EXTENDED_TYPE"].toString());
-    setAccess         ( static_cast<Access::Values>(obj["ACCESS"].toInt()) );
-    setDescription    ( obj["DESCRIPTION"].toString()) ;
-    setValue          ( obj["VALUE"].toVariant() );
+    if ( obj.contains("EXTENDED_TYPE") ) setExtendedType(obj["EXTENDED_TYPE"].toString());
+    if ( obj.contains("ACCESS")) setAccess(static_cast<Access::Values>(obj["ACCESS"].toInt()));
+    if ( obj.contains("DESCRIPTION")) setDescription(obj["DESCRIPTION"].toString());
+    if ( obj.contains("VALUE")) setValue(obj["VALUE"].toVariant());
+    if ( obj.contains("DEFAULT_VALUE")) setDefaultValue(obj["DEFAULT_VALUE"].toVariant());
 }
 
 WPNNode::WPNNode() : m_device(nullptr), m_parent(nullptr), m_target_property(nullptr), m_target(nullptr)
@@ -134,6 +135,9 @@ void WPNNode::componentComplete()
 
     if ( !m_device ) m_device = WPNDevice::instance();
     if ( m_device && !m_parent ) m_device->link( this );
+
+    if ( m_attributes.value.isNull() )
+         m_attributes.value = m_attributes.default_value;
 }
 
 qint16 WPNNode::index() const
@@ -147,9 +151,9 @@ qint16 WPNNode::index() const
 
 QString WPNNode::parentPath() const
 {
-    auto spl = m_attributes.path.split('/');
-    spl.removeLast();
-    return spl.join('/');
+    auto splitted_path = m_attributes.path.split('/');
+    splitted_path.removeLast();
+    return splitted_path.join('/');
 }
 
 QJsonObject WPNNode::attributesJson() const
@@ -157,7 +161,7 @@ QJsonObject WPNNode::attributesJson() const
     QJsonObject obj;
 
     obj.insert("FULL_PATH", m_attributes.path);
-    obj.insert("ACCESS", static_cast<quint8>(m_attributes.access));    
+    obj.insert("ACCESS", static_cast<quint8>( m_attributes.access ));
 
     if  ( m_attributes.type != Type::None )
     {
@@ -168,7 +172,6 @@ QJsonObject WPNNode::attributesJson() const
 
         if ( !m_attributes.extended_type.isEmpty() )
             obj.insert("EXTENDED_TYPE", m_attributes.extended_type );
-
     }
 
     //obj.insert("TAGS", m_attributes.tags);
@@ -178,11 +181,27 @@ QJsonObject WPNNode::attributesJson() const
     return obj;
 }
 
+QJsonValue WPNNode::attributeValue(QString attr) const
+{
+    if      ( attr == "VALUE" )
+              return QJsonArray { jsonValue() };
+
+    else if ( attr == "DEFAULT_VALUE" )
+              return m_attributes.default_value.toJsonValue();
+
+    return QJsonValue();
+}
+
 QJsonObject WPNNode::attributeJson(QString attr) const
 {
     QJsonObject obj;
 
-    if ( attr == "VALUE" ) obj.insert(attr, QJsonArray{jsonValue()});
+    if      ( attr == "VALUE" )
+              obj.insert(attr, QJsonArray{jsonValue()});
+
+    else if ( attr == "DEFAULT_VALUE" )
+              obj.insert(attr, m_attributes.default_value.toJsonValue());
+
     return obj;
 }
 
@@ -359,6 +378,20 @@ void WPNNode::setValue(QVariant value)
           listener->pushNodeValue(this);
 }
 
+void WPNNode::resetValue(bool recursive)
+{
+    setValue(m_attributes.default_value);
+
+    if ( recursive )
+         for ( const auto& subnode : m_children )
+               subnode.ptr->resetValue( recursive );
+}
+
+void WPNNode::setDefaultValue(QVariant value)
+{
+    m_attributes.default_value = value;
+}
+
 void WPNNode::setType(Type::Values type)
 {
     m_attributes.type = type;
@@ -434,6 +467,15 @@ void WPNNode::removeSubnode(QString path)
         }
 
     if ( idx >= 0 ) m_children.removeAt(idx);
+}
+
+WPNNode* WPNNode::subnodeFromName(QString name)
+{
+    for ( const auto& subnode : m_children )
+         if ( subnode.ptr->name() == name )
+              return subnode.ptr;
+
+    return nullptr;
 }
 
 WPNNode* WPNNode::subnode(QString path)

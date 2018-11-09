@@ -21,7 +21,7 @@
 #include <audio_objects/fork/fork.hpp>
 #include <audio_objects/peakrms/peakrms.hpp>
 #include <audio_objects/convolver/convolver.hpp>
-
+#include <audio_objects/limiter/masterlimiter.hpp>
 #include <audio_objects/clock/audioclock.hpp>
 #endif
 
@@ -66,6 +66,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<TimeNode, 1>          ( "WPN114", 1, 0, "TimeNode" );
     qmlRegisterType<Loop, 1>              ( "WPN114", 1, 0, "Loop" );
     qmlRegisterType<Automation, 1>        ( "WPN114", 1, 0, "Automation" );
+    qmlRegisterType<MasterLimiter, 1>     ( "WPN114", 1, 0, "MasterLimiter" );
 #endif
 
 #ifdef WPN114_MIDI
