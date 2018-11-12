@@ -66,13 +66,15 @@ class WPNDevice : public QObject
     virtual void pushNodeValue  ( WPNNode* node ) = 0;
 
     WPNNode* findOrCreateNode   ( QString path );
-    QString deviceName          ( ) const { return m_name; }
-    WPNNode* rootNode           ( ) { return m_root_node; }
+    QString deviceName          ( ) const { return m_name; }    
     void setDeviceName          ( QString name );
 
-    Q_INVOKABLE void explore    ( ) const;   
-    Q_INVOKABLE QVariant value  ( QString method ) const;
-    Q_INVOKABLE WPNNode* get    ( QString path );    
+    Q_INVOKABLE WPNNode* rootNode   ( ) { return m_root_node; }
+    Q_INVOKABLE void explore        ( ) const;
+    Q_INVOKABLE QVariant value      ( QString method ) const;
+    Q_INVOKABLE WPNNode* get        ( QString path );
+
+    Q_INVOKABLE QVariantList collectNodes ( QString pattern );
 
     Q_INVOKABLE void map       ( WPNDevice*, QString source, QString destination );
     Q_INVOKABLE void mapAll    ( WPNDevice*, QString source );
@@ -86,6 +88,7 @@ class WPNDevice : public QObject
     void link(WPNNode* node);
 
     signals:
+    void presetLoaded   ( );
     void nodeAdded      ( WPNNode* );
     void nodeRemoved    ( QString );
 

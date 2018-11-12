@@ -4,7 +4,6 @@
 #include <src/audio/audio.hpp>
 #include <src/oscquery/device.hpp>
 #include <math.h>
-
 #include <QQmlProperty>
 #include <QMetaProperty>
 
@@ -213,7 +212,6 @@ class Loop : public TimeNode
     quint64 m_times = 0;
     quint64 m_count = 1;
     qreal m_pattern_clock = 0;
-
 };
 
 #endif // AUDIOCLOCK_HPP

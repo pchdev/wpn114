@@ -166,7 +166,7 @@ void StreamNode::setExposePath(QString path)
         node->setTarget ( this, property );
     }    
 
-    auto dblevel = stream->subnodeFromName("dBlevel");
+    auto dblevel = stream->subnode("dBlevel");
     dblevel->setDefaultValue( 0 );
 
     expose( m_exp_node );
@@ -438,6 +438,7 @@ void WorldStream::componentComplete()
     m_stream = new AudioStream(*this, format, device_info);
     m_stream->moveToThread  ( &m_stream_thread );
 
+    QObject::connect( this, &StreamNode::activeChanged, this, &WorldStream::onActiveChanged );
     QObject::connect( this, &WorldStream::startStream, m_stream, &AudioStream::start);
     QObject::connect( this, &WorldStream::stopStream, m_stream, &AudioStream::stop);
     QObject::connect( this, &WorldStream::configure, m_stream, &AudioStream::configure);
@@ -446,6 +447,12 @@ void WorldStream::componentComplete()
     emit configure();
 
     m_stream_thread.start ( QThread::TimeCriticalPriority );
+}
+
+void WorldStream::onActiveChanged()
+{
+    if ( m_active ) start();
+    else stop();
 }
 
 void WorldStream::start()
@@ -601,7 +608,7 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
     quint16 nout    = m_world.m_num_outputs;
     quint16 bsize   = m_world.m_block_size;
     qreal level     = m_world.m_level;
-    float** buf     = m_pool;
+    float** buf     = m_pool;   
 
     StreamNode::resetBuffer(m_pool, nout, bsize);
 
@@ -617,7 +624,6 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
         for ( quint16 s = 0; s < bsize; ++s )
             for ( quint16 ch = 0; ch < pch.size(); ++ch )
                 buf[pch[ch]][s] += cdata[ch][s] * level;
-//                buf[pch[ch]][s] += qMax(qMin(cdata[ch][s]*(float)level, 1.f), 0.f);
     }   
 
     for ( const auto& insert : inserts )

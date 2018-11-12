@@ -71,10 +71,10 @@ class StreamNode : public QObject, public QQmlParserStatus
     QQmlListProperty<StreamNode>  subnodes();
     const QVector<StreamNode*>&   getSubnodes() const { return m_subnodes; }
 
-    void appendSubnode      ( StreamNode* );
-    int subnodesCount       ( ) const;
-    StreamNode* subnode     ( int ) const;
-    void clearSubnodes      ( );
+    void appendSubnode( StreamNode* );
+    Q_INVOKABLE int subnodesCount       ( ) const;
+    Q_INVOKABLE StreamNode* subnode     ( int ) const;
+    Q_INVOKABLE void clearSubnodes      ( );
 
     float** inputBuffer  ( ) const { return m_in; }
     float** outputBuffer ( ) const { return m_out; }
@@ -213,7 +213,7 @@ class WorldStream : public StreamNode
     virtual void componentComplete() override;
 
     Q_INVOKABLE void start  ( );
-    Q_INVOKABLE void stop   ( );
+    Q_INVOKABLE void stop   ( );        
 
     uint32_t sampleRate     ( ) const { return m_sample_rate; }
     uint16_t blockSize      ( ) const { return m_block_size; }
@@ -234,6 +234,9 @@ class WorldStream : public StreamNode
     int insertsCount       ( ) const;
     StreamNode* insert     ( int ) const;
     void clearInserts      ( );
+
+    public slots:
+    void onActiveChanged();
 
     signals:    
     void tick               ( qint64 tick );

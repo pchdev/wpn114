@@ -4,7 +4,7 @@
 
 SpeakerPair::SpeakerPair()
 {
-    setNspeakers(2);
+    setNspeakers( 2 );
 }
 
 void SpeakerPair::setXspread(qreal xspread)
@@ -128,10 +128,13 @@ void RoomNode::setInfluence(QVariant influence)
             m_influences.fill(influence.toDouble(), m_nspeakers);
         else m_influences << influence.toDouble();
     }
+
+    emit influenceChanged();
 }
 
 void RoomNode::setPosition(QVariant position)
 {
+    if ( position == m_position ) return;
     m_position = position;
     m_positions.clear();
 
@@ -155,6 +158,8 @@ void RoomNode::setPosition(QVariant position)
             }
         }
     }
+
+    emit positionChanged();
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -199,6 +204,7 @@ QQmlListProperty<RoomNode> RoomSetup::nodes()
 void RoomSetup::appendNode(RoomNode* node)
 {
     m_nodes.append(node);
+    emit nodesChanged();
 }
 
 int RoomSetup::nodeCount() const
@@ -214,6 +220,7 @@ RoomNode* RoomSetup::node(int index) const
 void RoomSetup::clearNodes()
 {
     m_nodes.clear();
+    emit nodesChanged();
 }
 
 void RoomSetup::appendNode(QQmlListProperty<RoomNode>* list, RoomNode* node)
@@ -287,7 +294,9 @@ void RoomSource::initialize(qint64 nsamples)
 
     // if single source, link 'active' property
     onSingleSourceActiveChanged();
-    QObject::connect( m_subnodes[0], SIGNAL(activeChanged()), this, SLOT(onSingleSourceActiveChanged()) );
+
+    QObject::connect( m_subnodes[0], &StreamNode::activeChanged,
+            this, &RoomSource::onSingleSourceActiveChanged );
 }
 
 void RoomSource::onSingleSourceActiveChanged()
@@ -362,7 +371,7 @@ void RoomChannel::computeCoeffs()
 
 MonoSource::MonoSource() : RoomSource()
 {
-    m_channel.c = QVector3D(0.5, 0.5, 0.5);
+    m_channel.c = QVector3D( 0.5, 0.5, 0.5 );
 }
 
 void MonoSource::allocateCoeffs(QVector<QVector4D> const& speakerset)
@@ -370,7 +379,7 @@ void MonoSource::allocateCoeffs(QVector<QVector4D> const& speakerset)
     auto coeffs = m_channel.coeffs;
     if ( coeffs ) delete coeffs;
 
-    coeffs = new float[speakerset.size()]();
+    coeffs = new float[ speakerset.size() ]();
 
     m_channel.coeffs = coeffs;
     m_channel.speakers = speakerset;
@@ -391,6 +400,8 @@ void MonoSource::componentComplete()
 
     m_w /= 2.0; m_h /= 2.0;
     update();
+
+    emit positionChanged();
 }
 
 void MonoSource::update()
@@ -400,10 +411,10 @@ void MonoSource::update()
         m_channel.diffuse = true;
 
         // rotate todo
-        m_channel.n = QVector3D(m_x, m_y+m_h, 0.5);
-        m_channel.s = QVector3D(m_x, m_y-m_h, 0.5);
-        m_channel.w = QVector3D(m_x-m_w, m_y, 0.5);
-        m_channel.e = QVector3D(m_x+m_w, m_y, 0.5);
+        m_channel.n = QVector3D( m_x, m_y+m_h, 0.5 );
+        m_channel.s = QVector3D( m_x, m_y-m_h, 0.5 );
+        m_channel.w = QVector3D( m_x-m_w, m_y, 0.5 );
+        m_channel.e = QVector3D( m_x+m_w, m_y, 0.5 );
     }
 
     else m_channel.diffuse = false;
@@ -419,15 +430,16 @@ void MonoSource::setPosition(QVector3D position)
 
 void MonoSource::setX(qreal x)
 {
-    m_x = x;
-    m_channel.c.setX(x);
+    m_x = x;    
+    m_channel.c.setX( x );
     update();
 }
 
 void MonoSource::setY(qreal y)
 {
     m_y = y;
-    m_channel.c.setY(y);
+    m_channel.c.setY( y );
+
     update();
 }
 
@@ -451,6 +463,12 @@ void StereoSource::componentComplete()
     RoomSource::componentComplete();
     m_left->componentComplete();
     m_right->componentComplete();
+}
+
+void StereoSource::expose(WPNNode*)
+{
+    m_left->setExposePath   ( m_exp_path+"/left" );
+    m_right->setExposePath  ( m_exp_path+"/right" );
 }
 
 void StereoSource::allocateCoeffs(QVector<QVector4D> const& speakerset)
@@ -523,14 +541,28 @@ void StereoSource::setY(qreal y)
 
 //---------------------------------------------------------------------------------------------------------
 
-Rooms::Rooms() {}
+Rooms::Rooms() : m_setup(nullptr) {}
 
 void Rooms::setSetup(RoomSetup* setup)
 {
-    m_setup     = setup;
-    m_speakers  = setup->speakers();
+    if ( m_setup == setup ) return;
+    m_setup = setup;
+    emit setupChanged();
+}
 
-    SETN_OUT ( setup->nspeakers() );
+void Rooms::componentComplete()
+{
+    if ( m_setup )
+    {
+        m_speakers = m_setup->speakers();
+        SETN_OUT ( m_setup->nspeakers());
+    }
+    else
+    {
+        setActive   ( false );
+        SETN_OUT    ( 0 );
+    }
+
 }
 
 void Rooms::initialize(qint64 nsamples)

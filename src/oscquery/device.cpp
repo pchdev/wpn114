@@ -160,6 +160,19 @@ void WPNDevice::onNodeRemoved(QString path)
     emit nodeRemoved(path);
 }
 
+QVariantList WPNDevice::collectNodes(QString pattern)
+{
+    QVector<WPNNode*> vec;
+    QVariantList result;
+
+    m_root_node->collect(pattern, vec);
+
+    for ( const auto& node : vec )
+          result << QVariant::fromValue<WPNNode*>(node);
+
+    return result;
+}
+
 void WPNDevice::map(WPNDevice* device, QString source, QString destination)
 {
     m_maps.push_back({ device, source, destination, false });
@@ -232,7 +245,7 @@ void WPNDevice::savePreset(QString name, QStringList filters, QStringList attrib
 
 void WPNDevice::loadPreset(QString name)
 {
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+    QString path = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation )
             .append("/presets/");
 
     QFile file( path+name );
@@ -254,5 +267,7 @@ void WPNDevice::loadPreset(QString name)
 
         node->update( obj );
     }
+
+    emit presetLoaded();
 }
 

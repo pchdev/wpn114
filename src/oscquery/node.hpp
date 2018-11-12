@@ -118,6 +118,8 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
 
     public:
     WPNNode();
+    WPNNode(const WPNNode&) {}
+
     virtual ~WPNNode();
 
     static WPNNode* fromJson(QJsonObject, WPNDevice* dev);
@@ -167,8 +169,7 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     QVariant defaultValue       ( ) const { return m_attributes.default_value; }
 
     Q_INVOKABLE void resetValue  ( bool recursive = false );
-    Q_INVOKABLE void setValue    ( QVariant value );
-    Q_INVOKABLE void collect     ( QString pattern, QVector<WPNNode*>& rec );
+    Q_INVOKABLE void setValue    ( QVariant value );   
 
     void setPath            ( QString path );
     void setType            ( Type::Values type );
@@ -187,12 +188,13 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
 
     // tree/hierarchy ----------------------------------------------------
 
-    Q_INVOKABLE WPNNode* subnodeFromName ( QString name );
+    void collect( QString pattern, QVector<WPNNode*>& rec );
 
-    Q_INVOKABLE WPNNode* subnode     ( QString path );
-    Q_INVOKABLE WPNNode* subnodeAt   ( int index );
+    Q_INVOKABLE QVariantList collect   ( QString name );
+    Q_INVOKABLE WPNNode* subnode       ( QString path );
+    Q_INVOKABLE WPNNode* subnodeAt     ( int index );
+
     Q_INVOKABLE quint16 nsubnodes    ( ) const { return m_children.size(); }
-
     QVector<WPNNodePointer> subnodes ( ) const { return m_children; }
 
     WPNNode* createSubnode  ( QString name );
@@ -231,4 +233,4 @@ class WPNNode : public QObject, public QQmlParserStatus, public QQmlPropertyValu
     QVector<WPNDevice*>      m_listeners;
 };
 
-
+Q_DECLARE_METATYPE( WPNNode )

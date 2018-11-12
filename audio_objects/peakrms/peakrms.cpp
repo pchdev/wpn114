@@ -53,7 +53,7 @@ void PeakRMS::bufferComplete()
             mean [ ch ] += pow  ( block[ch][s], 2 );
         }
 
-        mean[ch] = sqrt(1.0/bsize*mean[ch]);
+        mean[ch] = sqrt( 1.0/bsize*mean[ch] );
 
         max  [ ch ]  = std::log10( max[ch]  ) *20.f;
         mean [ ch ]  = std::log10( mean[ch] ) *20.f;

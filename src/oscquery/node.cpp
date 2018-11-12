@@ -249,7 +249,7 @@ void WPNNode::setTarget(QObject* sender, const QMetaProperty& property)
              mmethod = metaObject()->method(i);
 
     if ( property.hasNotifySignal() )
-         QObject::connect(sender, property.notifySignal(), this, mmethod );
+         QObject::connect( sender, property.notifySignal(), this, mmethod );
 }
 
 void WPNNode::metaPropertyChanged()
@@ -460,26 +460,22 @@ void WPNNode::removeSubnode(QString path)
     qint16 idx = -1;
 
     for ( qint16 i = 0; i < m_children.size(); ++i )
+    {
         if ( m_children[i].path == path )
         {
             idx = i;
             break;
         }
+    }
 
     if ( idx >= 0 ) m_children.removeAt(idx);
 }
 
-WPNNode* WPNNode::subnodeFromName(QString name)
-{
-    for ( const auto& subnode : m_children )
-         if ( subnode.ptr->name() == name )
-              return subnode.ptr;
-
-    return nullptr;
-}
-
 WPNNode* WPNNode::subnode(QString path)
 {
+    if ( !path.startsWith( '/' ))
+         path.prepend( m_attributes.path+"/" );
+
     for ( const auto& subnode : m_children )
         if ( subnode.path == path )
              return subnode.ptr;
@@ -523,4 +519,17 @@ void WPNNode::collect(QString name, QVector<WPNNode*>& rec )
 
         subnode.ptr->collect( name, rec );
     }
+}
+
+QVariantList WPNNode::collect( QString name )
+{
+    QVector<WPNNode*> vec;
+    QVariantList result;
+
+    collect(name, vec);
+
+    for ( const auto& node : vec )
+          result << QVariant::fromValue<WPNNode*>(node);
+
+    return result;
 }

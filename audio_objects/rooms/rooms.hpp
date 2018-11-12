@@ -13,8 +13,8 @@ class RoomNode : public QObject, public QQmlParserStatus
     Q_INTERFACES    ( QQmlParserStatus )
 
     Q_PROPERTY  ( int nspeakers READ nspeakers WRITE setNspeakers )
-    Q_PROPERTY  ( QVariant influence READ influence WRITE setInfluence )
-    Q_PROPERTY  ( QVariant position READ position WRITE setPosition )
+    Q_PROPERTY  ( QVariant influence READ influence WRITE setInfluence NOTIFY influenceChanged )
+    Q_PROPERTY  ( QVariant position READ position WRITE setPosition NOTIFY positionChanged )
 
     public:
     RoomNode();
@@ -35,6 +35,10 @@ class RoomNode : public QObject, public QQmlParserStatus
     QVector<qreal> influences    () const { return m_influences; }
 
     QVector4D speakerData(quint16 index) const;
+
+    signals:
+    void influenceChanged();
+    void positionChanged();
 
     protected:
     QVariant m_influence;
@@ -112,7 +116,7 @@ class RoomSetup : public QObject, public QQmlParserStatus
     Q_OBJECT
     Q_CLASSINFO ( "DefaultProperty", "nodes" )
     Q_PROPERTY  ( int nspeakers READ nspeakers )
-    Q_PROPERTY  ( QQmlListProperty<RoomNode> nodes READ nodes )
+    Q_PROPERTY  ( QQmlListProperty<RoomNode> nodes READ nodes NOTIFY nodesChanged )
 
     public:
     RoomSetup();
@@ -131,6 +135,9 @@ class RoomSetup : public QObject, public QQmlParserStatus
     int nodeCount       ( ) const;
     RoomNode* node      ( int ) const;
     void clearNodes     ( );
+
+    signals:
+    void nodesChanged();
 
     private:
     static void appendNode  ( QQmlListProperty<RoomNode>*, RoomNode*);
@@ -217,7 +224,7 @@ class RoomSource : public StreamNode
 class MonoSource : public RoomSource
 {
     Q_OBJECT
-    Q_PROPERTY  ( QVector3D position READ position WRITE setPosition )
+    Q_PROPERTY  ( QVector3D position READ position WRITE setPosition NOTIFY positionChanged )
 
     public:
     MonoSource();
@@ -234,6 +241,9 @@ class MonoSource : public RoomSource
 
     QVector3D position  ( ) const { return m_channel.c; }
     void setPosition    ( QVector3D position );
+
+    signals:
+    void positionChanged();
 
     protected:
     void update() override;
@@ -257,11 +267,12 @@ class StereoSource : public RoomSource
     ~StereoSource();
 
     virtual void componentComplete() override;
-
     virtual quint16 nchannels ( ) const override { return 2; }
 
     virtual void allocateCoeffs ( QVector<QVector4D> const& speakerset ) override;
     virtual RoomChannel& channel(quint16 channel) override;
+
+    virtual void expose(WPNNode*) override;
 
     qreal xspread       ( ) const { return m_xspread; }
     qreal yspread       ( ) const { return m_yspread; }
@@ -289,7 +300,7 @@ class Rooms : public StreamNode
 {
     Q_OBJECT
 
-    Q_PROPERTY  ( RoomSetup* setup READ setup WRITE setSetup )
+    Q_PROPERTY  ( RoomSetup* setup READ setup WRITE setSetup NOTIFY setupChanged )
 
     public:
     Rooms();
@@ -297,9 +308,14 @@ class Rooms : public StreamNode
     RoomSetup* setup() const { return m_setup; }
     void setSetup(RoomSetup* setup);
 
+    virtual void componentComplete() override;
+
     virtual float** preprocess  ( float** buf, qint64 le ) override;
     virtual float** process     ( float** buf, qint64 le ) override {}
     virtual void initialize     ( qint64 ) override;
+
+    signals:
+    void setupChanged();
 
     private:    
     QVector<QVector4D> m_speakers;
