@@ -235,7 +235,7 @@ void WPNDevice::savePreset(QString name, QStringList filters, QStringList attrib
          obj.insert( "FULL_PATH", node->path()  );
 
          for ( const auto& attribute : attributes )
-             obj.insert( attribute, node->attributeValue(attribute) );
+             obj.insert( attribute, node->attributeValue( attribute ) );
 
          arr.append( obj );
      }

@@ -35,7 +35,6 @@ void TimeNode::setDate(qreal date)
     m_date = date;
 }
 
-
 void TimeNode::setExposeDevice(WPNDevice* device)
 {
     m_expose_device = device;

@@ -109,8 +109,8 @@ void StreamNode::setLevel(qreal level)
         m_level = level;
         m_db_level = std::log10(level)*20.0;
 
-        emit levelChanged();
-        emit dBlevelChanged();
+        emit levelChanged   ( );
+        emit dBlevelChanged ( );
     }
 }
 
@@ -128,11 +128,12 @@ void StreamNode::setLevelNoDb(qreal level)
 void StreamNode::setDBlevel(qreal db)
 {
     m_db_level = db;
-    setLevelNoDb(std::pow(10.f, db*.05));
+    setLevelNoDb( std::pow(10.f, db*.05) );
 }
 
 void StreamNode::setExposePath(QString path)
 {
+    if ( m_exp_path == path ) return;
     m_exp_path = path;
 
     if ( m_exp_device )

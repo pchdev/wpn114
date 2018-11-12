@@ -41,6 +41,13 @@ class TimeNode : public QObject, public QQmlParserStatus
         return (s*60.0+((m-s)*100.0))*1000.0;
     }
 
+    enum Duration
+    {
+        Infinite = -1
+    };
+
+    Q_ENUM ( Duration )
+
     QQmlListProperty<TimeNode>  subnodes();
     const QVector<TimeNode*>&   getSubnodes() const { return m_subnodes; }
 
@@ -172,7 +179,6 @@ class Automation : public TimeNode
     QObject* m_target;
     QString m_property_str;
     QMetaProperty m_property;
-
 };
 
 class Loop : public TimeNode

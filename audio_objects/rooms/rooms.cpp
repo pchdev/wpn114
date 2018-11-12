@@ -562,7 +562,6 @@ void Rooms::componentComplete()
         setActive   ( false );
         SETN_OUT    ( 0 );
     }
-
 }
 
 void Rooms::initialize(qint64 nsamples)

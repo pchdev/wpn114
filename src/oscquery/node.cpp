@@ -133,6 +133,8 @@ void WPNNode::componentComplete()
             propertyChanged();
     }
 
+    if ( m_target ) metaPropertyChanged();
+
     if ( !m_device ) m_device = WPNDevice::instance();
     if ( m_device && !m_parent ) m_device->link( this );
 
@@ -226,7 +228,7 @@ void WPNNode::setTypeFromMetaType(int type)
 void WPNNode::setTarget(const QQmlProperty& property)
 {
     m_target_property = property;    
-    setTypeFromMetaType(property.propertyType());
+    setTypeFromMetaType( property.propertyType() );
 
     m_attributes.value = property.read();
     m_target_property.connectNotifySignal( this, SLOT(propertyChanged()) );
@@ -352,6 +354,7 @@ void WPNNode::post() const
 
 void WPNNode::setPath(QString path)
 {
+    if ( m_attributes.path == path ) return;
     m_attributes.path = path;
 }
 
