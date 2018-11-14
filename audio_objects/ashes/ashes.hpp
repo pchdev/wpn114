@@ -1,17 +1,29 @@
 #ifndef ASHES_H
 #define ASHES_H
 
-#include <src/audiobackend.hpp>
+#include <src/audio/audio.hpp>
 
-class Ashes : public AudioObject, public QQmlParserStatus
+#define PINK_MAX_RANDOM_ROWS    ( 30 )
+#define PINK_RANDOM_BITS        ( 24 )
+#define PINK_RANDOM_SHIFT       ( (sizeof(long)*8)-PINK_RANDOM_BITS )
+
+class Ashes : public StreamNode
 {
     Q_OBJECT
 
-public:
+    public:
     Ashes();
-    virtual void classBegin()           override;
-    virtual void componentComplete()    override;
-    virtual float** process(const quint16 nsamples) override;
+
+    virtual void initialize(qint64) override;
+    virtual float** process(float**, qint64) override;
+
+    private:
+    qint64 m_rows[PINK_MAX_RANDOM_ROWS];
+    qint64 m_running_sum = 0;
+    qint32 m_index = 0;
+    qint32 m_index_mask;
+    float m_scalar;
+
 
 };
 

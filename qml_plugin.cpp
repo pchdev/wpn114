@@ -23,6 +23,7 @@
 #include <audio_objects/convolver/convolver.hpp>
 #include <audio_objects/limiter/masterlimiter.hpp>
 #include <audio_objects/clock/audioclock.hpp>
+#include <audio_objects/ashes/ashes.hpp>
 #endif
 
 #ifdef WPN114_MIDI
@@ -67,6 +68,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<Loop, 1>              ( "WPN114", 1, 0, "Loop" );
     qmlRegisterType<Automation, 1>        ( "WPN114", 1, 0, "Automation" );
     qmlRegisterType<MasterLimiter, 1>     ( "WPN114", 1, 0, "MasterLimiter" );
+    qmlRegisterType<Ashes, 1>             ( "WPN114", 1, 0, "Ashes" );
 #endif
 
 #ifdef WPN114_MIDI

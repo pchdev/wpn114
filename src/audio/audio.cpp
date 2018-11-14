@@ -194,16 +194,13 @@ QVector<quint16> StreamNode::parentChannelsVec() const
     QVector<quint16> res;
 
     if ( m_parent_channels.type() == QMetaType::QVariantList )
-    {
         for ( const auto& ch : m_parent_channels.toList() )
             res << ch.toInt();
-    }
 
     else if ( m_parent_channels.type() == QMetaType::Int )
         res << m_parent_channels.toInt();
 
     return res;
-
 }
 
 void StreamNode::setParentChannels(QVariant pch)

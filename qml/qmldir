@@ -5,3 +5,4 @@ classname qml_plugin
 
 VUMeter 1.0 VUMeter.qml
 PushDevice 1.0 PushDevice.qml
+PinkAudio 1.0 PinkAudio.qml

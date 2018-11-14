@@ -25,51 +25,52 @@ Item
     signal aftertouch   ( int idx, int value );
     signal pressure     ( int value );
 
-    function light_button ( index, mode )
+    function lightButton ( index, mode )
     {
         midi_hdl.control(0, index, mode);
     }
 
-    function light_pad ( index, color, mode )
+    function lightPad ( index, color, mode )
     {
         midi_hdl.noteOn(mode, index+36, color );
     }
 
-    function light_toggle ( row, idx, mode )
+    function lightToggle ( row, idx, mode )
     {
         midi_hdl.control(0, row+idx, mode );
     }
 
-    function lcd_display ( row, column, str )
+    function lcdDisplay ( row, column, str )
     {
         var sysx = [ 240, 71, 127, 21, 24+row, 0, str.length+1, column, str, 247 ];
         midi_hdl.sendVariant(sysx);
     }
 
-    function lcd_clearline ( idx )
+    function lcdClearline ( idx )
     {
         var sysx = [ 240, 71, 127, 21, 28+idx, 0, 0, 247 ];
         midi_hdl.sendVariant(sysx);
     }
 
-    function lcd_clear ( )
+    function lcdClearAll ( )
     {
-        for ( var i = 0; i < 4; ++ i ) lcd_clearline(i);
+        for ( var i = 0; i < 4; ++ i )
+              lcdClearline(i);
     }
 
-    function padgrid_clear ( )
+    function padGridClear ( )
     {
         for ( var i = 36; i < 100; ++i )
             midi_hdl.noteOn(0, i, 0);
     }
 
-    function set_pitch_bend ( )
+    function setPitchBend ( )
     {
         var sysx = [ 240, 71, 127, 21, 99, 0, 1, 5, 247 ];
         midi_hdl.sendVariant(sysx);
     }
 
-    function set_modwheel ( )
+    function setModwheel ( )
     {
         var sysx = [ 240, 71, 127, 21, 99, 0, 1, 9, 247 ];
         midi_hdl.sendVariant(sysx);
@@ -106,6 +107,7 @@ Item
             else if ( index === Push.CommandButtons.OctaveUp && value) root.octaveUp();
             else if ( index === Push.CommandButtons.Session && value ) root.session();
             else if ( index === Push.CommandButtons.Note && value ) root.track();
+            else if ( index === Push.CommandButtons.Play && value ) root.play();
         }
 
         onNoteOnReceived:
