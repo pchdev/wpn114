@@ -55,9 +55,9 @@ class Mangler : public StreamNode
     qreal m_dry_out         = -3.0;
     qreal m_wet_out         = -3.0;
     qreal m_bad_resampler   = 12000.0;
-    int m_bitcrusher        = true;
+    int m_bitcrusher        = 0;
     qreal m_thermonuclear   = 0.0;
-    int m_bitdepth          = 8.0;
+    int m_bitdepth          = 8;
     qreal m_gate            = 0.0;
     qreal m_love            = 75.0;
     qreal m_jive            = 15.0;
@@ -78,15 +78,16 @@ class Mangler : public StreamNode
 
     float sample_csr = 0;
     float per_sample = 0;
-    float last_sample = 0;
+    float last_spl0 = 0;
+    float last_spl1 = 0;
     float next_sample = 0;
 
     // -------
 
-    float v0 = 0.f;
-    float v1 = 0.f;
-    float hv0 = 0.f;
-    float hv1 = 0.f;
+    float v0L = 0.f, v0R = 0.f;
+    float v1L = 0.f, v1R = 0.F;
+    float hv0L = 0.f, hv0R = 0.f;
+    float hv1L = 0.f, hv1R = 0.f;
 
 };
 
