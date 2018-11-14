@@ -45,9 +45,16 @@ QJsonObject HostSettings::toJson() const
 }
 
 WPNDevice* WPNDevice::m_singleton;
+QVector<WPNNode*> WPNDevice::s_registered_nodes;
+
 WPNDevice* WPNDevice::instance()
 {
     return m_singleton;
+}
+
+void WPNDevice::registerNode(WPNNode* node)
+{
+    s_registered_nodes.push_back(node);
 }
 
 WPNDevice::WPNDevice() : m_singleDevice(false), m_node_tree(nullptr)
@@ -56,6 +63,13 @@ WPNDevice::WPNDevice() : m_singleDevice(false), m_node_tree(nullptr)
     m_root_node ->setPath("/");
 
     m_node_tree = new WPNNodeTree( m_root_node );
+}
+
+void WPNDevice::componentComplete()
+{
+    if ( m_singleDevice )
+        for ( const auto& node : s_registered_nodes )
+              link( node );
 }
 
 WPNDevice::~WPNDevice()

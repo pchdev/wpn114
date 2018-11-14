@@ -10,7 +10,7 @@
 #include <src/http/http.hpp>
 #include <qzeroconf.h>
 
-class WPNQueryServer : public WPNDevice, public QQmlParserStatus
+class WPNQueryServer : public WPNDevice
 {
     Q_OBJECT
 

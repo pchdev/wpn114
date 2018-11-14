@@ -108,6 +108,7 @@ void WPNNode::setName( QString name )
 
 void WPNNode::setDevice( WPNDevice* device )
 {
+    if ( m_device == device ) return;
     m_device = device;
 }
 
@@ -130,12 +131,13 @@ void WPNNode::componentComplete()
         // workaround for incorrect initialization of some js 'array' properties
         QVariant v = m_target_property.read();
         if ( QString(v.typeName()) == "QJSValue")
-            propertyChanged();
+             propertyChanged();
     }
 
     if ( m_target ) metaPropertyChanged();
 
     if ( !m_device ) m_device = WPNDevice::instance();
+    if ( !m_device ) WPNDevice::registerNode( this );
     if ( m_device && !m_parent ) m_device->link( this );
 
     if ( m_attributes.value.isNull() )
@@ -354,7 +356,7 @@ void WPNNode::post() const
 
 void WPNNode::setPath(QString path)
 {
-    if ( m_attributes.path == path ) return;
+//    if ( m_attributes.path == path ) return;
     m_attributes.path = path;
 }
 

@@ -46,6 +46,8 @@ WPNQueryServer::~WPNQueryServer()
 
 void WPNQueryServer::componentComplete()
 {    
+    WPNDevice::componentComplete();
+
     QObject::connect( this, &WPNQueryServer::startNetwork, m_ws_server, &WPNWebSocketServer::listen );
     QObject::connect( this, &WPNQueryServer::startNetwork, m_osc_hdl, &OSCHandler::listen);
     QObject::connect( this, &WPNQueryServer::stopNetwork, m_ws_server, &WPNWebSocketServer::stop);

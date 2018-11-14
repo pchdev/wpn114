@@ -68,6 +68,8 @@ void WPNQueryClient::setRemoteUdpPort(quint16 port)
 
 void WPNQueryClient::componentComplete()
 {
+    WPNDevice::componentComplete();
+
     if      ( !m_host_addr.isEmpty()) start();
     else if ( !m_zconf_host.isEmpty() )
     {

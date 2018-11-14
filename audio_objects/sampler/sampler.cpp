@@ -15,7 +15,7 @@ StreamSampler::StreamSampler() : StreamNode()
         m_release_env[i]  = 1.f-env_value;
     }
 
-    setActive(false);
+    setActive( false );
 }
 
 StreamSampler::~StreamSampler()
@@ -164,14 +164,14 @@ void StreamSampler::initialize(qint64)
 
     // load crossfade buffer
     m_xfade_buffer = new float[ BUFSTREAM_MAX_XFADELEN*SAMPLERATE*m_num_outputs ]();
-    m_soundfile->buffer(m_xfade_buffer, m_start*srate, BUFSTREAM_MAX_XFADELEN*SAMPLERATE );
+    m_soundfile->buffer( m_xfade_buffer, m_start*srate, BUFSTREAM_MAX_XFADELEN*SAMPLERATE );
 
     // start streamer thread, load first buffer
     // start sample is the end of the 'up' xfade
     // as it is already handled by the xfade buffer
     m_streamer->setStartSample( m_xfade_length );
     m_streamer_thread.start( QThread::LowPriority );
-    emit next(m_current_buffer);
+    emit next( m_current_buffer );
 }
 
 void StreamSampler::onNextBufferReady()
@@ -188,7 +188,7 @@ void StreamSampler::play()
     }
 
     else m_playing = true;
-    if ( !m_active ) setActive(true);
+    if ( !m_active ) setActive( true );
 }
 
 void StreamSampler::stop()
@@ -269,7 +269,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
             return out;
         }
 
-        if ( spos == xfade_length && bpos == 0 ) emit next(m_next_buffer);
+        if ( spos == xfade_length && bpos == 0 ) emit next( m_next_buffer );
         if ( bpos == bufnsamples )
         {
             // if reaching the end of current buffer
@@ -281,7 +281,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
             m_next_buffer         = tmp;
             m_next_buffer_ready   = false;
 
-            emit next(m_next_buffer);
+            emit next( m_next_buffer );
             bpos = 0;
         }
 
@@ -293,11 +293,20 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
             float x     = (float) attack_phase-y;
             float e     = lininterp(x, attack[y], attack[y+1]);
 
-            for ( quint16 ch = 0; ch < nch; ++ch )
-                out[ch][s] = *xfdata++*e;
+            if ( loop )
+            {
+                for ( quint16 ch = 0; ch < nch; ++ch )
+                    out[ch][s] = *xfdata++*e;
+                xpos++;
+            }
+            else
+            {
+                for ( quint16 ch = 0; ch < nch; ++ch )
+                    out[ch][s] = *bufdata++*e;
+                bpos++;
+            }
 
             spos++;
-            xpos++;
             attack_phase += attack_inc;
         }
 
@@ -388,7 +397,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
             if ( release_phase >= release_end )
             {                
                 reset();
-                emit reset(m_current_buffer);
+                emit reset( m_current_buffer );
 
                 m_playing       = false;
                 setActive       ( false );

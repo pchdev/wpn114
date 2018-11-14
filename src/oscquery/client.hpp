@@ -9,7 +9,7 @@
 #include <QNetworkAccessManager>
 #include <QThread>
 
-class WPNQueryClient : public WPNDevice, public QQmlParserStatus
+class WPNQueryClient : public WPNDevice
 {
     Q_OBJECT
     Q_PROPERTY  ( QString hostAddr READ hostAddr WRITE setHostAddr NOTIFY hostAddrChanged )

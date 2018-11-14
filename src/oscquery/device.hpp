@@ -49,19 +49,25 @@ struct WPNValueMap
     bool listen_all;
 };
 
-class WPNDevice : public QObject
+class WPNDevice : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_PROPERTY  ( QString deviceName READ deviceName WRITE setDeviceName )
-    Q_PROPERTY ( bool singleDevice READ singleDevice WRITE setSingleDevice )
+    Q_INTERFACES    ( QQmlParserStatus )
+
+    Q_PROPERTY      ( QString deviceName READ deviceName WRITE setDeviceName )
+    Q_PROPERTY      ( bool singleDevice READ singleDevice WRITE setSingleDevice )
 
     public:
     WPNDevice  ( );
     ~WPNDevice ( );
 
     static WPNDevice* instance();
+    static void registerNode(WPNNode* node);
     bool singleDevice() { return m_singleDevice; }
     void setSingleDevice(bool single);
+
+    virtual void componentComplete() override;
+    virtual void classBegin() override {}
 
     virtual void pushNodeValue  ( WPNNode* node ) = 0;
 
@@ -99,6 +105,7 @@ class WPNDevice : public QObject
     protected:
     bool m_singleDevice;
     static WPNDevice* m_singleton;
+    static QVector<WPNNode*> s_registered_nodes;
 
     QString       m_name;
     WPNNode*      m_root_node;
