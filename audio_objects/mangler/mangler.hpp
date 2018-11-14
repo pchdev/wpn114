@@ -12,6 +12,7 @@ class Mangler : public StreamNode
     Q_OBJECT
 
     Q_PROPERTY  ( qreal inputGain READ inputGain WRITE setInputGain )
+    Q_PROPERTY  ( qreal wetOut READ wetOut WRITE setWetOut )
     Q_PROPERTY  ( qreal dryOut READ dryOut WRITE setDryOut )
     Q_PROPERTY  ( qreal badResampler READ badResampler WRITE setBadResampler )
     Q_PROPERTY  ( int bitcrusher READ bitcrusher WRITE setBitcrusher )
@@ -29,6 +30,7 @@ class Mangler : public StreamNode
     virtual float** process ( float**, qint64 ) override;
 
     qreal inputGain         ( ) const { return m_input_gain; }
+    qreal wetOut            ( ) const { return m_wet_out; }
     qreal dryOut            ( ) const { return m_dry_out; }
     qreal badResampler      ( ) const { return m_bad_resampler; }
     int bitcrusher          ( ) const { return m_bitcrusher; }
@@ -41,6 +43,7 @@ class Mangler : public StreamNode
 
     void setInputGain       ( qreal input_gain ) { m_input_gain = input_gain; }
     void setDryOut          ( qreal dry_out ) { m_dry_out = dry_out; }
+    void setWetOut          ( qreal wet_out ) { m_wet_out = wet_out; }
     void setBadResampler    ( qreal bad_resampler ) { m_bad_resampler = bad_resampler; }
     void setBitcrusher      ( int bitcrusher ) { m_bitcrusher = bitcrusher; }
     void setThermonuclear   ( qreal thermonuclear ) { m_thermonuclear = thermonuclear; }

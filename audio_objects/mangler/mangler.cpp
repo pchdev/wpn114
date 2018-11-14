@@ -9,7 +9,7 @@ Mangler::Mangler()
 }
 
 void Mangler::setBitPattern( quint16 index,
-                             qint8 b1, qint8 b2, qint8 b3, qint8 b4, qint8 b5, qint8 b6, qint8 b7, qint8 b8 )
+qint8 b1, qint8 b2, qint8 b3, qint8 b4, qint8 b5, qint8 b6, qint8 b7, qint8 b8 )
 {
     qint8* ptr = &lut[ index ];
     *ptr++ = b1; *ptr++ = b2; *ptr++ = b3; *ptr++ = b4;
@@ -127,6 +127,9 @@ float** Mangler::process(float** in, qint64 nsamples)
             lut[ bit_2 ] = 1;
         }
     }
+
+    if ( bit_1 < 0 ) bit_1 = 0;
+    if ( bit_2 < 0 ) bit_2 = 0;
 
     float clear_mask_1  = 0, clear_mask_2   = 0;
     float xor_mask_1    = 0, xor_mask_2     = 0;
