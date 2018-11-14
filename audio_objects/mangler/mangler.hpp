@@ -14,7 +14,7 @@ class Mangler : public StreamNode
     Q_PROPERTY  ( qreal inputGain READ inputGain WRITE setInputGain )
     Q_PROPERTY  ( qreal dryOut READ dryOut WRITE setDryOut )
     Q_PROPERTY  ( qreal badResampler READ badResampler WRITE setBadResampler )
-    Q_PROPERTY  ( bool bitcrusher READ bitcrusher WRITE setBitcrusher )
+    Q_PROPERTY  ( int bitcrusher READ bitcrusher WRITE setBitcrusher )
     Q_PROPERTY  ( qreal thermonuclear READ thermonuclear WRITE setThermonuclear )
     Q_PROPERTY  ( int bitdepth READ bitdepth WRITE setBitdepth )
     Q_PROPERTY  ( qreal gate READ gate WRITE setGate )
@@ -31,7 +31,7 @@ class Mangler : public StreamNode
     qreal inputGain         ( ) const { return m_input_gain; }
     qreal dryOut            ( ) const { return m_dry_out; }
     qreal badResampler      ( ) const { return m_bad_resampler; }
-    bool bitcrusher         ( ) const { return m_bitcrusher; }
+    int bitcrusher          ( ) const { return m_bitcrusher; }
     qreal thermonuclear     ( ) const { return m_thermonuclear; }
     int bitdepth            ( ) const { return m_bitdepth; }
     qreal gate              ( ) const { return m_gate; }
@@ -42,7 +42,7 @@ class Mangler : public StreamNode
     void setInputGain       ( qreal input_gain ) { m_input_gain = input_gain; }
     void setDryOut          ( qreal dry_out ) { m_dry_out = dry_out; }
     void setBadResampler    ( qreal bad_resampler ) { m_bad_resampler = bad_resampler; }
-    void setBitcrusher      ( bool bitcrusher ) { m_bitcrusher = bitcrusher; }
+    void setBitcrusher      ( int bitcrusher ) { m_bitcrusher = bitcrusher; }
     void setThermonuclear   ( qreal thermonuclear ) { m_thermonuclear = thermonuclear; }
     void setBitdepth        ( int bitdepth ) { m_bitdepth = bitdepth; }
     void setGate            ( qreal gate ) { m_gate = gate; }
@@ -55,7 +55,7 @@ class Mangler : public StreamNode
     qreal m_dry_out         = -3.0;
     qreal m_wet_out         = -3.0;
     qreal m_bad_resampler   = 12000.0;
-    bool m_bitcrusher       = true;
+    int m_bitcrusher        = true;
     qreal m_thermonuclear   = 0.0;
     int m_bitdepth          = 8.0;
     qreal m_gate            = 0.0;
@@ -63,12 +63,14 @@ class Mangler : public StreamNode
     qreal m_jive            = 15.0;
     int m_attitude          = 1;
 
+    void setBitPattern ( quint16 index,
+    qint8 b1, qint8 b2, qint8 b3, qint8 b4, qint8 b5, qint8 b6, qint8 b7, qint8 b8 );
+
     // -----
     float itm1 = 0, itm2 = 0, otm1 = 0, otm2 = 0;
     float dcshift = 1;
-    float relgain = 0;
-    float lut_start = 128;
-    float* lut; //??
+    float relgain[ 17 ];
+    qint8 lut[ 136 ];
     float shaper_amt = 0.857f;
     float shaper_amt_2 = 0.9f;
 
@@ -78,6 +80,13 @@ class Mangler : public StreamNode
     float per_sample = 0;
     float last_sample = 0;
     float next_sample = 0;
+
+    // -------
+
+    float v0 = 0.f;
+    float v1 = 0.f;
+    float hv0 = 0.f;
+    float hv1 = 0.f;
 
 };
 
