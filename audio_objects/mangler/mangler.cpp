@@ -283,8 +283,8 @@ float** Mangler::process(float** in, qint64 nsamples)
         s0 *= wet_gain;
         s1 *= wet_gain;
 
-        s0 = ( 1.f+shaper_amt_2 )*s0/(1.f+shaper_amt_2*abs(s0) );
-        s1 = ( 1.f+shaper_amt_2 )*s1/(1.f+shaper_amt_2*abs(s1) );
+        s0 = ( 1.f+shaper_amt_2 )*s0/(1.f+shaper_amt_2*fabs(s0) );
+        s1 = ( 1.f+shaper_amt_2 )*s1/(1.f+shaper_amt_2*fabs(s1) );
 
         // dcfilter --------------------------------------
         otm1 = 0.99f*otm1+s0-itm1; itm1 = s0; s0 = otm1;
@@ -304,3 +304,5 @@ float** Mangler::process(float** in, qint64 nsamples)
 
     return out;
 }
+
+// 05.45.38
