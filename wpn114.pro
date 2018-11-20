@@ -41,6 +41,8 @@ vst {
 
 audio {
     #QT += multimedia
+    INCLUDEPATH += /usr/local/opt/portaudio/include
+    LIBS += -L/usr/local/opt/portaudio/lib/ -lportaudio
     DEFINES += WPN114_AUDIO
     SOURCES +=                                      \
         src/audio/audio.cpp                         \

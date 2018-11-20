@@ -11,6 +11,7 @@
 #include <QVector>
 #include <src/oscquery/device.hpp>
 #include <QThread>
+#include <portaudio.h>
 
 struct StreamProperties
 {
@@ -151,45 +152,41 @@ class StreamNode : public QObject, public QQmlParserStatus
 
 class WorldStream;
 
-class AudioStream : public QIODevice
+class AudioStream : public QObject
 {
      Q_OBJECT
 
     public:
-    AudioStream  ( const WorldStream& world, QAudioFormat format, QAudioDeviceInfo info);
-    ~AudioStream ( ) override;
-
-    virtual qint64 readData  ( char*, qint64 )        override;
-    virtual qint64 writeData ( const char*, qint64 )  override;
-    virtual qint64 bytesAvailable ( )                 const override;
+    AudioStream  ( const WorldStream& world, PaStreamParameters parameters, PaDeviceInfo info);
+    ~AudioStream ( );
 
     qint64 uclock( ) const;
 
     signals:
-    void tick       ( qint64 );
+    void tick(qint64);
 
     public slots:
     void onBufferProcessed ( );
+
     void configure  ( );
     void start      ( );
     void stop       ( );
     void exit       ( );
     void restart    ( );
 
-    protected slots:
-    void onAudioStateChanged ( QAudio::State );
-
     private:
     bool m_active = false;
     qint64 m_clock;
     WorldStream const& m_world;
-    QAudioFormat m_format;
-    QAudioDeviceInfo m_device_info;
-    QAudioInput* m_input;
-    QAudioOutput* m_output;
     float** m_pool;
-
+    PaDeviceInfo m_device_info;
+    PaStream* m_stream;
+    PaStreamParameters m_parameters;
 };
+
+int readData( const void* inbuf, void* outbuf, unsigned long fpb,
+              const PaStreamCallbackTimeInfo* timeinfo,
+              PaStreamCallbackFlags statflags, void* udata );
 
 class WorldStream : public StreamNode
 {
@@ -202,6 +199,9 @@ class WorldStream : public StreamNode
     Q_PROPERTY  ( QQmlListProperty<StreamNode> inserts READ inserts )
 
     friend class AudioStream;
+    friend int readData(
+            const void*, void*, unsigned long,
+            const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void*);
 
     public:    
     WorldStream();
@@ -266,3 +266,5 @@ class WorldStream : public StreamNode
 
     QVector<StreamNode*> m_inserts;
 };
+
+

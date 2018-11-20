@@ -408,32 +408,36 @@ void WorldStream::componentComplete()
 {
     QAudioFormat format;
 
-    format.setCodec           ( "audio/pcm" );
-    format.setByteOrder       ( QAudioFormat::LittleEndian );
-    format.setSampleType      ( QAudioFormat::Float );
-    format.setSampleSize      ( 32 );
-    format.setSampleRate      ( m_sample_rate );
-    format.setChannelCount    ( m_num_outputs );
-
-    auto device_info = QAudioDeviceInfo::defaultOutputDevice();
+    auto ndevices = Pa_GetDeviceCount();
+    PaDeviceInfo device_info;
+    PaDeviceIndex device_index;
 
     if ( !m_out_device.isEmpty() || m_out_device != "default" )
     {
-        auto devices = device_info.availableDevices( QAudio::AudioOutput );
-        for ( const auto& device : devices )
+        for ( quint16 d = 0; d < ndevices; ++d )
         {
-            if ( device.deviceName() == m_out_device )
+            auto device = Pa_GetDeviceInfo(d);
+            if ( QString(device->name) == m_out_device )
             {
-                device_info = device;
-                break;
+                device_index = d;
+                device_info = *device;
             }
         }
     }
+    else
+    {
+        device_index = Pa_GetDefaultOutputDevice();
+        device_info = *Pa_GetDeviceInfo(device_index);
+    }
 
-    if ( !device_info.isFormatSupported(format) )
-        qDebug() << "[AUDIO] Format not supported by chosen device";
+    PaStreamParameters parameters;
+    parameters.channelCount = m_num_outputs;
+    parameters.sampleFormat = paFloat32;
+    parameters.hostApiSpecificStreamInfo = nullptr;
+    parameters.suggestedLatency = device_info.defaultLowOutputLatency;
+    parameters.device = device_index;
 
-    m_stream = new AudioStream( *this, format, device_info );
+    m_stream = new AudioStream( *this, parameters, device_info);
     m_stream->moveToThread  ( &m_stream_thread );
 
     QObject::connect( this, &StreamNode::activeChanged, this, &WorldStream::onActiveChanged );
@@ -515,29 +519,31 @@ int WorldStream::insertsCount(QQmlListProperty<StreamNode>* list)
 
 // -----------------------------------------------------------------------------------------
 
-AudioStream::AudioStream(const WorldStream& world, QAudioFormat format, QAudioDeviceInfo device_info) :
-    m_world(world), m_format(format), m_device_info(device_info),
-    m_output(nullptr), m_input(nullptr), m_pool(nullptr), m_clock(0)
+AudioStream::AudioStream(const WorldStream& world, PaStreamParameters parameters, PaDeviceInfo device_info) :
+    m_world(world), m_parameters(parameters), m_device_info(device_info), m_stream(nullptr)
 {
+
 }
 
 AudioStream::~AudioStream()
 {
     StreamNode::deleteBuffer(m_pool, m_world.numOutputs(), m_world.blockSize());
-    delete m_input;
-    delete m_output;
+    delete m_stream;
 }
 
 void AudioStream::exit()
 {
-    m_output->stop();
-    close();
+    Pa_CloseStream(m_stream);
+    Pa_Terminate();
 }
 
 void AudioStream::configure()
 {
-    m_output = new QAudioOutput(m_device_info, m_format);
-    QObject::connect( m_output, &QAudioOutput::stateChanged, this, &AudioStream::onAudioStateChanged );
+    Pa_Initialize();
+
+    Pa_OpenStream(
+        &m_stream, nullptr, &m_parameters, m_world.sampleRate(), m_world.blockSize(),
+        paClipOff, &readData, (void*) &m_world );
 }
 
 void AudioStream::start()
@@ -547,71 +553,50 @@ void AudioStream::start()
 
     for ( const auto& insert : m_world.m_inserts )
         insert->preinitialize( { m_world.m_sample_rate, m_world.m_block_size });
-
-    StreamNode::allocateBuffer(m_pool, m_world.m_num_outputs, m_world.m_block_size);
-    m_output->setBufferSize(m_world.m_block_size*m_world.numOutputs()*sizeof(float));
-
-    open( QIODevice::ReadOnly );
-    m_output->start(this);
-
-    qDebug() << "AudioStream buffer size initialized at"
-             << m_output->bufferSize() << "bytes";
+    Pa_StartStream(m_stream);
 }
 
 void AudioStream::stop()
 {
-    m_output->stop();
+    Pa_StopStream(m_stream);
 }
 
 void AudioStream::restart()
 {
     // no need to reinitialize buffers
-    open( QIODevice::ReadOnly );
-    m_output->start(this);
 }
 
 qint64 AudioStream::uclock() const
 {
-    return m_output->processedUSecs();
+    return 0;
 }
 
 void AudioStream::onBufferProcessed()
 {
-    qint64 msecs = floor(m_output->processedUSecs()/1000.0);
-    emit tick(msecs-m_clock);
-
+    qreal msecs = Pa_GetStreamTime( m_stream )*1000;
+    emit tick( msecs-m_clock );
     m_clock = msecs;
 }
 
-void AudioStream::onAudioStateChanged(QAudio::State state)
+int readData( const void* inbuf, void* outbuf, unsigned long fpb,
+              const PaStreamCallbackTimeInfo* timeinfo,
+              PaStreamCallbackFlags statflags, void* udata )
 {
-    qDebug() << "[AUDIO]" << state;
+    WorldStream& world = *((WorldStream*) udata);
 
-    if ( m_output->error() == QAudio::UnderrunError )
-    {
-        qDebug() << "QAudio::UnderrunError";
-        restart();
-    }
+    world.stream()->onBufferProcessed();
 
-    else qDebug() << "QAudio::Error:" << m_output->error();
-}
-
-qint64 AudioStream::readData(char* data, qint64 maxlen)
-{
-    onBufferProcessed();
-
-    auto inputs     = m_world.m_subnodes;
-    auto inserts    = m_world.m_inserts;
-    quint16 nout    = m_world.m_num_outputs;
-    quint16 bsize   = m_world.m_block_size;
-    qreal level     = m_world.m_level;
-    float** buf     = m_pool;   
-
-    StreamNode::resetBuffer(m_pool, nout, bsize);
+    auto inputs     = world.m_subnodes;
+    auto inserts    = world.m_inserts;
+    quint16 nout    = world.m_num_outputs;
+    quint16 bsize   = world.m_block_size;
+    qreal level     = world.m_level;
+    float** buf     = world.m_out;
+    float* data     = ( float* ) outbuf;
 
     for ( const auto& input : inputs )
     {
-        if ( !input->active() ) continue;       
+        if ( !input->active() ) continue;
 
         float** cdata   = input->preprocess ( nullptr, bsize );
         auto pch        = input->parentChannelsVec();
@@ -621,7 +606,7 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
         for ( quint16 s = 0; s < bsize; ++s )
             for ( quint16 ch = 0; ch < pch.size(); ++ch )
                 buf[pch[ch]][s] += cdata[ch][s] * level;
-    }   
+    }
 
     for ( const auto& insert : inserts )
     {
@@ -630,29 +615,8 @@ qint64 AudioStream::readData(char* data, qint64 maxlen)
     }
 
     for ( quint16 s = 0; s < bsize; ++s )
-    {
         for ( quint16 ch = 0; ch < nout; ++ch )
-        {
-            // convert to interleaved little endian
-            qToLittleEndian<float>(buf[ch][s], data);
-            data += sizeof(float);
-        }
-    }
+            *data++ = buf[ch][s];
 
-    // i.e. block_size * 4bytes per value * numChannels
-    return ( bsize*sizeof(float)*nout );
-
-}
-
-qint64 AudioStream::writeData(const char* data, qint64 len)
-{
-    Q_UNUSED ( data );
-    Q_UNUSED ( len );
-
-    return 0;
-}
-
-qint64 AudioStream::bytesAvailable() const
-{
-    return 0;
+    return paContinue;
 }
