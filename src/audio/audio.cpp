@@ -408,6 +408,8 @@ void WorldStream::componentComplete()
 {
     QAudioFormat format;
 
+    Pa_Initialize();
+
     auto ndevices = Pa_GetDeviceCount();
     PaDeviceInfo device_info;
     PaDeviceIndex device_index;
@@ -421,6 +423,7 @@ void WorldStream::componentComplete()
             {
                 device_index = d;
                 device_info = *device;
+                break;
             }
         }
     }
@@ -519,7 +522,7 @@ int WorldStream::insertsCount(QQmlListProperty<StreamNode>* list)
 
 // -----------------------------------------------------------------------------------------
 
-AudioStream::AudioStream(const WorldStream& world, PaStreamParameters parameters, PaDeviceInfo device_info) :
+AudioStream::AudioStream(WorldStream& world, PaStreamParameters parameters, PaDeviceInfo device_info) :
     m_world(world), m_parameters(parameters), m_device_info(device_info), m_stream(nullptr)
 {
 
@@ -539,21 +542,20 @@ void AudioStream::exit()
 
 void AudioStream::configure()
 {
-    Pa_Initialize();
-
-    Pa_OpenStream(
+    m_err = Pa_OpenStream(
         &m_stream, nullptr, &m_parameters, m_world.sampleRate(), m_world.blockSize(),
         paClipOff, &readData, (void*) &m_world );
 }
 
 void AudioStream::start()
 {
-    for ( const auto& input : m_world.m_subnodes )
-        input->preinitialize({ m_world.m_sample_rate, m_world.m_block_size });
+    StreamProperties properties = { m_world.m_sample_rate, m_world.m_block_size };
+    m_world.preinitialize( properties );
 
     for ( const auto& insert : m_world.m_inserts )
-        insert->preinitialize( { m_world.m_sample_rate, m_world.m_block_size });
-    Pa_StartStream(m_stream);
+        insert->preinitialize( properties );
+
+    m_err = Pa_StartStream( m_stream );
 }
 
 void AudioStream::stop()
@@ -583,7 +585,6 @@ int readData( const void* inbuf, void* outbuf, unsigned long fpb,
               PaStreamCallbackFlags statflags, void* udata )
 {
     WorldStream& world = *((WorldStream*) udata);
-
     world.stream()->onBufferProcessed();
 
     auto inputs     = world.m_subnodes;
@@ -593,6 +594,8 @@ int readData( const void* inbuf, void* outbuf, unsigned long fpb,
     qreal level     = world.m_level;
     float** buf     = world.m_out;
     float* data     = ( float* ) outbuf;
+
+    StreamNode::resetBuffer(buf, nout, bsize);
 
     for ( const auto& input : inputs )
     {

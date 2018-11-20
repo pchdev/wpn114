@@ -157,7 +157,7 @@ class AudioStream : public QObject
      Q_OBJECT
 
     public:
-    AudioStream  ( const WorldStream& world, PaStreamParameters parameters, PaDeviceInfo info);
+    AudioStream  ( WorldStream& world, PaStreamParameters parameters, PaDeviceInfo info);
     ~AudioStream ( );
 
     qint64 uclock( ) const;
@@ -177,11 +177,12 @@ class AudioStream : public QObject
     private:
     bool m_active = false;
     qint64 m_clock;
-    WorldStream const& m_world;
+    WorldStream& m_world;
     float** m_pool;
     PaDeviceInfo m_device_info;
     PaStream* m_stream;
     PaStreamParameters m_parameters;
+    PaError m_err;
 };
 
 int readData( const void* inbuf, void* outbuf, unsigned long fpb,
