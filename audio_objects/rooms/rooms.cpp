@@ -70,6 +70,11 @@ void SpeakerRing::setWidth(qreal width)
     m_width = width;
 }
 
+void SpeakerRing::setRadius(qreal radius)
+{
+    m_radius = radius;
+}
+
 void SpeakerRing::componentComplete()
 {
     // TODO: elliptic form with width&height
@@ -81,8 +86,8 @@ void SpeakerRing::componentComplete()
         qreal x = (sin((qreal)ls/m_nspeakers*M_PI*2 + m_offset) + 1.f) / 2.f;
         qreal y = (cos((qreal)ls/m_nspeakers*M_PI*2 + m_offset) + 1.f) / 2.f;
 
-        position.setX ( x );
-        position.setY ( y );
+        position.setX ( x*m_radius + ((1-m_radius)/2) );
+        position.setY ( y*m_radius + ((1-m_radius)/2) );
         position.setZ ( m_elevation );
 
         list << position;
@@ -283,6 +288,11 @@ void RoomSource::setY(qreal y)
     m_y = y;
 }
 
+void RoomSource::setZ(qreal z)
+{
+    m_z = z;
+}
+
 void RoomSource::setFixed(bool fixed)
 {
     m_fixed = fixed;
@@ -327,18 +337,18 @@ float** RoomSource::preprocess(float** buf, qint64 nsamples)
 
 qreal RoomChannel::spgain(QVector3D src, QVector4D ls)
 {
-    // only in 2D for now
     auto lr  = ls.w();
-    auto s   = src.toVector2D();
-    auto l   = ls.toVector2D();
 
-    float dx = fabs(s.x()-l.x());
+    float dx = fabs(src.x()-ls.x());
     if ( dx > lr ) return 0;
 
-    float dy = fabs(s.y()-l.y());
+    float dy = fabs(src.y()-ls.y());
     if ( dy > lr ) return 0;
 
-    float d = sqrt((dx*dx)+(dy*dy));
+    float dz = fabs(src.z()-ls.z());
+    if ( dz > lr ) return 0;
+
+    float d = sqrt((dx*dx)+(dy*dy)+(dz*dz));
     if ( d/lr > 1 ) return 0;
     else return (1.f - d/lr);
 }
@@ -425,6 +435,7 @@ void MonoSource::setPosition(QVector3D position)
     m_channel.c = position;
     m_x = position.x();
     m_y = position.y();
+    m_z = position.z();
     update();
 }
 
@@ -439,6 +450,14 @@ void MonoSource::setY(qreal y)
 {
     m_y = y;
     m_channel.c.setY( y );
+
+    update();
+}
+
+void MonoSource::setZ(qreal z)
+{
+    m_z = z;
+    m_channel.c.setZ( z );
 
     update();
 }
@@ -539,6 +558,13 @@ void StereoSource::setY(qreal y)
     m_right ->setY(y);
 }
 
+void StereoSource::setZ(qreal z)
+{
+    m_z = z;
+    m_left  ->setZ(z);
+    m_right ->setZ(z);
+}
+
 //---------------------------------------------------------------------------------------------------------
 
 Rooms::Rooms() : m_setup(nullptr) {}
@@ -611,6 +637,5 @@ float** Rooms::preprocess(float** buf, qint64 nsamples)
     }
 
     StreamNode::applyGain(out, nout, nsamples, m_level);
-
     return out;
 }

@@ -58,7 +58,7 @@ void MultiSampler::setPath(QString path)
 
         m_samplers.push_back(sampler);
 
-        setNumOutputs(qMax(m_num_outputs, sampler->numOutputs()));
+        setNumOutputs( qMax( m_num_outputs, sampler->numOutputs()) );
     }
 
     m_urn = Urn(m_files.size());

@@ -419,7 +419,7 @@ void WorldStream::componentComplete()
 
     if ( !m_out_device.isEmpty() || m_out_device != "default" )
     {
-        auto devices = device_info.availableDevices(QAudio::AudioOutput);
+        auto devices = device_info.availableDevices( QAudio::AudioOutput );
         for ( const auto& device : devices )
         {
             if ( device.deviceName() == m_out_device )
@@ -433,7 +433,7 @@ void WorldStream::componentComplete()
     if ( !device_info.isFormatSupported(format) )
         qDebug() << "[AUDIO] Format not supported by chosen device";
 
-    m_stream = new AudioStream(*this, format, device_info);
+    m_stream = new AudioStream( *this, format, device_info );
     m_stream->moveToThread  ( &m_stream_thread );
 
     QObject::connect( this, &StreamNode::activeChanged, this, &WorldStream::onActiveChanged );
@@ -443,7 +443,6 @@ void WorldStream::componentComplete()
     QObject::connect( m_stream, &AudioStream::tick, this, &WorldStream::tick );
 
     emit configure();
-
     m_stream_thread.start ( QThread::TimeCriticalPriority );
 }
 

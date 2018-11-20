@@ -59,6 +59,7 @@ void TimeNode::setExposePath(QString path)
 
     QObject::connect( start, SIGNAL( valueReceived(QVariant) ), this, SIGNAL(start()));
     QObject::connect( end, SIGNAL( valueReceived(QVariant) ), this, SIGNAL(end()));
+//    QObject::connect( end, SIGNAL( valueReceived(QVariant) ), this, SLOT(onStop()));
 }
 
 void TimeNode::setDuration(qreal duration)

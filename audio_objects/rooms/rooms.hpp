@@ -87,6 +87,7 @@ class SpeakerRing : public RoomNode
     Q_PROPERTY      ( qreal elevation READ elevation WRITE setElevation )
     Q_PROPERTY      ( qreal width READ width WRITE setWidth )
     Q_PROPERTY      ( qreal height READ height WRITE setHeight )
+    Q_PROPERTY      ( qreal radius READ radius WRITE setRadius )
 
     public:
     SpeakerRing();
@@ -97,17 +98,20 @@ class SpeakerRing : public RoomNode
     qreal elevation  ( ) const { return m_elevation; }
     qreal width      ( ) const { return m_width; }
     qreal height     ( ) const { return m_height; }
+    qreal radius     ( ) const { return m_radius; }
 
     void setOffset      ( qreal offset );
     void setElevation   ( qreal elevation );
     void setWidth       ( qreal width );
     void setHeight      ( qreal height );
+    void setRadius      ( qreal radius );
 
     private:
-    qreal m_width       = 1.f;
-    qreal m_height      = 1.f;
-    qreal m_elevation   = 0.f;
-    qreal m_offset      = 0.f;
+    qreal m_width       = 1;
+    qreal m_height      = 1;
+    qreal m_elevation   = 0;
+    qreal m_offset      = 0;
+    qreal m_radius      = 1;
 };
 
 // x, y, z, w = influence
@@ -177,6 +181,7 @@ class RoomSource : public StreamNode
     Q_PROPERTY  ( int nchannels READ nchannels )
     Q_PROPERTY  ( qreal x READ x WRITE setX )
     Q_PROPERTY  ( qreal y READ y WRITE setY )
+    Q_PROPERTY  ( qreal z READ z WRITE setZ )
 
     public:
     RoomSource();
@@ -194,6 +199,7 @@ class RoomSource : public StreamNode
 
     qreal x ( ) const { return m_x; }
     qreal y ( ) const { return m_y; }
+    qreal z ( ) const { return m_z; }
 
     qreal diffuse   ( ) const { return m_diffuse; }
     qreal bias      ( ) const { return m_bias; }
@@ -202,6 +208,7 @@ class RoomSource : public StreamNode
 
     virtual void setX           ( qreal x );
     virtual void setY           ( qreal y );
+    virtual void setZ           ( qreal z );
     virtual void setDiffuse     ( qreal diffuse );
     virtual void setRotate      ( qreal rotate );
     virtual void setBias        ( qreal bias );
@@ -216,6 +223,7 @@ class RoomSource : public StreamNode
 
     qreal m_x = 0.5;
     qreal m_y = 0.5;
+    qreal m_z = 0.5;
     qreal m_diffuse = 0;
     qreal m_rotate = 0;
     qreal m_bias = 0.5;
@@ -238,6 +246,7 @@ class MonoSource : public RoomSource
 
     void setX   ( qreal x ) override;
     void setY   ( qreal y ) override;
+    void setZ   ( qreal z ) override;
 
     QVector3D position  ( ) const { return m_channel.c; }
     void setPosition    ( QVector3D position );
@@ -284,6 +293,7 @@ class StereoSource : public RoomSource
 
     void setX           ( qreal x ) override;
     void setY           ( qreal y ) override;
+    void setZ           ( qreal z ) override;
     void setDiffuse     ( qreal diffuse ) override;
     void setRotate      ( qreal rotate ) override;
     void setBias        ( qreal bias ) override;

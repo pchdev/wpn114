@@ -11,14 +11,14 @@ ForkEndpoint::ForkEndpoint(Fork& fork) : StreamNode(), m_fork(fork)
 
 float** ForkEndpoint::process(float** buf, qint64 nsamples)
 {
-    return m_fork.preprocess(buf, nsamples);
+    return m_fork.preprocess( buf, nsamples );
 }
 
 Fork::Fork() : StreamNode(), m_parent(nullptr), m_target(nullptr), m_endpoint(nullptr) { }
 
 Fork::~Fork()
 {
-    m_endpoint->setNumOutputs(0);
+    m_endpoint->setNumOutputs( 0 );
     delete m_endpoint;
 }
 

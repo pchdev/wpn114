@@ -48,7 +48,7 @@ class Fork : public StreamNode
 
     private:
     bool m_active_default;
-    bool m_prefader;
+    bool m_prefader = false;
     StreamNode* m_parent;
     StreamNode* m_target;
     ForkEndpoint* m_endpoint;
