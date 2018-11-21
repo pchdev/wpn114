@@ -321,6 +321,22 @@ void StreamNode::preinitialize(StreamProperties properties)
           subnode->preinitialize( properties );
 }
 
+inline float** StreamNode::mergeInputs(float** buf, qint64 nsamples)
+{
+    for ( const auto& subnode : m_subnodes )
+    {
+        if ( subnode->active() )
+        {
+            auto pch     = subnode->parentChannelsVec();
+            auto genbuf  = subnode->preprocess( nullptr, nsamples );
+
+            for ( quint16 ch = 0; ch < pch.size(); ++ch )
+                for ( quint16 s = 0; s < nsamples; ++s )
+                    buf[pch[ch]][s] += genbuf[ch][s];
+        }
+    }
+}
+
 float** StreamNode::preprocess(float** buf, qint64 le)
 {   
     if ( m_type == StreamType::Generator )
@@ -341,19 +357,7 @@ float** StreamNode::preprocess(float** buf, qint64 le)
         // merge all subnodes and apply master gain
         auto out = m_out;
         StreamNode::resetBuffer( out, m_num_outputs, le );
-
-        for ( const auto& subnode : m_subnodes )
-        {
-            if ( subnode->active() )
-            {
-                auto pch     = subnode->parentChannelsVec();
-                auto genbuf  = subnode->preprocess( nullptr, le );
-
-                for ( quint16 ch = 0; ch < pch.size(); ++ch )
-                    for ( quint16 s = 0; s < le; ++s )
-                        out[pch[ch]][s] += genbuf[ch][s];
-            }
-        }
+        mergeInputs( out, le );
 
         StreamNode::applyGain(out, m_num_outputs, le, m_level);
         return out;
@@ -369,18 +373,7 @@ float** StreamNode::preprocess(float** buf, qint64 le)
         if  ( buf != nullptr )
             StreamNode::mergeBuffers(in, buf, m_num_inputs, m_num_inputs, le);
 
-        for ( const auto& subnode : m_subnodes )
-        {
-            if ( subnode->active() )
-            {
-                auto pch     = subnode->parentChannelsVec();
-                auto genbuf  = subnode->preprocess( nullptr, le );
-
-                for ( quint16 ch = 0; ch < pch.size(); ++ch )
-                    for ( quint16 s = 0; s < le; ++s )
-                        in[pch[ch]][s] += genbuf[ch][s];
-            }
-        }
+        mergeInputs( in, le );
 
         out = process( in, le );
         StreamNode::applyGain(out, m_num_outputs, le, m_level);

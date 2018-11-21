@@ -135,6 +135,8 @@ class StreamNode : public QObject, public QQmlParserStatus
     static StreamNode* subnode    ( QQmlListProperty<StreamNode>*, int );
     static void clearSubnodes     ( QQmlListProperty<StreamNode>* );
 
+    float** mergeInputs(float**, qint64);
+
     StreamProperties m_stream_properties;
     qreal m_level;
     qreal m_db_level;

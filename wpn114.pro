@@ -64,7 +64,8 @@ audio {
         audio_objects/clock/audioclock.cpp          \
         audio_objects/bursts/bursts.cpp             \
         audio_objects/limiter/masterlimiter.cpp     \
-        audio_objects/ashes/ashes.cpp
+        audio_objects/ashes/ashes.cpp               \
+        audio_objects/downmix/downmix.cpp
     HEADERS +=                                      \
         src/audio/audio.hpp                         \
         audio_objects/sine/sine.hpp                 \
@@ -85,7 +86,8 @@ audio {
         audio_objects/clock/audioclock.hpp          \
         audio_objects/bursts/bursts.hpp             \
         audio_objects/limiter/masterlimiter.hpp     \
-        audio_objects/ashes/ashes.hpp
+        audio_objects/ashes/ashes.hpp               \
+        audio_objects/downmix/downmix.hpp
 }
 
 midi {
