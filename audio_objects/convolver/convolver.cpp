@@ -6,6 +6,7 @@ Convolver::Convolver() : m_ir(nullptr), m_convolver_l(nullptr), m_convolver_r(nu
 {
     SETN_IN     ( 2 );
     SETN_OUT    ( 2 );
+    SETTYPE     ( StreamType::Effect );
 }
 
 Convolver::~Convolver()

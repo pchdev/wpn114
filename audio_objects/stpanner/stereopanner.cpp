@@ -5,6 +5,7 @@ StereoPanner::StereoPanner() : StreamNode(), m_position(0.5)
 {
     SETN_IN     ( 1 );
     SETN_OUT    ( 2 );
+    SETTYPE     ( StreamType::Effect);
 }
 
 float** StereoPanner::process(float** buf, qint64 bsize)

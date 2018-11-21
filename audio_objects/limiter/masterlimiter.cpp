@@ -3,7 +3,7 @@
 
 MasterLimiter::MasterLimiter()
 {
-
+    SETTYPE( StreamType::Effect );
 }
 
 void MasterLimiter::setThreshold(qreal threshold)

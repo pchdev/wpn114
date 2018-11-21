@@ -52,6 +52,17 @@ class StreamNode : public QObject, public QQmlParserStatus
     StreamNode();
     ~StreamNode() override;
 
+    enum class StreamType
+    {
+        Generator   = 0,
+        Analyzer    = 1,
+        Effect      = 2,
+        Hybrid      = 3,
+        Mixer       = 4
+    };
+
+    Q_ENUM ( StreamType )
+
     static void deleteBuffer    ( float**& buffer, quint16 nchannels, quint16 nsamples );
     static void allocateBuffer  ( float**& buffer, quint16 nchannels, quint64 nsamples );
     static void resetBuffer     ( float**& buffer, quint16 nchannels, quint16 nsamples );
@@ -144,10 +155,12 @@ class StreamNode : public QObject, public QQmlParserStatus
     WPNDevice* m_exp_device;
     WPNNode* m_exp_node;
     StreamNode* m_parent_stream;
+    StreamType m_type = StreamType::Generator;
 
     #define SAMPLERATE m_stream_properties.sample_rate
     #define SETN_OUT(n) setNumOutputs(n);
     #define SETN_IN(n) setNumInputs(n);
+    #define SETTYPE(t) m_type = t;
 };
 
 class WorldStream;
@@ -208,8 +221,8 @@ class WorldStream : public StreamNode
     WorldStream();
     ~WorldStream();
 
-    virtual void initialize     ( qint64 ) override {}
-    virtual float** process     ( float**, qint64 ) override {}
+    virtual void initialize ( qint64 ) override {}
+    virtual float** process ( float**, qint64 ) override {}
 
     virtual void componentComplete() override;
 

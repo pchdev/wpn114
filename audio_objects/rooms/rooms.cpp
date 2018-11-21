@@ -253,6 +253,7 @@ void RoomSetup::clearNodes(QQmlListProperty<RoomNode>* list)
 RoomSource::RoomSource()
 {
     SETN_IN   ( 0 );
+    SETTYPE   ( StreamType::Effect );
 }
 
 void RoomSource::componentComplete()
@@ -567,7 +568,7 @@ void StereoSource::setZ(qreal z)
 
 //---------------------------------------------------------------------------------------------------------
 
-Rooms::Rooms() : m_setup(nullptr) {}
+Rooms::Rooms() : m_setup(nullptr) { SETTYPE( StreamType::Effect ) }
 
 void Rooms::setSetup(RoomSetup* setup)
 {

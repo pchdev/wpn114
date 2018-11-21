@@ -7,6 +7,7 @@
 
 StreamSampler::StreamSampler() : StreamNode()
 {
+    SETTYPE( StreamType::Generator );
     // building sin envelopes
     for ( int i = 0; i < ENV_RESOLUTION; ++ i )
     {
@@ -434,6 +435,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
 
 Sampler::Sampler() : StreamNode()
 {    
+    SETTYPE( StreamType::Generator );
     // building sin envelopes
     for ( int i = 0; i < ENV_RESOLUTION; ++ i )
     {

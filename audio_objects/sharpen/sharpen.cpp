@@ -6,6 +6,7 @@ Sharpen::Sharpen() : m_distortion(0)
 {
     SETN_IN     ( 2 );
     SETN_OUT    ( 2 );
+    SETTYPE     ( StreamType::Effect );
 }
 
 void Sharpen::initialize(qint64 dist)

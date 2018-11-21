@@ -50,6 +50,9 @@ void AudioPlugin::componentComplete()
     SETN_IN    ( m_plugin_hdl->get_ninputs()  );
     SETN_OUT   ( m_plugin_hdl->get_noutputs() );
 
+    if ( !m_num_inputs ) m_type = StreamType::Generator;
+    else m_type = StreamType::Effect;
+
 #ifdef __APPLE__ //----------------------------------------------------------
     m_view              = new QMacNativeWidget();
     m_view_container    = new QMacCocoaViewContainer( m_view->nativeView() );

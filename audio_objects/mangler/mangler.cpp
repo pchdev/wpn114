@@ -6,6 +6,7 @@ Mangler::Mangler()
 {
     SETN_IN     ( 2 );
     SETN_OUT    ( 2 );
+    SETTYPE     ( StreamType::Effect );
 }
 
 void Mangler::setBitPattern( quint16 index,

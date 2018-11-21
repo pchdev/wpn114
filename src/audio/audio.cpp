@@ -318,13 +318,14 @@ void StreamNode::preinitialize(StreamProperties properties)
     initialize( properties.block_size );
 
     for ( const auto& subnode : m_subnodes )
-          subnode->preinitialize(properties);
+          subnode->preinitialize( properties );
 }
 
 float** StreamNode::preprocess(float** buf, qint64 le)
 {   
-    if ( !m_num_inputs ) // if generator, pass the buffer down the chain
+    if ( m_type == StreamType::Generator )
     {
+        // process and pass buffer down the effects chain
         float** ubuf = process(buf, le);
         StreamNode::applyGain(ubuf, m_num_outputs, le, m_level);
 
@@ -334,10 +335,35 @@ float** StreamNode::preprocess(float** buf, qint64 le)
 
         return ubuf;
     }
-    else
+
+    else if ( m_type == StreamType::Mixer )
     {
-        // otherwise mix all sources down to an array of channels       
-        float** in = m_in;
+        // merge all subnodes and apply master gain
+        auto out = m_out;
+        StreamNode::resetBuffer( out, m_num_outputs, le );
+
+        for ( const auto& subnode : m_subnodes )
+        {
+            if ( subnode->active() )
+            {
+                auto pch     = subnode->parentChannelsVec();
+                auto genbuf  = subnode->preprocess( nullptr, le );
+
+                for ( quint16 ch = 0; ch < pch.size(); ++ch )
+                    for ( quint16 s = 0; s < le; ++s )
+                        out[pch[ch]][s] += genbuf[ch][s];
+            }
+        }
+
+        StreamNode::applyGain(out, m_num_outputs, le, m_level);
+        return out;
+    }
+
+    else if ( m_type == StreamType::Effect )
+    {
+        // otherwise mix all sources down to an array of channels
+        // and then process it
+        float** in = m_in, **out = nullptr;
         StreamNode::resetBuffer(in, m_num_inputs, le);
 
         if  ( buf != nullptr )
@@ -348,7 +374,7 @@ float** StreamNode::preprocess(float** buf, qint64 le)
             if ( subnode->active() )
             {
                 auto pch     = subnode->parentChannelsVec();
-                auto genbuf  = subnode->preprocess(nullptr, le);
+                auto genbuf  = subnode->preprocess( nullptr, le );
 
                 for ( quint16 ch = 0; ch < pch.size(); ++ch )
                     for ( quint16 s = 0; s < le; ++s )
@@ -356,15 +382,17 @@ float** StreamNode::preprocess(float** buf, qint64 le)
             }
         }
 
-        return process(in, le);
-    }
+        out = process( in, le );
+        StreamNode::applyGain(out, m_num_outputs, le, m_level);
+        return out;
+    }   
 }
 
 //-----------------------------------------------------------------------------------------------
 
-WorldStream::WorldStream() : m_sample_rate(44100), m_block_size(512)
+WorldStream::WorldStream() : m_sample_rate( 44100 ), m_block_size( 512 )
 {
-
+    SETTYPE( StreamType::Mixer );
 }
 
 WorldStream::~WorldStream()
@@ -407,7 +435,6 @@ void WorldStream::setOutDevice(QString device)
 void WorldStream::componentComplete()
 {
     QAudioFormat format;
-
     Pa_Initialize();
 
     auto ndevices = Pa_GetDeviceCount();
@@ -587,34 +614,16 @@ int readData( const void* inbuf, void* outbuf, unsigned long fpb,
     WorldStream& world = *((WorldStream*) udata);
     world.stream()->onBufferProcessed();
 
-    auto inputs     = world.m_subnodes;
     auto inserts    = world.m_inserts;
     quint16 nout    = world.m_num_outputs;
     quint16 bsize   = world.m_block_size;
-    qreal level     = world.m_level;
-    float** buf     = world.m_out;
     float* data     = ( float* ) outbuf;
 
-    StreamNode::resetBuffer(buf, nout, bsize);
-
-    for ( const auto& input : inputs )
-    {
-        if ( !input->active() ) continue;
-
-        float** cdata   = input->preprocess ( nullptr, bsize );
-        auto pch        = input->parentChannelsVec();
-
-        if ( pch.size() > nout ) pch.resize(nout);
-
-        for ( quint16 s = 0; s < bsize; ++s )
-            for ( quint16 ch = 0; ch < pch.size(); ++ch )
-                buf[pch[ch]][s] += cdata[ch][s] * level;
-    }
-
+    auto buf = world.preprocess( nullptr, bsize );
     for ( const auto& insert : inserts )
     {
         if ( !insert->active() ) continue;
-        buf = insert->preprocess(buf, bsize);
+        buf = insert->preprocess( buf, bsize );
     }
 
     for ( quint16 s = 0; s < bsize; ++s )

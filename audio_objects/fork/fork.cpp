@@ -5,6 +5,7 @@ ForkEndpoint::ForkEndpoint(Fork& fork) : StreamNode(), m_fork(fork)
 {
     SETN_IN     ( 0 );
     SETN_OUT    ( fork.numOutputs() );
+    SETTYPE     ( StreamType::Generator );
 
     m_qml       = true;
 }

@@ -5,6 +5,7 @@
 
 PeakRMS::PeakRMS()
 {
+    SETTYPE   ( StreamType::Effect );
     qRegisterMetaType<QVector<float>>();
 }
 
@@ -21,7 +22,7 @@ void PeakRMS::setRefreshRate(qreal rate)
 void PeakRMS::componentComplete()
 {    
     SETN_IN   ( m_source->numOutputs() );
-    SETN_OUT  ( m_source->numInputs()  );
+    SETN_OUT  ( m_source->numInputs()  );   
 }
 
 void PeakRMS::initialize(qint64 nsamples)

@@ -3,6 +3,7 @@
 Ashes::Ashes()
 {
     SETN_OUT  ( 1 );
+    SETTYPE   ( StreamType::Generator );
 }
 
 inline quint64 draw()

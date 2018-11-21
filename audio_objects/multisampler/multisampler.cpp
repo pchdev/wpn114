@@ -28,6 +28,7 @@ MultiSampler::MultiSampler() : m_dir(nullptr)
 {
     SETN_IN     ( 0 );
     SETN_OUT    ( 0 );
+    SETTYPE     ( StreamType::Generator );
 }
 
 MultiSampler::~MultiSampler()
