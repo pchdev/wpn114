@@ -2,174 +2,314 @@
 #include <cmath>
 #include <QtDebug>
 
+SpeakerArea::SpeakerArea()
+{
+
+}
+
+SpeakerArea::SpeakerArea(qreal radius, qreal bias, qreal angle) :
+    m_radius(radius), m_bias(bias), m_angle(angle)
+{
+
+}
+
+SpeakerArea::SpeakerArea(SpeakerArea const& area )
+{
+    m_radius    = area.radius();
+    m_bias      = area.bias();
+    m_angle     = area.angle();
+}
+
+SpeakerArea& SpeakerArea::operator=(SpeakerArea const& area)
+{
+    m_radius    = area.radius();
+    m_bias      = area.bias();
+    m_angle     = area.angle();
+}
+
+bool SpeakerArea::operator!=(SpeakerArea const& area)
+{
+    return ( area.angle() != m_angle &&
+             area.radius() != m_radius &&
+             area.bias() != m_bias );
+}
+
+void SpeakerArea::setRadius(qreal radius)
+{
+    if ( radius != m_radius )
+    {
+        m_radius = radius;
+        emit radiusChanged();
+    }
+}
+
+void SpeakerArea::setBias(qreal bias)
+{
+    if ( bias != m_bias )
+    {
+        m_bias = bias;
+        emit biasChanged();
+    }
+}
+
+void SpeakerArea::setAngle(qreal angle)
+{
+    if ( angle != m_angle )
+    {
+        m_angle = angle;
+        emit angleChanged();
+    }
+
+}
+
+//----------------------
+
+Speaker::Speaker() : m_position(QVector3D(0.5, 0.5, 0.5))
+{
+
+}
+
+Speaker::Speaker(QVector3D position) : m_position(position)
+{
+
+}
+
+Speaker::Speaker(Speaker const& copy)
+{
+    m_position = copy.position();
+    m_horizontal_area = copy.horizontalArea();
+    m_vertical_area = copy.verticalArea();
+}
+
+Speaker& Speaker::operator=(Speaker const& assign)
+{
+    m_position = assign.position();
+    m_horizontal_area = assign.horizontalArea();
+    m_vertical_area = assign.verticalArea();
+}
+
+void Speaker::setPosition(QVector3D const& position)
+{
+    if ( position != m_position )
+    {
+         m_position = position;
+         emit positionChanged();
+    }
+}
+
+void Speaker::setHorizontalArea(SpeakerArea const& area)
+{
+//    if ( area != m_horizontal_area )
+    m_horizontal_area = area;
+}
+
+void Speaker::setVerticalArea(SpeakerArea const& area)
+{
+    m_vertical_area = area;
+}
+
+void Speaker::setX(qreal x)
+{
+    if ( x == m_position.x() ) return;
+    m_position.setX(x);
+    emit xChanged();
+}
+
+void Speaker::setY(qreal y)
+{
+    if ( y == m_position.y() ) return;
+    m_position.setY(y);
+    emit yChanged();
+}
+
+void Speaker::setZ(qreal z)
+{
+    if ( z == m_position.z() ) return;
+    m_position.setZ(z);
+    emit zChanged();
+}
+
+//===========================================================================
+
 SpeakerPair::SpeakerPair()
 {
-    setNspeakers( 2 );
+    m_left  = new Speaker( QVector3D( 0.25, 0.5, 0.5) );
+    m_right = new Speaker( QVector3D( 0.75, 0.5, 0.5) );
+
+    m_speakers.push_back(m_left  );
+    m_speakers.push_back(m_right );
 }
 
 void SpeakerPair::setXspread(qreal xspread)
 {
+    if ( xspread == m_xspread ) return;
+
     m_xspread = xspread;
+
+    m_left->setX    ( 0.5-xspread );
+    m_right->setX   ( xspread+0.5 );
 }
 
 void SpeakerPair::setYspread(qreal yspread)
 {
+    if ( yspread == m_yspread ) return;
     m_yspread = yspread;
+
+    m_left->setY    ( 0.5-yspread );
+    m_right->setY   ( yspread+0.5 );
+}
+
+void SpeakerPair::setZspread(qreal zspread)
+{
+    if ( zspread == m_zspread ) return;
+    m_zspread = zspread;
+
+    m_left->setZ    ( 0.5-zspread );
+    m_right->setZ   ( 0.5+zspread );
 }
 
 void SpeakerPair::setX(qreal x)
 {
+    if ( m_x == x ) return;
     m_x = x;
+
+    m_left->setX    ( x );
+    m_right->setX   ( x );
 }
 
 void SpeakerPair::setY(qreal y)
 {
+    if ( m_y == y ) return;
     m_y = y;
+
+    m_left->setY    ( y );
+    m_right->setY   ( y );
+}
+
+void SpeakerPair::setZ(qreal z)
+{
+    if ( m_z == z ) return;
+    m_z = z;
+
+    m_left->setZ    ( z );
+    m_right->setZ   ( z );
 }
 
 void SpeakerPair::componentComplete()
 {
-    QVector3D position_l, position_r;
-    QVariantList list;
-
-    position_l.setX(0.5-m_xspread);
-    position_r.setX(0.5+m_xspread);
-    position_l.setY(m_y);
-    position_r.setY(m_y);
-
-    list << position_l << position_r;
-    m_positions << position_l << position_r;
-
-    m_position = list;
 }
 
 //--------------------------------------------------------------------------------------------------
 
+#define CHANGEGUARD(a,b) if (a == b) return
 SpeakerRing::SpeakerRing()
 {
 
 }
 
+void SpeakerRing::setNspeakers(quint16 nspeakers)
+{
+    // TODO: update on the fly
+    for ( quint16 n = 0; n < nspeakers; ++n )
+        m_speakers.push_back(new Speaker());
+}
+
+void SpeakerRing::update()
+{
+    quint16 index = 0;
+
+    for ( const auto& speaker : m_speakers )
+    {
+        QVector3D position;
+        qreal ph = (qreal)index/nspeakers()*M_PI*2 + m_offset;
+        qreal x = (sin(ph) +1.)/2.;
+        qreal y = (cos(ph) +1.)/2.;
+
+        speaker->setX ( x*m_radius + ((1.-m_radius)/2));
+        speaker->setY ( y*m_radius + ((1.-m_radius)/2.));
+    }
+}
+
 void SpeakerRing::setOffset(qreal offset)
 {
+    CHANGEGUARD ( offset, m_offset );
     m_offset = offset;
+    update();
+
+    emit offsetChanged();
 }
 
 void SpeakerRing::setElevation(qreal elevation)
 {
+    CHANGEGUARD ( elevation, m_elevation );
     m_elevation = elevation;
+
+    for ( const auto& speaker : m_speakers )
+        speaker->setZ(elevation);
+
+    emit elevationChanged();
 }
 
 void SpeakerRing::setHeight(qreal height)
 {
+    CHANGEGUARD ( height, m_height );
     m_height = height;
+
+    emit heightChanged();
+    // TODO
 }
 
 void SpeakerRing::setWidth(qreal width)
 {
+    CHANGEGUARD ( width, m_width );
     m_width = width;
+
+    emit widthChanged();
+    // TODO
 }
 
 void SpeakerRing::setRadius(qreal radius)
 {
+    CHANGEGUARD ( radius, m_radius );
     m_radius = radius;
+    update();
+
+    emit radiusChanged();
 }
 
 void SpeakerRing::componentComplete()
 {
-    // TODO: elliptic form with width&height
-    QVariantList list;
 
-    for ( quint16 ls = 0; ls < m_nspeakers; ++ls )
-    {
-        QVector3D position;
-        qreal x = (sin((qreal)ls/m_nspeakers*M_PI*2 + m_offset) + 1.f) / 2.f;
-        qreal y = (cos((qreal)ls/m_nspeakers*M_PI*2 + m_offset) + 1.f) / 2.f;
-
-        position.setX ( x*m_radius + ((1-m_radius)/2) );
-        position.setY ( y*m_radius + ((1-m_radius)/2) );
-        position.setZ ( m_elevation );
-
-        list << position;
-        m_positions << position;
-    }
-
-    m_position = list;
 }
 
 //---------------------------------------------------------------------------------------------------------
 
-RoomNode::RoomNode() : m_nspeakers(0)
+RoomNode::RoomNode()
 {
 
 }
 
-void RoomNode::setNspeakers(quint16 nspeakers)
+QVariant RoomNode::speakers() const
 {
-    m_nspeakers = nspeakers;
-    setInfluence(m_influence);
-}
+    if ( m_speakers.size() == 0 )
+         return QVariant();
 
-QVector4D RoomNode::speakerData(quint16 index) const
-{
-    if ( !m_positions.size() ) return QVector4D();
-    QVector4D res(m_positions[index], m_influences[index]);
-    return res;
-}
+    else if ( m_speakers.size() == 1 )
+        return QVariant::fromValue(m_speakers[0]);
 
-void RoomNode::setInfluence(QVariant influence)
-{
-    m_influence = influence;
-    m_influences.clear();
-
-    if ( influence.type() == QMetaType::QVariantList )
-        for ( const auto& i : influence.toList() )
-            m_influences << i.toDouble();
-
-    else if ( influence.type() == QMetaType::Double ||
-              influence.type() == QMetaType::Float )
+    else
     {
-        if ( m_nspeakers > 1 )
-            m_influences.fill(influence.toDouble(), m_nspeakers);
-        else m_influences << influence.toDouble();
+        QVariantList list;
+        for ( const auto& speaker : m_speakers )
+            list << QVariant::fromValue( speaker );
+
+        return list;
     }
-
-    emit influenceChanged();
-}
-
-void RoomNode::setPosition(QVariant position)
-{
-    if ( position == m_position ) return;
-    m_position = position;
-    m_positions.clear();
-
-    if ( position.type() == QMetaType::QVariantList )
-    {
-        QVector3D pos;
-        for ( const auto& p : position.toList())
-        {
-            auto l = p.toList();
-            if ( l.size() == 2 )
-            {
-                pos.setX(l[0].toDouble());
-                pos.setY(l[1].toDouble());
-                pos.setZ(0.f);
-            }
-            else if ( l.size() == 3 )
-            {
-                pos.setX(l[0].toDouble());
-                pos.setY(l[1].toDouble());
-                pos.setZ(l[2].toDouble());
-            }
-        }
-    }
-
-    emit positionChanged();
 }
 
 //---------------------------------------------------------------------------------------------------------
 
-RoomSetup::RoomSetup() : m_nspeakers(0)
+RoomSetup::RoomSetup()
 {
 
 }
@@ -177,24 +317,12 @@ RoomSetup::RoomSetup() : m_nspeakers(0)
 RoomSetup::~RoomSetup()
 {
     for ( const auto& node : m_nodes )
-        delete node;
+          delete node;
 }
 
 void RoomSetup::componentComplete()
 {
-    for ( const auto& node : m_nodes )
-        m_nspeakers += node->nspeakers();
-}
 
-const QVector<QVector4D> RoomSetup::speakers() const
-{
-    QVector<QVector4D> res;
-
-    for ( const auto& node: m_nodes )
-        for ( quint16 i = 0; i < node->nspeakers(); ++i )
-            res << node->speakerData(i);
-
-    return res;
 }
 
 QQmlListProperty<RoomNode> RoomSetup::nodes()
@@ -209,6 +337,8 @@ QQmlListProperty<RoomNode> RoomSetup::nodes()
 void RoomSetup::appendNode(RoomNode* node)
 {
     m_nodes.append(node);
+    m_speakers.append(node->getSpeakers());
+
     emit nodesChanged();
 }
 
@@ -336,22 +466,23 @@ float** RoomSource::preprocess(float** buf, qint64 nsamples)
 
 // CHANNEL ---------------------------------------------------------------------------------------
 
-qreal RoomChannel::spgain(QVector3D src, QVector4D ls)
+qreal RoomChannel::spgain(const QVector3D &src, const Speaker &ls)
 {
-    auto lr  = ls.w();
+    auto lrh  = ls.horizontalArea().radius();
+    auto lrv  = ls.verticalArea().radius();
 
     float dx = fabs(src.x()-ls.x());
-    if ( dx > lr ) return 0;
+    if ( dx > lrh ) return 0;
 
     float dy = fabs(src.y()-ls.y());
-    if ( dy > lr ) return 0;
+    if ( dy > lrh ) return 0;
 
     float dz = fabs(src.z()-ls.z());
-    if ( dz > lr ) return 0;
+    if ( dz > lrv ) return 0;
 
     float d = sqrt((dx*dx)+(dy*dy)+(dz*dz));
-    if ( d/lr > 1 ) return 0;
-    else return (1.f - d/lr);
+    if ( d/lrh > 1 ) return 0;
+    else return (1.f - d/lrh);
 }
 
 void RoomChannel::computeCoeffs()
@@ -361,14 +492,14 @@ void RoomChannel::computeCoeffs()
     {
         qreal gain = 0.0;
 
-        if ( !diffuse ) gain = spgain(c, speaker);
+        if ( !diffuse ) gain = spgain(c, *speaker);
         else
         {
-            qreal cg = spgain(c, speaker);
-            qreal ng = spgain(n, speaker);
-            qreal sg = spgain(s, speaker);
-            qreal eg = spgain(e, speaker);
-            qreal wg = spgain(w, speaker);
+            qreal cg = spgain(c, *speaker);
+            qreal ng = spgain(n, *speaker);
+            qreal sg = spgain(s, *speaker);
+            qreal eg = spgain(e, *speaker);
+            qreal wg = spgain(w, *speaker);
 
             gain = qMax(qMax(qMax(qMax(ng,sg),eg),wg),cg);
         }
@@ -385,15 +516,15 @@ MonoSource::MonoSource() : RoomSource()
     m_channel.c = QVector3D( 0.5, 0.5, 0.5 );
 }
 
-void MonoSource::allocateCoeffs(QVector<QVector4D> const& speakerset)
+void MonoSource::allocateCoeffs(QVector<Speaker*> const& speakerset)
 {
     auto coeffs = m_channel.coeffs;
     if ( coeffs ) delete coeffs;
 
     coeffs = new float[ speakerset.size() ]();
 
-    m_channel.coeffs = coeffs;
-    m_channel.speakers = speakerset;
+    m_channel.coeffs    = coeffs;
+    m_channel.speakers  = speakerset;
 }
 
 RoomChannel& MonoSource::channel(quint16)
@@ -491,7 +622,7 @@ void StereoSource::expose(WPNNode*)
     m_right->setExposePath  ( m_exp_path+"/right" );
 }
 
-void StereoSource::allocateCoeffs(QVector<QVector4D> const& speakerset)
+void StereoSource::allocateCoeffs(QVector<Speaker*> const& speakerset)
 {
     m_left  ->allocateCoeffs ( speakerset );
     m_right ->allocateCoeffs ( speakerset );
@@ -579,11 +710,7 @@ void Rooms::setSetup(RoomSetup* setup)
 
 void Rooms::componentComplete()
 {
-    if ( m_setup )
-    {
-        m_speakers = m_setup->speakers();
-        SETN_OUT ( m_setup->nspeakers());
-    }
+    if ( m_setup ) { SETN_OUT ( m_setup->nspeakers()); }
     else
     {
         setActive   ( false );
@@ -598,7 +725,7 @@ void Rooms::initialize(qint64 nsamples)
         auto source = qobject_cast<RoomSource*>(node);
         if ( ! source ) continue;
 
-        source->allocateCoeffs(m_speakers);        
+        source->allocateCoeffs(m_setup->speakers());
 
         // manage coefficents for static sources
         if ( source->fixed() )
@@ -609,7 +736,6 @@ void Rooms::initialize(qint64 nsamples)
 
 float** Rooms::preprocess(float** buf, qint64 nsamples)
 {    
-    auto speakers   = m_speakers;
     auto out        = m_out;
     auto nout       = m_num_outputs;
 

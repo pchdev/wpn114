@@ -7,45 +7,103 @@
 #include <QVector4D>
 #include <QQmlListProperty>
 
+class SpeakerArea : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY  ( qreal radius READ radius WRITE setRadius NOTIFY radiusChanged )
+    Q_PROPERTY  ( qreal bias READ bias WRITE setBias NOTIFY biasChanged )
+    Q_PROPERTY  ( qreal angle READ angle WRITE setAngle NOTIFY angleChanged )
+
+    public:
+    SpeakerArea ( );
+    SpeakerArea ( qreal radius, qreal bias, qreal angle );
+    SpeakerArea ( const SpeakerArea& copy );
+
+    SpeakerArea& operator= ( SpeakerArea const& );
+    bool operator!= ( SpeakerArea const& );
+
+    qreal radius  ( ) const { return m_radius; }
+    qreal bias    ( ) const { return m_bias; }
+    qreal angle   ( ) const { return m_angle; }
+
+    void setRadius  ( qreal radius );
+    void setBias    ( qreal bias );
+    void setAngle   ( qreal angle );
+
+    signals:
+    void radiusChanged  ( );
+    void biasChanged    ( );
+    void angleChanged   ( );
+
+    private:
+    qreal m_radius  = 0.5;
+    qreal m_bias    = 0.5;
+    qreal m_angle   = 0;
+};
+
+class Speaker : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY  ( QVector3D position READ position WRITE setPosition NOTIFY positionChanged )
+    Q_PROPERTY  ( qreal x READ x WRITE setX NOTIFY xChanged )
+    Q_PROPERTY  ( qreal y READ y WRITE setY NOTIFY yChanged )
+    Q_PROPERTY  ( qreal z READ z WRITE setZ NOTIFY zChanged )
+    Q_PROPERTY  ( SpeakerArea horizontalArea READ horizontalArea WRITE setHorizontalArea NOTIFY horizontalAreaChanged )
+    Q_PROPERTY  ( SpeakerArea verticalArea READ verticalArea WRITE setVerticalArea NOTIFY verticalAreaChanged )
+
+    public:
+    Speaker ( );
+    Speaker ( QVector3D position );
+    Speaker ( QVector3D position, SpeakerArea harea, SpeakerArea varea);
+    Speaker ( Speaker const& );
+    Speaker& operator=(Speaker const&);
+
+    QVector3D position            ( ) const { return m_position; }
+    SpeakerArea horizontalArea    ( ) const { return m_horizontal_area; }
+    SpeakerArea verticalArea      ( ) const { return m_vertical_area; }
+
+    qreal x() const { return m_position.x(); }
+    qreal y() const { return m_position.y(); }
+    qreal z() const { return m_position.z(); }
+
+    void setX( qreal x );
+    void setY( qreal y );
+    void setZ( qreal z );
+
+    void setPosition        ( QVector3D const& position );
+    void setHorizontalArea  ( SpeakerArea const& area );
+    void setVerticalArea    ( SpeakerArea const& area );
+
+    signals:
+    void positionChanged        ();
+    void horizontalAreaChanged  ();
+    void verticalAreaChanged    ();
+    void xChanged ( );
+    void yChanged ( );
+    void zChanged ( );
+
+    private:
+    QVector3D m_position;
+    SpeakerArea m_horizontal_area;
+    SpeakerArea m_vertical_area;
+};
+
 class RoomNode : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
-
-    Q_PROPERTY  ( int nspeakers READ nspeakers WRITE setNspeakers )
-    Q_PROPERTY  ( QVariant influence READ influence WRITE setInfluence NOTIFY influenceChanged )
-    Q_PROPERTY  ( QVariant position READ position WRITE setPosition NOTIFY positionChanged )
 
     public:
     RoomNode();
 
     virtual void classBegin() override {}
     virtual void componentComplete() override {}
-
-    quint16 nspeakers   ( ) const { return m_nspeakers; }
-    void setNspeakers   ( quint16 nspeakers );
-
-    QVariant influence  ( ) const { return m_influence; }
-    QVariant position   ( ) const { return m_position; }
-
-    virtual void setInfluence   ( QVariant influence );
-    virtual void setPosition    ( QVariant position );
-
-    QVector<QVector3D> positions () const { return m_positions; }
-    QVector<qreal> influences    () const { return m_influences; }
-
-    QVector4D speakerData(quint16 index) const;
-
-    signals:
-    void influenceChanged();
-    void positionChanged();
+    virtual QVector<Speaker*> const& getSpeakers( ) const { return m_speakers; }
+    Q_INVOKABLE QVariant speakers() const;
 
     protected:
-    QVariant m_influence;
-    QVariant m_position;
-    QVector<qreal> m_influences;
-    QVector<QVector3D> m_positions;
-    quint16 m_nspeakers;
+    QVector<Speaker*> m_speakers;
 };
 
 class SpeakerPair : public RoomNode
@@ -53,29 +111,43 @@ class SpeakerPair : public RoomNode
     Q_OBJECT
     Q_PROPERTY  ( qreal xspread READ xspread WRITE setXspread )
     Q_PROPERTY  ( qreal yspread READ yspread WRITE setYspread )
+    Q_PROPERTY  ( qreal zspread READ zspread WRITE setZspread )
     Q_PROPERTY  ( qreal x READ x WRITE setX )
     Q_PROPERTY  ( qreal y READ y WRITE setY )
+    Q_PROPERTY  ( qreal z READ z WRITE setZ )
+    Q_PROPERTY  ( Speaker* left READ left )
+    Q_PROPERTY  ( Speaker* right READ right )
 
     public:
     SpeakerPair();
-
     virtual void componentComplete() override;
+
+    Speaker* left   () const { return m_left; }
+    Speaker* right  () const { return m_right; }
 
     qreal xspread() const { return m_xspread; }
     qreal yspread() const { return m_yspread; }
+    qreal zspread() const { return m_zspread; }
     qreal x() const { return m_x; }
     qreal y() const { return m_y; }
+    qreal z() const { return m_z; }
 
-    void setXspread(qreal xspread);
-    void setYspread(qreal yspread);
-    void setX(qreal x);
-    void setY(qreal y);
+    void setXspread( qreal xspread );
+    void setYspread( qreal yspread );
+    void setZspread( qreal zspread );
+    void setX( qreal x );
+    void setY( qreal y );
+    void setZ( qreal z );
 
     private:
-    qreal m_xspread;
-    qreal m_yspread;
-    qreal m_x;
-    qreal m_y;
+    Speaker* m_left   = nullptr;
+    Speaker* m_right  = nullptr;
+    qreal m_xspread   = 0.25;
+    qreal m_yspread   = 0;
+    qreal m_zspread   = 0;
+    qreal m_x         = 0;
+    qreal m_y         = 0;
+    qreal m_z         = 0;
 
 };
 
@@ -83,11 +155,12 @@ class SpeakerRing : public RoomNode
 {
     Q_OBJECT
 
-    Q_PROPERTY      ( qreal offset READ offset WRITE setOffset )
-    Q_PROPERTY      ( qreal elevation READ elevation WRITE setElevation )
-    Q_PROPERTY      ( qreal width READ width WRITE setWidth )
-    Q_PROPERTY      ( qreal height READ height WRITE setHeight )
-    Q_PROPERTY      ( qreal radius READ radius WRITE setRadius )
+    Q_PROPERTY  ( int nspeakers READ nspeakers WRITE setNspeakers NOTIFY nspeakersChanged )
+    Q_PROPERTY  ( qreal offset READ offset WRITE setOffset NOTIFY offsetChanged )
+    Q_PROPERTY  ( qreal elevation READ elevation WRITE setElevation NOTIFY elevationChanged )
+    Q_PROPERTY  ( qreal width READ width WRITE setWidth NOTIFY widthChanged )
+    Q_PROPERTY  ( qreal height READ height WRITE setHeight NOTIFY heightChanged )
+    Q_PROPERTY  ( qreal radius READ radius WRITE setRadius NOTIFY radiusChanged )
 
     public:
     SpeakerRing();
@@ -100,13 +173,26 @@ class SpeakerRing : public RoomNode
     qreal height     ( ) const { return m_height; }
     qreal radius     ( ) const { return m_radius; }
 
+    quint16 nspeakers( ) const { return m_speakers.size(); }
+    void setNspeakers( quint16 nspeakers );
+
     void setOffset      ( qreal offset );
     void setElevation   ( qreal elevation );
     void setWidth       ( qreal width );
     void setHeight      ( qreal height );
     void setRadius      ( qreal radius );
 
+    signals:
+    void nspeakersChanged   ( );
+    void offsetChanged      ( );
+    void elevationChanged   ( );
+    void widthChanged       ( );
+    void heightChanged      ( );
+    void radiusChanged      ( );
+
     private:
+    void update();
+
     qreal m_width       = 1;
     qreal m_height      = 1;
     qreal m_elevation   = 0;
@@ -126,14 +212,14 @@ class RoomSetup : public QObject, public QQmlParserStatus
     RoomSetup();
     ~RoomSetup();
 
-    quint16 nspeakers() const { return m_nspeakers; }
+    quint16 nspeakers() const { return m_speakers.size(); }
 
     virtual void classBegin() override {}
     virtual void componentComplete() override;
 
     QQmlListProperty<RoomNode> nodes    ( );
     const QVector<RoomNode*>& getNodes  ( ) const { return m_nodes; }
-    const QVector<QVector4D> speakers   ( ) const;
+    QVector<Speaker*> speakers ( ) const { return m_speakers; }
 
     void appendNode     ( RoomNode* );
     int nodeCount       ( ) const;
@@ -150,12 +236,13 @@ class RoomSetup : public QObject, public QQmlParserStatus
     static void clearNodes  ( QQmlListProperty<RoomNode>* );
 
     QVector<RoomNode*> m_nodes;
-    quint16 m_nspeakers;
+    QVector<Speaker*> m_speakers;
+
 };
 
 struct RoomChannel
 {
-    qreal spgain ( QVector3D src, QVector4D ls );
+    qreal spgain ( QVector3D const& src, Speaker const& ls );
     void computeCoeffs ( );
 
     QVector3D c;
@@ -164,10 +251,10 @@ struct RoomChannel
     QVector3D s;
     QVector3D e;
 
-    QVector<QVector4D> speakers;
+    QVector<Speaker*> speakers;
 
     float* coeffs   = nullptr;
-    bool diffuse    = 0.5;
+    float  diffuse  = 0.5;
 };
 
 class RoomSource : public StreamNode
@@ -194,7 +281,7 @@ class RoomSource : public StreamNode
 
     virtual quint16 nchannels  ( ) const = 0;
 
-    virtual void allocateCoeffs ( QVector<QVector4D> const& speakerset ) = 0;
+    virtual void allocateCoeffs ( QVector<Speaker*> const& speakerset ) = 0;
     virtual RoomChannel& channel(quint16 channel) = 0;
 
     qreal x ( ) const { return m_x; }
@@ -241,7 +328,7 @@ class MonoSource : public RoomSource
 
     virtual quint16 nchannels ( ) const override { return 1; }
 
-    virtual void allocateCoeffs ( QVector<QVector4D> const& speakerset ) override;
+    virtual void allocateCoeffs ( QVector<Speaker*> const& speakerset ) override;
     virtual RoomChannel& channel(quint16 channel) override;
 
     void setX   ( qreal x ) override;
@@ -278,7 +365,7 @@ class StereoSource : public RoomSource
     virtual void componentComplete() override;
     virtual quint16 nchannels ( ) const override { return 2; }
 
-    virtual void allocateCoeffs ( QVector<QVector4D> const& speakerset ) override;
+    virtual void allocateCoeffs ( QVector<Speaker*> const& speakerset ) override;
     virtual RoomChannel& channel(quint16 channel) override;
 
     virtual void expose(WPNNode*) override;
@@ -328,7 +415,6 @@ class Rooms : public StreamNode
     void setupChanged();
 
     private:    
-    QVector<QVector4D> m_speakers;
     RoomSetup* m_setup;
 };
 

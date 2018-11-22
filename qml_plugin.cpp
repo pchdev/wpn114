@@ -43,10 +43,13 @@ void qml_plugin::registerTypes(const char *uri)
 {
     Q_UNUSED    ( uri );
 
-#ifdef WPN114_AUDIO
+#ifdef WPN114_AUDIO //======================================================================================
+
     qmlRegisterUncreatableType<StreamNode, 1>   ( "WPN114", 1, 0, "StreamNode","Coucou");
     qmlRegisterUncreatableType<RoomNode, 1>     ( "WPN114", 1, 0, "RoomNode", "Coucou" );
     qmlRegisterUncreatableType<RoomSource, 1>   ( "WPN114", 1, 0, "RoomSource", "Coucou");
+    qmlRegisterUncreatableType<Speaker, 1>      ( "WPN114", 1, 0, "Speaker", "Coucou" );
+    qmlRegisterUncreatableType<SpeakerArea, 1>  ( "WPN114", 1, 0, "SpeakerArea", "Coucou" );
 
     qmlRegisterType<WorldStream, 1>       ( "WPN114", 1, 0, "AudioStream" );
     qmlRegisterType<SinOsc, 1>            ( "WPN114", 1, 0, "SinOsc" );
@@ -57,7 +60,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<RoomSetup, 1>         ( "WPN114", 1, 0, "RoomSetup" );
     qmlRegisterType<MonoSource, 1>        ( "WPN114", 1, 0, "MonoSource" );
     qmlRegisterType<StereoSource, 1>      ( "WPN114", 1, 0, "StereoSource" );
-    qmlRegisterType<Rooms, 1>             ( "WPN114", 1, 0, "Rooms" );
+    qmlRegisterType<Rooms, 1>             ( "WPN114", 1, 0, "Rooms" );    
     qmlRegisterType<SpeakerPair, 1>       ( "WPN114", 1, 0, "SpeakerPair" );
     qmlRegisterType<SpeakerRing, 1>       ( "WPN114", 1, 0, "SpeakerRing" );
     qmlRegisterType<Sharpen, 1>           ( "WPN114", 1, 0, "Sharpen" );
@@ -73,7 +76,8 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<Downmix, 1>           ( "WPN114", 1, 0, "Downmix" );
 #endif
 
-#ifdef WPN114_MIDI
+#ifdef WPN114_MIDI //=====================================================================================
+
     qmlRegisterType<MIDIHandler, 1>       ( "WPN114", 1, 0, "MIDIHandler" );
 
     qmlRegisterUncreatableType<CommandButtons, 1>       ( "WPNPush", 1, 0, "CommandButtons", "Coucou" );
@@ -85,11 +89,14 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<ToggleRow, 1>            ( "WPNPush", 1, 0, "ToggleRow", "Coucou" );
 #endif
 
-#ifdef WPN114_VST
+#ifdef WPN114_VST //======================================================================================
+
     qmlRegisterType<AudioPlugin, 1>       ( "WPN114", 1, 0, "AudioPlugin" );
+
 #endif
 
-#ifdef WPN114_NETWORK
+#ifdef WPN114_NETWORK //==================================================================================
+
     qmlRegisterUncreatableType<Type, 1>         ( "WPN114", 1, 0, "Type", "Coucou" );
     qmlRegisterUncreatableType<Access, 1>       ( "WPN114", 1, 0, "Access", "Coucou" );
     qmlRegisterUncreatableType<Clipmode, 1>     ( "WPN114", 1, 0, "Clipmode", "Coucou" );
@@ -102,5 +109,6 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<WPNQueryServer, 1>          ( "WPN114", 1, 0, "OSCQueryServer" );
     qmlRegisterType<WPNQueryClient, 1>          ( "WPN114", 1, 0, "OSCQueryClient" );
     qmlRegisterType<NetExplorer, 1>             ( "WPN114", 1, 0, "NetExplorer" );
-#endif
+
+#endif //=================================================================================================
 }

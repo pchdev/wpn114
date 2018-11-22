@@ -19,6 +19,38 @@ struct StreamProperties
     quint16 block_size;
 };
 
+class Stream
+{
+    public:
+    Stream  ( quint16 nchannels, quint16 nsamples );
+    Stream  ( const Stream& tcopy );
+    ~Stream ( );
+
+    void reset              ( );
+    void silenceChannel     ( quint16 index );
+
+    float** pool        ( ) { return m_pool; }
+
+    quint16 nchannels   ( ) const { return m_nchannels; }
+    quint16 nsamples    ( ) const { return m_nsamples; }
+    void setnChannels  ( quint16 nchannels );
+    void setnSamples   ( quint16 nsamples );
+
+    void coeff          ( float c );
+    float* channel      ( quint16 index );
+    void mergeWith      ( Stream stream );
+    void mergeWith      ( Stream stream, quint16 ch_offset );
+    void mergeWith      ( Stream stream, quint16 lch_offset, quint16 rch_offset );
+    float get           ( quint16 channel, quint16 sample );
+    void set            ( quint16 channel, quint16 sample, float value );
+
+    private:
+    void allocatePool();
+    float** m_pool;
+    quint16 m_nchannels;
+    quint16 m_nsamples;
+};
+
 /*class ControlNode : public QObject
 {
     Q_OBJECT
