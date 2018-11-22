@@ -96,6 +96,7 @@ class RoomNode : public QObject, public QQmlParserStatus
 
     public:
     RoomNode();
+    ~RoomNode();
 
     virtual void classBegin() override {}
     virtual void componentComplete() override {}
@@ -104,6 +105,21 @@ class RoomNode : public QObject, public QQmlParserStatus
 
     protected:
     QVector<Speaker*> m_speakers;
+};
+
+class SingleSpeaker : public RoomNode
+{
+    Q_OBJECT
+    Q_PROPERTY  ( QVector3D position READ position WRITE setPosition )
+
+    public:
+    SingleSpeaker();
+
+    QVector3D position() const { return m_speaker->position(); }
+    void setPosition(QVector3D position) { m_speaker->setPosition(position); }
+
+    private:
+    Speaker* m_speaker = nullptr;
 };
 
 class SpeakerPair : public RoomNode
@@ -120,6 +136,7 @@ class SpeakerPair : public RoomNode
 
     public:
     SpeakerPair();
+
     virtual void componentComplete() override;
 
     Speaker* left   () const { return m_left; }

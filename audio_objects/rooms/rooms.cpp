@@ -129,6 +129,11 @@ void Speaker::setZ(qreal z)
     emit zChanged();
 }
 
+SingleSpeaker::SingleSpeaker() : m_speaker(new Speaker)
+{
+    m_speakers.push_back(m_speaker);
+}
+
 //===========================================================================
 
 SpeakerPair::SpeakerPair()
@@ -287,6 +292,12 @@ void SpeakerRing::componentComplete()
 RoomNode::RoomNode()
 {
 
+}
+
+RoomNode::~RoomNode()
+{
+    for ( const auto& speaker : m_speakers )
+          delete speaker;
 }
 
 QVariant RoomNode::speakers() const
