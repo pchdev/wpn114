@@ -20,11 +20,13 @@ SpeakerArea::SpeakerArea(SpeakerArea const& area )
     m_angle     = area.angle();
 }
 
-SpeakerArea& SpeakerArea::operator=(SpeakerArea const& area)
+SpeakerArea& SpeakerArea::operator=( SpeakerArea const& area )
 {
     m_radius    = area.radius();
     m_bias      = area.bias();
     m_angle     = area.angle();
+
+    return *this;
 }
 
 bool SpeakerArea::operator!=(SpeakerArea const& area)
@@ -300,6 +302,22 @@ RoomNode::~RoomNode()
           delete speaker;
 }
 
+void RoomNode::setHorizontalInfluence(qreal inf)
+{
+    for ( const auto& speaker : m_speakers )
+        speaker->setHorizontalArea(SpeakerArea(inf, 0.5, 0));
+
+    m_h_influence = inf;
+}
+
+void RoomNode::setVerticalInfluence(qreal inf)
+{
+    for ( const auto& speaker : m_speakers )
+        speaker->setVerticalArea(SpeakerArea(inf, 0.5, 0));
+
+    m_v_influence = inf;
+}
+
 QVariant RoomNode::speakers() const
 {
     if ( m_speakers.size() == 0 )
@@ -334,6 +352,15 @@ RoomSetup::~RoomSetup()
 void RoomSetup::componentComplete()
 {
 
+}
+
+QVariantList RoomSetup::speakerList() const
+{
+    QVariantList list;
+    for ( const auto& speaker : m_speakers )
+        list << QVariant::fromValue(speaker);
+
+    return list;
 }
 
 QQmlListProperty<RoomNode> RoomSetup::nodes()
@@ -493,7 +520,7 @@ qreal RoomChannel::spgain(const QVector3D &src, const Speaker &ls)
 
     float d = sqrt((dx*dx)+(dy*dy)+(dz*dz));
     if ( d/lrh > 1 ) return 0;
-    else return (1.f - d/lrh);
+    else return (1.f - d/lrh/lrv);
 }
 
 void RoomChannel::computeCoeffs()

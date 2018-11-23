@@ -41,6 +41,8 @@ class SpeakerArea : public QObject
     qreal m_angle   = 0;
 };
 
+Q_DECLARE_METATYPE( SpeakerArea )
+
 class Speaker : public QObject
 {
     Q_OBJECT
@@ -93,10 +95,18 @@ class RoomNode : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES    ( QQmlParserStatus )
+    Q_PROPERTY      ( qreal horizontalInfluence READ horizontalInfluence WRITE setHorizontalInfluence )
+    Q_PROPERTY      ( qreal verticalInfluence READ verticalInfluence WRITE setVerticalInfluence )
 
     public:
     RoomNode();
     ~RoomNode();
+
+    qreal horizontalInfluence() const { return m_h_influence; }
+    qreal verticalInfluence() const { return m_v_influence; }
+
+    void setHorizontalInfluence(qreal hinf);
+    void setVerticalInfluence(qreal vinf);
 
     virtual void classBegin() override {}
     virtual void componentComplete() override {}
@@ -105,6 +115,8 @@ class RoomNode : public QObject, public QQmlParserStatus
 
     protected:
     QVector<Speaker*> m_speakers;
+    qreal m_h_influence = 0.5;
+    qreal m_v_influence = 0.5;
 };
 
 class SingleSpeaker : public RoomNode
@@ -237,6 +249,8 @@ class RoomSetup : public QObject, public QQmlParserStatus
     QQmlListProperty<RoomNode> nodes    ( );
     const QVector<RoomNode*>& getNodes  ( ) const { return m_nodes; }
     QVector<Speaker*> speakers ( ) const { return m_speakers; }
+
+    Q_INVOKABLE QVariantList speakerList() const;
 
     void appendNode     ( RoomNode* );
     int nodeCount       ( ) const;
