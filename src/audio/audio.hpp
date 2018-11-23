@@ -223,7 +223,7 @@ class AudioStream : public QObject
 
     private:
     bool m_active = false;
-    qint64 m_clock;
+    qint64 m_clock = 0;
     WorldStream& m_world;
     float** m_pool;
     PaDeviceInfo m_device_info;

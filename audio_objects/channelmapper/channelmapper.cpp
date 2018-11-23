@@ -1,4 +1,5 @@
 #include "channelmapper.hpp"
+#include <QtDebug>
 
 ChannelMapper::ChannelMapper()
 {
@@ -17,8 +18,12 @@ QVariantList ChannelMapper::map() const
 
 void ChannelMapper::setMap(QVariantList const map)
 {
+    QVector<quint16> tmp;
     for ( const auto& index : map )
-          m_map << index.toInt();
+          tmp << index.toInt();
+
+    if ( tmp.size() == m_map.size() ) return;
+    m_map = tmp;
 }
 
 float** ChannelMapper::process(float** in, qint64 nsamples)
@@ -30,7 +35,7 @@ float** ChannelMapper::process(float** in, qint64 nsamples)
 
     for ( const auto& channel : m_map )
     {
-         out[channel] = in[index];
+        memcpy(out[channel], in[index], sizeof(float)*nsamples);
          ++index;
     }
 

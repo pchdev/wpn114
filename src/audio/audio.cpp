@@ -439,8 +439,6 @@ float** StreamNode::preprocess(float** buf, qint64 le)
         auto out = m_out;
         StreamNode::resetBuffer( out, m_num_outputs, le );
         mergeInputs( out, le );
-
-        StreamNode::applyGain(out, m_num_outputs, le, m_level);
         return out;
     }
 
@@ -676,7 +674,9 @@ qint64 AudioStream::uclock() const
 
 void AudioStream::onBufferProcessed()
 {
-    qreal msecs = Pa_GetStreamTime( m_stream )*1000;
+    qint64 msecs = Pa_GetStreamTime( m_stream )*1000;
+    if ( !m_clock ) m_clock = msecs;
+
     emit tick( msecs-m_clock );
     m_clock = msecs;
 }
@@ -699,6 +699,8 @@ int readData( const void* inbuf, void* outbuf, unsigned long fpb,
         if ( !insert->active() ) continue;
         buf = insert->preprocess( buf, bsize );
     }
+
+    StreamNode::applyGain(buf, nout, bsize, world.m_level);
 
     for ( quint16 s = 0; s < bsize; ++s )
         for ( quint16 ch = 0; ch < nout; ++ch )

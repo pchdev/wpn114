@@ -1,4 +1,5 @@
 #include "downmix.hpp"
+#include <QtDebug>
 
 Downmix::Downmix()
 {
@@ -48,12 +49,14 @@ float** Downmix::process(float** in, qint64 nsamples)
     auto nout = m_num_outputs;
     auto nin = m_num_inputs;
 
+    StreamNode::resetBuffer(out, nout, nsamples);
+    StreamNode::mergeBuffers(out, in, nout, nin, nsamples);
+
     for ( quint16 s = 0; s < nsamples; ++s )
         for ( quint16 ch = 0; ch < nout; ++ch )
             if ( !m_channels.contains(ch) )
                 for ( const auto& tch : m_channels )
                     out[tch][s] += in[ch][s]/nout;
 
-    StreamNode::mergeBuffers(out, in, nout, nin, nsamples);
     return out;
 }

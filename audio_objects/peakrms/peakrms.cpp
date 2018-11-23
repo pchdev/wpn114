@@ -21,8 +21,6 @@ void PeakRMS::setRefreshRate(qreal rate)
 
 void PeakRMS::componentComplete()
 {    
-    SETN_IN   ( m_source->numOutputs() );
-    SETN_OUT  ( m_source->numInputs()  );   
 }
 
 void PeakRMS::initialize(qint64 nsamples)
@@ -33,7 +31,7 @@ void PeakRMS::initialize(qint64 nsamples)
 
 void PeakRMS::bufferComplete()
 {
-    auto nout   = m_source->numOutputs();
+    auto nout   = m_num_outputs;
     auto pos    = m_pos;
     auto block  = m_block;
     auto bsize  = m_block_size;
@@ -70,7 +68,7 @@ void PeakRMS::bufferComplete()
 
 float** PeakRMS::process(float** in, qint64 nsamples)
 {
-    auto nout   = m_source->numOutputs();
+    auto nout   = m_num_outputs;
     auto pos    = m_pos;
     auto block  = m_block;
     auto bsize  = m_block_size;

@@ -13,7 +13,7 @@ SpeakerArea::SpeakerArea(qreal radius, qreal bias, qreal angle) :
 
 }
 
-SpeakerArea::SpeakerArea(SpeakerArea const& area )
+SpeakerArea::SpeakerArea( SpeakerArea const& area )
 {
     m_radius    = area.radius();
     m_bias      = area.bias();
@@ -66,9 +66,17 @@ void SpeakerArea::setAngle(qreal angle)
 
 //----------------------
 
-Speaker::Speaker() : m_position(QVector3D(0.5, 0.5, 0.5))
+Speaker::Speaker() : m_position(QVector3D(0.5, 0.5, 0.5)),
+    m_horizontal_area(new SpeakerArea),
+    m_vertical_area(new SpeakerArea)
 {
 
+}
+
+Speaker::~Speaker()
+{
+    delete m_horizontal_area;
+    delete m_vertical_area;
 }
 
 Speaker::Speaker(QVector3D position) : m_position(position)
@@ -99,13 +107,13 @@ void Speaker::setPosition(QVector3D const& position)
     }
 }
 
-void Speaker::setHorizontalArea(SpeakerArea const& area)
+void Speaker::setHorizontalArea(SpeakerArea* area)
 {
 //    if ( area != m_horizontal_area )
     m_horizontal_area = area;
 }
 
-void Speaker::setVerticalArea(SpeakerArea const& area)
+void Speaker::setVerticalArea(SpeakerArea* area)
 {
     m_vertical_area = area;
 }
@@ -227,13 +235,14 @@ void SpeakerRing::update()
 
     for ( const auto& speaker : m_speakers )
     {
-        QVector3D position;
         qreal ph = (qreal)index/nspeakers()*M_PI*2 + m_offset;
         qreal x = (sin(ph) +1.)/2.;
         qreal y = (cos(ph) +1.)/2.;
 
         speaker->setX ( x*m_radius + ((1.-m_radius)/2));
         speaker->setY ( y*m_radius + ((1.-m_radius)/2.));
+        speaker->setZ ( m_elevation );
+        ++index;
     }
 }
 
@@ -286,7 +295,7 @@ void SpeakerRing::setRadius(qreal radius)
 
 void SpeakerRing::componentComplete()
 {
-
+    RoomNode::componentComplete();
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -294,6 +303,17 @@ void SpeakerRing::componentComplete()
 RoomNode::RoomNode()
 {
 
+}
+
+void RoomNode::componentComplete()
+{
+    for ( const auto& speaker : m_speakers )
+    {
+        speaker->horizontalArea()->setRadius(m_h_influence);
+        speaker->verticalArea()->setRadius(m_v_influence);
+    }
+
+    qDebug() << "COUCOU" << m_h_influence << m_v_influence;
 }
 
 RoomNode::~RoomNode()
@@ -305,7 +325,7 @@ RoomNode::~RoomNode()
 void RoomNode::setHorizontalInfluence(qreal inf)
 {
     for ( const auto& speaker : m_speakers )
-        speaker->setHorizontalArea(SpeakerArea(inf, 0.5, 0));
+        speaker->horizontalArea()->setRadius(inf);
 
     m_h_influence = inf;
 }
@@ -313,7 +333,7 @@ void RoomNode::setHorizontalInfluence(qreal inf)
 void RoomNode::setVerticalInfluence(qreal inf)
 {
     for ( const auto& speaker : m_speakers )
-        speaker->setVerticalArea(SpeakerArea(inf, 0.5, 0));
+        speaker->verticalArea()->setRadius(inf);
 
     m_v_influence = inf;
 }
@@ -351,7 +371,15 @@ RoomSetup::~RoomSetup()
 
 void RoomSetup::componentComplete()
 {
+    for ( const auto& node : m_nodes )
+        m_speakers.append(node->getSpeakers());
 
+    for ( const auto& speaker : m_speakers )
+    {
+        qDebug() << "SPEAKER_RADIUS"
+                 << speaker->horizontalArea()->radius()
+                 << speaker->verticalArea()->radius();
+    }
 }
 
 QVariantList RoomSetup::speakerList() const
@@ -375,8 +403,6 @@ QQmlListProperty<RoomNode> RoomSetup::nodes()
 void RoomSetup::appendNode(RoomNode* node)
 {
     m_nodes.append(node);
-    m_speakers.append(node->getSpeakers());
-
     emit nodesChanged();
 }
 
@@ -506,8 +532,9 @@ float** RoomSource::preprocess(float** buf, qint64 nsamples)
 
 qreal RoomChannel::spgain(const QVector3D &src, const Speaker &ls)
 {
-    auto lrh  = ls.horizontalArea().radius();
-    auto lrv  = ls.verticalArea().radius();
+    auto lrh  = ls.horizontalArea()->radius();
+    auto lrv  = ls.verticalArea()->radius();
+    auto lr   = sqrt((lrh*lrh)+(lrv*lrv));
 
     float dx = fabs(src.x()-ls.x());
     if ( dx > lrh ) return 0;
@@ -519,8 +546,9 @@ qreal RoomChannel::spgain(const QVector3D &src, const Speaker &ls)
     if ( dz > lrv ) return 0;
 
     float d = sqrt((dx*dx)+(dy*dy)+(dz*dz));
-    if ( d/lrh > 1 ) return 0;
-    else return (1.f - d/lrh/lrv);
+    if ( d/lr > 1 ) return 0;
+
+    else return (( 1.f-d/lr ));
 }
 
 void RoomChannel::computeCoeffs()
@@ -540,6 +568,7 @@ void RoomChannel::computeCoeffs()
             qreal wg = spgain(w, *speaker);
 
             gain = qMax(qMax(qMax(qMax(ng,sg),eg),wg),cg);
+
         }
 
         coeffs[spk] = gain;

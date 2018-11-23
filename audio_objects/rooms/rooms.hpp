@@ -51,19 +51,21 @@ class Speaker : public QObject
     Q_PROPERTY  ( qreal x READ x WRITE setX NOTIFY xChanged )
     Q_PROPERTY  ( qreal y READ y WRITE setY NOTIFY yChanged )
     Q_PROPERTY  ( qreal z READ z WRITE setZ NOTIFY zChanged )
-    Q_PROPERTY  ( SpeakerArea horizontalArea READ horizontalArea WRITE setHorizontalArea NOTIFY horizontalAreaChanged )
-    Q_PROPERTY  ( SpeakerArea verticalArea READ verticalArea WRITE setVerticalArea NOTIFY verticalAreaChanged )
+    Q_PROPERTY  ( SpeakerArea* horizontalArea READ horizontalArea WRITE setHorizontalArea NOTIFY horizontalAreaChanged )
+    Q_PROPERTY  ( SpeakerArea* verticalArea READ verticalArea WRITE setVerticalArea NOTIFY verticalAreaChanged )
 
     public:
-    Speaker ( );
+    Speaker  ( );
+    ~Speaker ( );
+
     Speaker ( QVector3D position );
     Speaker ( QVector3D position, SpeakerArea harea, SpeakerArea varea);
     Speaker ( Speaker const& );
     Speaker& operator=(Speaker const&);
 
-    QVector3D position            ( ) const { return m_position; }
-    SpeakerArea horizontalArea    ( ) const { return m_horizontal_area; }
-    SpeakerArea verticalArea      ( ) const { return m_vertical_area; }
+    QVector3D position             ( ) const { return m_position; }
+    SpeakerArea* horizontalArea    ( ) const { return m_horizontal_area; }
+    SpeakerArea* verticalArea      ( ) const { return m_vertical_area; }
 
     qreal x() const { return m_position.x(); }
     qreal y() const { return m_position.y(); }
@@ -74,8 +76,8 @@ class Speaker : public QObject
     void setZ( qreal z );
 
     void setPosition        ( QVector3D const& position );
-    void setHorizontalArea  ( SpeakerArea const& area );
-    void setVerticalArea    ( SpeakerArea const& area );
+    void setHorizontalArea  ( SpeakerArea* area );
+    void setVerticalArea    ( SpeakerArea* area );
 
     signals:
     void positionChanged        ();
@@ -87,8 +89,8 @@ class Speaker : public QObject
 
     private:
     QVector3D m_position;
-    SpeakerArea m_horizontal_area;
-    SpeakerArea m_vertical_area;
+    SpeakerArea* m_horizontal_area;
+    SpeakerArea* m_vertical_area;
 };
 
 class RoomNode : public QObject, public QQmlParserStatus
@@ -109,7 +111,7 @@ class RoomNode : public QObject, public QQmlParserStatus
     void setVerticalInfluence(qreal vinf);
 
     virtual void classBegin() override {}
-    virtual void componentComplete() override {}
+    virtual void componentComplete() override;
     virtual QVector<Speaker*> const& getSpeakers( ) const { return m_speakers; }
     Q_INVOKABLE QVariant speakers() const;
 
