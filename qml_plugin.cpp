@@ -25,6 +25,7 @@
 #include <audio_objects/clock/audioclock.hpp>
 #include <audio_objects/ashes/ashes.hpp>
 #include <audio_objects/downmix/downmix.hpp>
+#include <audio_objects/channelmapper/channelmapper.hpp>
 #endif
 
 #ifdef WPN114_MIDI
@@ -48,8 +49,8 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<StreamNode, 1>   ( "WPN114", 1, 0, "StreamNode","Coucou");
     qmlRegisterUncreatableType<RoomNode, 1>     ( "WPN114", 1, 0, "RoomNode", "Coucou" );
     qmlRegisterUncreatableType<RoomSource, 1>   ( "WPN114", 1, 0, "RoomSource", "Coucou");
-    qmlRegisterUncreatableType<Speaker, 1>      ( "WPN114", 1, 0, "Speaker", "Coucou" );
-    qmlRegisterUncreatableType<SpeakerArea, 1>  ( "WPN114", 1, 0, "SpeakerArea", "Coucou" );
+    qmlRegisterType<Speaker, 1>                 ( "WPN114", 1, 0, "Speaker" );
+    qmlRegisterType<SpeakerArea, 1>             ( "WPN114", 1, 0, "SpeakerArea" );
 
     qmlRegisterType<WorldStream, 1>       ( "WPN114", 1, 0, "AudioStream" );
     qmlRegisterType<SinOsc, 1>            ( "WPN114", 1, 0, "SinOsc" );
@@ -74,6 +75,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<MasterLimiter, 1>     ( "WPN114", 1, 0, "MasterLimiter" );
     qmlRegisterType<Ashes, 1>             ( "WPN114", 1, 0, "Ashes" );
     qmlRegisterType<Downmix, 1>           ( "WPN114", 1, 0, "Downmix" );
+    qmlRegisterType<ChannelMapper, 1>     ( "WPN114", 1, 0, "ChannelMapper" );
 #endif
 
 #ifdef WPN114_MIDI //=====================================================================================
