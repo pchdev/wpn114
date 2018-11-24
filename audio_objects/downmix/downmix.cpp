@@ -45,9 +45,9 @@ void Downmix::initialize(qint64 nsamples)
 
 float** Downmix::process(float** in, qint64 nsamples)
 {
-    auto out = m_out;
-    auto nout = m_num_outputs;
-    auto nin = m_num_inputs;
+    auto out   = m_out;
+    auto nout  = m_num_outputs;
+    auto nin   = m_num_inputs;
 
     StreamNode::resetBuffer(out, nout, nsamples);
     StreamNode::mergeBuffers(out, in, nout, nin, nsamples);

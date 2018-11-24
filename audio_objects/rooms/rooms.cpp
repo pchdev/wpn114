@@ -312,8 +312,6 @@ void RoomNode::componentComplete()
         speaker->horizontalArea()->setRadius(m_h_influence);
         speaker->verticalArea()->setRadius(m_v_influence);
     }
-
-    qDebug() << "COUCOU" << m_h_influence << m_v_influence;
 }
 
 RoomNode::~RoomNode()
@@ -373,13 +371,6 @@ void RoomSetup::componentComplete()
 {
     for ( const auto& node : m_nodes )
         m_speakers.append(node->getSpeakers());
-
-    for ( const auto& speaker : m_speakers )
-    {
-        qDebug() << "SPEAKER_RADIUS"
-                 << speaker->horizontalArea()->radius()
-                 << speaker->verticalArea()->radius();
-    }
 }
 
 QVariantList RoomSetup::speakerList() const
@@ -534,7 +525,6 @@ qreal RoomChannel::spgain(const QVector3D &src, const Speaker &ls)
 {
     auto lrh  = ls.horizontalArea()->radius();
     auto lrv  = ls.verticalArea()->radius();
-    auto lr   = sqrt((lrh*lrh)+(lrv*lrv));
 
     float dx = fabs(src.x()-ls.x());
     if ( dx > lrh ) return 0;
@@ -545,10 +535,11 @@ qreal RoomChannel::spgain(const QVector3D &src, const Speaker &ls)
     float dz = fabs(src.z()-ls.z());
     if ( dz > lrv ) return 0;
 
-    float d = sqrt((dx*dx)+(dy*dy)+(dz*dz));
-    if ( d/lr > 1 ) return 0;
+    float dh = sqrt((dx*dx)+(dy*dy));
 
-    else return (( 1.f-d/lr ));
+    if ( dh/lrh > 1 ) return 0;
+    else if ( dz/lrv > 1 ) return 0;
+    else return ((1-dh/lrh)*(1-dz/lrv));
 }
 
 void RoomChannel::computeCoeffs()
@@ -557,8 +548,7 @@ void RoomChannel::computeCoeffs()
     for ( const auto& speaker: speakers )
     {
         qreal gain = 0.0;
-
-        if ( !diffuse ) gain = spgain(c, *speaker);
+        if ( diffuse == 0.f ) gain = spgain(c, *speaker);
         else
         {
             qreal cg = spgain(c, *speaker);
@@ -568,7 +558,6 @@ void RoomChannel::computeCoeffs()
             qreal wg = spgain(w, *speaker);
 
             gain = qMax(qMax(qMax(qMax(ng,sg),eg),wg),cg);
-
         }
 
         coeffs[spk] = gain;
@@ -814,7 +803,7 @@ float** Rooms::preprocess(float** buf, qint64 nsamples)
         if ( !source || !source->active() ) continue;
 
         quint16 snch = source->numOutputs();
-        float** in  = source->preprocess(nullptr, nsamples);
+        float** in  = source->preprocess(nullptr, nsamples);        
 
         for ( quint16 ch = 0; ch < snch; ++ch )
         {

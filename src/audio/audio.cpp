@@ -6,87 +6,6 @@
 #include <memory>
 #include <QtGlobal>
 
-Stream::Stream(quint16 nch, quint16 nspl) : m_nchannels(nch), m_nsamples(nspl)
-{
-    allocatePool();
-}
-
-Stream::~Stream()
-{
-    for ( uint16_t ch = 0; ch < m_nchannels; ++ch )
-        delete [ ] m_pool[ch];
-    delete [ ] m_pool;
-}
-
-void Stream::setnChannels(quint16 nchannels)
-{
-
-}
-
-void Stream::setnSamples(quint16 nsamples)
-{
-
-}
-
-void Stream::allocatePool()
-{
-    m_pool = new float* [ m_nchannels ]();
-    for ( uint16_t ch = 0; ch < m_nchannels; ++ch )
-          m_pool[ch] = new float [ m_nsamples ]();
-}
-
-void Stream::reset()
-{
-    for ( uint16_t ch = 0; ch < m_nchannels; ++ch )
-        memset(m_pool[ch], 0.f, sizeof(float)*m_nsamples);
-}
-
-void Stream::silenceChannel(quint16 index)
-{
-    memset(m_pool[index], 0.f, sizeof(float)*m_nsamples);
-}
-
-void Stream::coeff(float c)
-{
-    if ( c == 1.f ) return;
-
-    for ( quint16 ch = 0; ch < m_nchannels; ++ch )
-        for ( quint16 s = 0; s < m_nsamples; ++s )
-            m_pool[ch][s] *= c;
-}
-
-float* Stream::channel(quint16 index)
-{
-    return m_pool[index];
-}
-
-void Stream::mergeWith( Stream stream )
-{
-//    for ( quint16 ch = 0; ch < rnchannels; ++ch )
-//        for ( quint16 s = 0; s < nsamples; ++s )
-//            lhs[ch][s] += rhs[ch][s];
-}
-
-void Stream::mergeWith( Stream stream, quint16 ch_offset )
-{
-
-}
-
-void Stream::mergeWith( Stream stream, quint16 lch_offset, quint16 rch_offset )
-{
-
-}
-
-float Stream::get( quint16 channel, quint16 sample )
-{
-    return m_pool[channel][sample];
-}
-
-void Stream::set( quint16 channel, quint16 sample, float value )
-{
-    m_pool[channel][sample] = value;
-}
-
 static const QStringList g_ignore =
 {
     "parentStream", "subnodes", "exposeDevice", "objectName", "exposePath",
@@ -694,6 +613,7 @@ int readData( const void* inbuf, void* outbuf, unsigned long fpb,
     float* data     = ( float* ) outbuf;
 
     auto buf = world.preprocess( nullptr, bsize );
+
     for ( const auto& insert : inserts )
     {
         if ( !insert->active() ) continue;

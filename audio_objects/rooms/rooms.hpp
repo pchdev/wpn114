@@ -287,7 +287,7 @@ struct RoomChannel
     QVector<Speaker*> speakers;
 
     float* coeffs   = nullptr;
-    float  diffuse  = 0.5;
+    float  diffuse  = 0.f;
 };
 
 class RoomSource : public StreamNode
@@ -340,6 +340,7 @@ class RoomSource : public StreamNode
     protected:
     virtual void update() {}
     bool m_fixed;
+    bool m_changed = true;
 
     qreal m_x = 0.5;
     qreal m_y = 0.5;
