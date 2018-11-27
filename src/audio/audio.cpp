@@ -425,7 +425,6 @@ void WorldStream::setOutDevice(QString device)
 
 void WorldStream::componentComplete()
 {
-    QAudioFormat format;
     Pa_Initialize();
 
     auto ndevices = Pa_GetDeviceCount();

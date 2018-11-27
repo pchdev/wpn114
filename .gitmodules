@@ -1,3 +1,6 @@
-[submodule "thirdparty/libossia"]
-	path = thirdparty/libossia
-	url = https://github.com/OSSIA/libossia.git
+[submodule "external/qtzeroconf"]
+	path = external/qtzeroconf
+    url = https://github.com/jbagg/QtZeroConf.git
+[submodule "FFTConvolver"]
+    path = audio_object/convolver/FFTConvolver
+    url = https://github.com/HiFi-LoFi/FFTConvolver.git

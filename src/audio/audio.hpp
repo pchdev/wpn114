@@ -2,11 +2,7 @@
 
 #include <QObject>
 #include <QQmlListProperty>
-
 #include <QQmlParserStatus>
-#include <QAudioFormat>
-#include <QAudioInput>
-#include <QAudioOutput>
 #include <QIODevice>
 #include <QVector>
 #include <src/oscquery/device.hpp>

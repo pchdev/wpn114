@@ -1,8 +1,7 @@
 TARGET = WPN114
-
-QT += quick multimedia widgets
 TEMPLATE = lib
 CONFIG += c++11 dll
+QT += quick
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -27,9 +26,9 @@ macx {
     DEFINES += __MACOSX_CORE__
 }
 
-unix {
+linux {
     CONFIG += audio midi network
-    #DESTDIR =
+    DESTDIR = /usr/lib/x86_64-linux-gnu/qt5/qml/WPN114
 }
 
 include ( external/qtzeroconf/qtzeroconf.pri )
@@ -62,10 +61,10 @@ audio {
         audio_objects/fork/fork.cpp                 \
         audio_objects/peakrms/peakrms.cpp           \
         audio_objects/convolver/convolver.cpp       \
-        audio_objects/convolver/AudioFFT.cpp        \
-        audio_objects/convolver/FFTConvolver.cpp    \
-        audio_objects/convolver/TwoStageFFTConvolver.cpp \
-        audio_objects/convolver/Utilities.cpp       \
+        audio_objects/convolver/FFTConvolver/AudioFFT.cpp        \
+        audio_objects/convolver/FFTConvolver/FFTConvolver.cpp    \
+        audio_objects/convolver/FFTConvolver/TwoStageFFTConvolver.cpp \
+        audio_objects/convolver/FFTConvolver/Utilities.cpp       \
         audio_objects/clock/audioclock.cpp          \
         audio_objects/bursts/bursts.cpp             \
         audio_objects/limiter/masterlimiter.cpp     \
@@ -87,10 +86,10 @@ audio {
         audio_objects/fork/fork.hpp                 \
         audio_objects/peakrms/peakrms.hpp           \
         audio_objects/convolver/convolver.hpp       \
-        audio_objects/convolver/AudioFFT.h          \
-        audio_objects/convolver/FFTConvolver.h      \
-        audio_objects/convolver/TwoStageFFTConvolver.h \
-        audio_objects/convolver/Utilities.h         \
+        audio_objects/convolver/FFTConvolver/AudioFFT.h          \
+        audio_objects/convolver/FFTConvolver/FFTConvolver.h      \
+        audio_objects/convolver/FFTConvolver/TwoStageFFTConvolver.h \
+        audio_objects/convolver/FFTConvolver/Utilities.h         \
         audio_objects/clock/audioclock.hpp          \
         audio_objects/bursts/bursts.hpp             \
         audio_objects/limiter/masterlimiter.hpp     \
@@ -110,6 +109,7 @@ midi {
 }
 
 network {
+    QT += network
     DEFINES += WPN114_NETWORK
     SOURCES +=                                  \
         src/http/http.cpp                       \
