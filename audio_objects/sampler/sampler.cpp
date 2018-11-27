@@ -395,7 +395,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
         if ( m_releasing )
         {
             // if reaching end of release envelope
-            if ( release_phase >= release_end )
+            if ( release_phase >= release_end || m_attack == 0)
             {                
                 reset();
                 emit reset( m_current_buffer );
@@ -413,7 +413,7 @@ float** StreamSampler::process(float** buf, qint64 nsamples)
                 float x     = (float) release_phase-y;
                 float rel   = lininterp(x, release[y], release[y+1]);
 
-                for ( quint16 ch = 0; ch < nch; ++ch )
+                for ( quint16 ch = 0; ch < nch; ++ch )               
                     out[ch][s] *= rel;
 
                 release_phase += release_inc;

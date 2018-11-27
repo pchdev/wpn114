@@ -26,6 +26,7 @@
 #include <audio_objects/ashes/ashes.hpp>
 #include <audio_objects/downmix/downmix.hpp>
 #include <audio_objects/channelmapper/channelmapper.hpp>
+#include <audio_objects/hlpf/filter.hpp>
 #endif
 
 #ifdef WPN114_MIDI
@@ -76,6 +77,7 @@ void qml_plugin::registerTypes(const char *uri)
     qmlRegisterType<Ashes, 1>             ( "WPN114", 1, 0, "Ashes" );
     qmlRegisterType<Downmix, 1>           ( "WPN114", 1, 0, "Downmix" );
     qmlRegisterType<ChannelMapper, 1>     ( "WPN114", 1, 0, "ChannelMapper" );
+    qmlRegisterType<Filter, 1>            ( "WPN114", 1, 0, "HLPFilter" );
 #endif
 
 #ifdef WPN114_MIDI //=====================================================================================

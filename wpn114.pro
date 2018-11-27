@@ -23,8 +23,13 @@ macx {
     -framework CoreFoundation \
     -framework CoreAudio \
     -framework CoreMIDI    
-
     DESTDIR = /Users/pchd/Qt/5.11.1/clang_64/qml/WPN114
+    DEFINES += __MACOSX_CORE__
+}
+
+unix {
+    CONFIG += audio midi network
+    #DESTDIR =
 }
 
 include ( external/qtzeroconf/qtzeroconf.pri )
@@ -66,7 +71,8 @@ audio {
         audio_objects/limiter/masterlimiter.cpp     \
         audio_objects/ashes/ashes.cpp               \
         audio_objects/downmix/downmix.cpp           \
-        audio_objects/channelmapper/channelmapper.cpp
+        audio_objects/channelmapper/channelmapper.cpp \
+        audio_objects/hlpf/filter.cpp
 
     HEADERS +=                                      \
         src/audio/audio.hpp                         \
@@ -90,12 +96,12 @@ audio {
         audio_objects/limiter/masterlimiter.hpp     \
         audio_objects/ashes/ashes.hpp               \
         audio_objects/downmix/downmix.hpp           \
-        audio_objects/channelmapper/channelmapper.hpp
+        audio_objects/channelmapper/channelmapper.hpp \
+        audio_objects/hlpf/filter.hpp
 }
 
 midi {
     DEFINES += WPN114_MIDI
-    DEFINES += __MACOSX_CORE__
     HEADERS += src/midi/midi.hpp
     SOURCES += src/midi/midi.cpp
     HEADERS += src/midi/RtMidi.h

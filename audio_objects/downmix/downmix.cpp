@@ -56,7 +56,7 @@ float** Downmix::process(float** in, qint64 nsamples)
         for ( quint16 ch = 0; ch < nout; ++ch )
             if ( !m_channels.contains(ch) )
                 for ( const auto& tch : m_channels )
-                    out[tch][s] += in[ch][s]/nout;
+                    out[tch][s] += in[ch][s]*0.33;
 
     return out;
 }

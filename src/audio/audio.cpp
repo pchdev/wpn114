@@ -562,7 +562,7 @@ void AudioStream::configure()
 {
     m_err = Pa_OpenStream(
         &m_stream, nullptr, &m_parameters, m_world.sampleRate(), m_world.blockSize(),
-        paClipOff, &readData, (void*) &m_world );
+        paNoFlag, &readData, (void*) &m_world );
 }
 
 void AudioStream::start()
@@ -610,15 +610,15 @@ int readData( const void* inbuf, void* outbuf, unsigned long fpb,
     auto inserts    = world.m_inserts;
     quint16 nout    = world.m_num_outputs;
     quint16 bsize   = world.m_block_size;
-    float* data     = ( float* ) outbuf;
+    float* data     = ( float* ) outbuf;    
 
-    auto buf = world.preprocess( nullptr, bsize );
+    auto buf = world.preprocess( nullptr, bsize );       
 
     for ( const auto& insert : inserts )
     {
         if ( !insert->active() ) continue;
         buf = insert->preprocess( buf, bsize );
-    }
+    }    
 
     StreamNode::applyGain(buf, nout, bsize, world.m_level);
 

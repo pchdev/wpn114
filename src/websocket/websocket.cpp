@@ -15,7 +15,6 @@ WPNWebSocketServer::~WPNWebSocketServer()
 void WPNWebSocketServer::listen()
 {
     m_tcp_server = new QTcpServer;
-
     QObject::connect( m_tcp_server, &QTcpServer::newConnection,
                       this, &WPNWebSocketServer::onNewConnection );
 
@@ -185,10 +184,8 @@ void WPNWebSocket::onRawMessageReceived()
         {
              if ( data.contains("Sec-WebSocket-Accept"))
                  onHandshakeResponseReceived(data);
-
              else emit httpMessageReceived(data);
         }
-
         else decode(data);
     }
 }
