@@ -1,6 +1,6 @@
 [submodule "external/qtzeroconf"]
 	path = external/qtzeroconf
     url = https://github.com/jbagg/QtZeroConf.git
-[submodule "audio_objects/convolver/fftconvolver"]
-	path = audio_objects/convolver/fftconvolver
+[submodule "external/fftconvolver"]
+	path = external/fftconvolver
 	url = https://github.com/HiFi-LoFi/FFTConvolver.git
