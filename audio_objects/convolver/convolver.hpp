@@ -3,7 +3,7 @@
 
 #include <src/audio/audio.hpp>
 #include <src/audio/soundfile.hpp>
-#include "fftconvolver/FFTConvolver.h"
+#include <external/fftconvolver/FFTConvolver.h>
 
 using namespace fftconvolver;
 #define CONVOLVER_BUFFER_SIZE 1024

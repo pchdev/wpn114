@@ -61,10 +61,10 @@ audio {
         audio_objects/fork/fork.cpp                 \
         audio_objects/peakrms/peakrms.cpp           \
         audio_objects/convolver/convolver.cpp       \
-        audio_objects/convolver/FFTConvolver/AudioFFT.cpp        \
-        audio_objects/convolver/FFTConvolver/FFTConvolver.cpp    \
-        audio_objects/convolver/FFTConvolver/TwoStageFFTConvolver.cpp \
-        audio_objects/convolver/FFTConvolver/Utilities.cpp       \
+        external/fftconvolver/AudioFFT.cpp        \
+        external/fftconvolver/FFTConvolver.cpp    \
+        external/fftconvolver/TwoStageFFTConvolver.cpp \
+        external/fftconvolver/Utilities.cpp       \
         audio_objects/clock/audioclock.cpp          \
         audio_objects/bursts/bursts.cpp             \
         audio_objects/limiter/masterlimiter.cpp     \
@@ -86,10 +86,10 @@ audio {
         audio_objects/fork/fork.hpp                 \
         audio_objects/peakrms/peakrms.hpp           \
         audio_objects/convolver/convolver.hpp       \
-        audio_objects/convolver/FFTConvolver/AudioFFT.h          \
-        audio_objects/convolver/FFTConvolver/FFTConvolver.h      \
-        audio_objects/convolver/FFTConvolver/TwoStageFFTConvolver.h \
-        audio_objects/convolver/FFTConvolver/Utilities.h         \
+        external/fftconvolver/AudioFFT.h          \
+        external/fftconvolver/FFTConvolver.h      \
+        external/fftconvolver/TwoStageFFTConvolver.h \
+        external/fftconvolver/Utilities.h         \
         audio_objects/clock/audioclock.hpp          \
         audio_objects/bursts/bursts.hpp             \
         audio_objects/limiter/masterlimiter.hpp     \
