@@ -1,4 +1,0 @@
-module WPN114
-typeinfo plugins.qmltypes
-plugin WPN114
-classname qml_plugin
