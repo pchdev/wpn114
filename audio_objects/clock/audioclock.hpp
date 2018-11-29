@@ -1,8 +1,8 @@
 #ifndef AUDIOCLOCK_HPP
 #define AUDIOCLOCK_HPP
 
-#include <src/audio/audio.hpp>
-#include <src/oscquery/device.hpp>
+#include <source/audio/audio.hpp>
+#include <source/oscquery/device.hpp>
 #include <math.h>
 #include <QQmlProperty>
 #include <QMetaProperty>

@@ -2,7 +2,7 @@
 #define AUDIOPLUGIN_H
 
 #include <QObject>
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 #include "aeffect.h"
 #include "aeffectx.h"
 #include <QMacNativeWidget>

@@ -2,7 +2,7 @@
 #include <QtDebug>
 #include <qendian.h>
 #include <cmath>
-#include <src/oscquery/node.hpp>
+#include <source/oscquery/node.hpp>
 #include <memory>
 #include <QtGlobal>
 
@@ -425,39 +425,31 @@ void WorldStream::setOutDevice(QString device)
 
 void WorldStream::componentComplete()
 {
-    Pa_Initialize();
+    RtAudio audio;
+    RtAudio::StreamParameters parameters;
+    RtAudio::DeviceInfo info;
+    RtAudio::StreamOptions options;
 
-    auto ndevices = Pa_GetDeviceCount();
-    PaDeviceInfo device_info;
-    PaDeviceIndex device_index;
+    auto ndevices = audio.getDeviceCount();
 
-    if ( !m_out_device.isEmpty() || m_out_device != "default" )
+    for ( quint32 d = 0; d < ndevices; ++d )
     {
-        for ( quint16 d = 0; d < ndevices; ++d )
+        info = audio.getDeviceInfo(d);
+        auto name = QString::fromStdString(info.name);
+        qDebug() << name;
+
+        if ( name.contains(m_out_device) )
         {
-            auto device = Pa_GetDeviceInfo(d);
-            if ( QString(device->name) == m_out_device )
-            {
-                device_index = d;
-                device_info = *device;
-                break;
-            }
+            parameters.deviceId = d;
+            break;
         }
     }
-    else
-    {
-        device_index = Pa_GetDefaultOutputDevice();
-        device_info = *Pa_GetDeviceInfo(device_index);
-    }
 
-    PaStreamParameters parameters;
-    parameters.channelCount = m_num_outputs;
-    parameters.sampleFormat = paFloat32;
-    parameters.hostApiSpecificStreamInfo = nullptr;
-    parameters.suggestedLatency = device_info.defaultLowOutputLatency;
-    parameters.device = device_index;
+    parameters.nChannels = m_num_outputs;
+    options.streamName = "WPN114";
+    options.flags = RTAUDIO_SCHEDULE_REALTIME;
 
-    m_stream = new AudioStream( *this, parameters, device_info);
+    m_stream = new AudioStream( *this, parameters, info, options);
     m_stream->moveToThread  ( &m_stream_thread );
 
     QObject::connect( this, &StreamNode::activeChanged, this, &WorldStream::onActiveChanged );
@@ -539,8 +531,13 @@ int WorldStream::insertsCount(QQmlListProperty<StreamNode>* list)
 
 // -----------------------------------------------------------------------------------------
 
-AudioStream::AudioStream(WorldStream& world, PaStreamParameters parameters, PaDeviceInfo device_info) :
-    m_world(world), m_parameters(parameters), m_device_info(device_info), m_stream(nullptr)
+AudioStream::AudioStream( WorldStream& world,
+                          RtAudio::StreamParameters parameters,
+                          RtAudio::DeviceInfo info,
+                          RtAudio::StreamOptions options) :
+
+    m_world(world), m_parameters(parameters),
+    m_device_info(info), m_options(options), m_stream(new RtAudio)
 {
 
 }
@@ -553,15 +550,26 @@ AudioStream::~AudioStream()
 
 void AudioStream::exit()
 {
-    Pa_CloseStream(m_stream);
-    Pa_Terminate();
+    m_stream->stopStream();
+    m_stream->closeStream();
 }
 
 void AudioStream::configure()
 {
-    m_err = Pa_OpenStream(
-        &m_stream, nullptr, &m_parameters, m_world.sampleRate(), m_world.blockSize(),
-        paNoFlag, &readData, (void*) &m_world );
+    m_blocksize = m_world.blockSize();
+    m_format = RTAUDIO_FLOAT32;
+
+    try
+    {
+        m_stream->openStream( &m_parameters, nullptr,
+                    m_format, m_world.sampleRate(), &m_blocksize,
+                    &readData, (void*) &m_world, &m_options, nullptr);
+    }
+
+    catch(const RtAudioError& e)
+    {
+        qDebug() << "OPENSTREAM_ERROR:" << QString::fromStdString(e.getMessage());
+    }
 }
 
 void AudioStream::start()
@@ -572,12 +580,20 @@ void AudioStream::start()
     for ( const auto& insert : m_world.m_inserts )
         insert->preinitialize( properties );
 
-    m_err = Pa_StartStream( m_stream );
+    try     { m_stream->startStream(); }
+    catch   ( const RtAudioError& e )
+    {
+        qDebug() << "STARTSTREAM_ERROR:" << QString::fromStdString(e.getMessage());
+    }
 }
 
 void AudioStream::stop()
 {
-    Pa_StopStream(m_stream);
+    try     { m_stream->stopStream(); }
+    catch   ( const RtAudioError& e )
+    {
+        e.printMessage();
+    }
 }
 
 void AudioStream::restart()
@@ -590,34 +606,33 @@ qint64 AudioStream::uclock() const
     return 0;
 }
 
-void AudioStream::onBufferProcessed()
+void AudioStream::onBufferProcessed(double time)
 {
-    qint64 msecs = Pa_GetStreamTime( m_stream )*1000;
+    qint64 msecs = time*1000;
     if ( !m_clock ) m_clock = msecs;
 
     emit tick( msecs-m_clock );
     m_clock = msecs;
 }
 
-int readData( const void* inbuf, void* outbuf, unsigned long fpb,
-              const PaStreamCallbackTimeInfo* timeinfo,
-              PaStreamCallbackFlags statflags, void* udata )
+int readData( void* out, void* in, unsigned int nframes,
+              double time, RtAudioStreamStatus status, void *udata)
 {
     WorldStream& world = *((WorldStream*) udata);
-    world.stream()->onBufferProcessed();
+    world.stream()->onBufferProcessed(time);
 
     auto inserts    = world.m_inserts;
     quint16 nout    = world.m_num_outputs;
     quint16 bsize   = world.m_block_size;
-    float* data     = ( float* ) outbuf;    
+    float* data     = ( float* ) out;
 
-    auto buf = world.preprocess( nullptr, bsize );       
+    auto buf = world.preprocess( nullptr, bsize );
 
     for ( const auto& insert : inserts )
     {
         if ( !insert->active() ) continue;
         buf = insert->preprocess( buf, bsize );
-    }    
+    }
 
     StreamNode::applyGain(buf, nout, bsize, world.m_level);
 
@@ -625,5 +640,5 @@ int readData( const void* inbuf, void* outbuf, unsigned long fpb,
         for ( quint16 ch = 0; ch < nout; ++ch )
             *data++ = buf[ch][s];
 
-    return paContinue;
+    return 0;
 }

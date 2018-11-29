@@ -1,7 +1,7 @@
 #ifndef PEAKRMS_HPP
 #define PEAKRMS_HPP
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 class PeakRMS : public StreamNode
 {

@@ -7,7 +7,7 @@
 #include <QQmlParserStatus>
 #include "client.hpp"
 #include "../websocket/websocket.hpp"
-#include <src/http/http.hpp>
+#include <source/http/http.hpp>
 #include <qzeroconf.h>
 
 class WPNQueryServer : public WPNDevice

@@ -1,7 +1,7 @@
 #ifndef ASHES_H
 #define ASHES_H
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 #define PINK_MAX_RANDOM_ROWS    ( 30 )
 #define PINK_RANDOM_BITS        ( 24 )

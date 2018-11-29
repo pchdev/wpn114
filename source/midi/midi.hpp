@@ -1,5 +1,5 @@
 #pragma once
-#include "RtMidi.h"
+#include <external/rtmidi/RtMidi.h>
 #include <QObject>
 #include <QQmlParserStatus>
 #include <QVariant>

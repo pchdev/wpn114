@@ -1,7 +1,7 @@
 #ifndef CHANNELMAPPER_HPP
 #define CHANNELMAPPER_HPP
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 class ChannelMapper : public StreamNode
 {

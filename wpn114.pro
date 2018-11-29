@@ -39,20 +39,17 @@ vst {
     HEADERS += audio_objects/audioplugin/aeffect.h \
     audio_objects/audioplugin/aeffectx.h \
     audio_objects/audioplugin/audioplugin.hpp
-
     SOURCES += audio_objects/audioplugin/audioplugin.mm
 }
 
 audio {
-    #QT += multimedia
-    INCLUDEPATH += /usr/local/opt/portaudio/include
-    LIBS += -L/usr/local/opt/portaudio/lib/ -lportaudio
     DEFINES += WPN114_AUDIO
     SOURCES +=                                      \
-        src/audio/audio.cpp                         \
+        source/audio/audio.cpp                      \
+        external/rtaudio/RtAudio.cpp                \
         audio_objects/sine/sine.cpp                 \
         audio_objects/stpanner/stereopanner.cpp     \
-        src/audio/soundfile.cpp                     \
+        source/audio/soundfile.cpp                     \
         audio_objects/sampler/sampler.cpp           \
         audio_objects/rooms/rooms.cpp               \
         audio_objects/mangler/mangler.cpp           \
@@ -74,10 +71,11 @@ audio {
         audio_objects/hlpf/filter.cpp
 
     HEADERS +=                                      \
-        src/audio/audio.hpp                         \
+        source/audio/audio.hpp                      \
+        source/audio/soundfile.hpp                  \
+        external/rtaudio/RtAudio.h                  \
         audio_objects/sine/sine.hpp                 \
         audio_objects/stpanner/stereopanner.hpp     \
-        src/audio/soundfile.hpp                     \
         audio_objects/sampler/sampler.hpp           \
         audio_objects/rooms/rooms.hpp               \
         audio_objects/mangler/mangler.hpp           \
@@ -101,40 +99,40 @@ audio {
 
 midi {
     DEFINES += WPN114_MIDI
-    HEADERS += src/midi/midi.hpp
-    SOURCES += src/midi/midi.cpp
-    HEADERS += src/midi/RtMidi.h
-    SOURCES += src/midi/RtMidi.cpp
-    HEADERS += src/midi/devices/push/device_enums.hpp
+    HEADERS += source/midi/midi.hpp
+    SOURCES += source/midi/midi.cpp
+    HEADERS += external/rtmidi/RtMidi.h
+    SOURCES += external/rtmidi/RtMidi.cpp
+    HEADERS += source/midi/devices/push/device_enums.hpp
 }
 
 network {
     QT += network
     DEFINES += WPN114_NETWORK
     SOURCES +=                                  \
-        src/http/http.cpp                       \
-        src/osc/osc.cpp                         \
-        src/oscquery/client.cpp                 \
-        src/oscquery/device.cpp                 \
-        src/oscquery/file.cpp                   \
-        src/oscquery/folder.cpp                 \
-        src/oscquery/node.cpp                   \
-        src/oscquery/query-server.cpp           \
-        src/websocket/websocket.cpp             \
-        src/oscquery/nodetree.cpp               \
-        src/oscquery/netexplorer.cpp
+        source/http/http.cpp                       \
+        source/osc/osc.cpp                         \
+        source/oscquery/client.cpp                 \
+        source/oscquery/device.cpp                 \
+        source/oscquery/file.cpp                   \
+        source/oscquery/folder.cpp                 \
+        source/oscquery/node.cpp                   \
+        source/oscquery/server.cpp           \
+        source/websocket/websocket.cpp             \
+        source/oscquery/tree.cpp               \
+        source/oscquery/netexplorer.cpp
     HEADERS +=                                  \
-        src/http/http.hpp                       \
-        src/osc/osc.hpp                         \
-        src/oscquery/client.hpp                 \
-        src/oscquery/device.hpp                 \
-        src/oscquery/file.hpp                   \
-        src/oscquery/folder.hpp                 \
-        src/oscquery/node.hpp                   \
-        src/oscquery/query-server.hpp           \
-        src/websocket/websocket.hpp             \
-        src/oscquery/nodetree.hpp               \
-        src/oscquery/netexplorer.hpp
+        source/http/http.hpp                       \
+        source/osc/osc.hpp                         \
+        source/oscquery/client.hpp                 \
+        source/oscquery/device.hpp                 \
+        source/oscquery/file.hpp                   \
+        source/oscquery/folder.hpp                 \
+        source/oscquery/node.hpp                   \
+        source/oscquery/server.hpp           \
+        source/websocket/websocket.hpp             \
+        source/oscquery/tree.hpp               \
+        source/oscquery/netexplorer.hpp
 }
 
 SOURCES += qml_plugin.cpp

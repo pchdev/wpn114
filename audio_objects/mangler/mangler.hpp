@@ -5,7 +5,7 @@
 #ifndef MANGLER_HPP
 #define MANGLER_HPP
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 class Mangler : public StreamNode
 {

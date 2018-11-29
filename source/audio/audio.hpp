@@ -5,9 +5,9 @@
 #include <QQmlParserStatus>
 #include <QIODevice>
 #include <QVector>
-#include <src/oscquery/device.hpp>
+#include <source/oscquery/device.hpp>
 #include <QThread>
-#include <portaudio.h>
+#include <external/rtaudio/RtAudio.h>
 
 struct StreamProperties
 {
@@ -168,16 +168,19 @@ class AudioStream : public QObject
      Q_OBJECT
 
     public:
-    AudioStream  ( WorldStream& world, PaStreamParameters parameters, PaDeviceInfo info);
-    ~AudioStream ( );
+    AudioStream  ( WorldStream& world,
+                   RtAudio::StreamParameters parameters,
+                   RtAudio::DeviceInfo info,
+                   RtAudio::StreamOptions options );
 
+    ~AudioStream ( );
     qint64 uclock( ) const;
 
     signals:
     void tick(qint64);
 
     public slots:
-    void onBufferProcessed ( );
+    void onBufferProcessed ( double time );
 
     void configure  ( );
     void start      ( );
@@ -190,15 +193,17 @@ class AudioStream : public QObject
     qint64 m_clock = 0;
     WorldStream& m_world;
     float** m_pool;
-    PaDeviceInfo m_device_info;
-    PaStream* m_stream;
-    PaStreamParameters m_parameters;
-    PaError m_err;
+
+    RtAudio* m_stream = nullptr;
+    RtAudioFormat m_format;
+    RtAudio::DeviceInfo m_device_info;
+    RtAudio::StreamParameters m_parameters;
+    RtAudio::StreamOptions m_options;
+    quint32 m_blocksize;
 };
 
-int readData( const void* inbuf, void* outbuf, unsigned long fpb,
-              const PaStreamCallbackTimeInfo* timeinfo,
-              PaStreamCallbackFlags statflags, void* udata );
+int readData( void* out, void* in, unsigned int nframes,
+              double time, RtAudioStreamStatus status, void *udata);
 
 class WorldStream : public StreamNode
 {
@@ -211,10 +216,8 @@ class WorldStream : public StreamNode
     Q_PROPERTY  ( QQmlListProperty<StreamNode> inserts READ inserts )
 
     friend class AudioStream;
-    friend int readData(
-            const void*, void*, unsigned long,
-            const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void*);
-
+    friend int readData( void* out, void* in, unsigned int nframes,
+                         double time, RtAudioStreamStatus status, void *udata);
     public:    
     WorldStream();
     ~WorldStream();

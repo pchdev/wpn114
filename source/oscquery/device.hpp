@@ -1,7 +1,7 @@
 #pragma once
 
 #include "node.hpp"
-#include "nodetree.hpp"
+#include "tree.hpp"
 #include <QObject>
 
 class WPNNode;

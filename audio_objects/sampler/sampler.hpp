@@ -1,8 +1,8 @@
 #ifndef SAMPLER_HPP
 #define SAMPLER_HPP
 
-#include <src/audio/audio.hpp>
-#include <src/audio/soundfile.hpp>
+#include <source/audio/audio.hpp>
+#include <source/audio/soundfile.hpp>
 #include <QQmlParserStatus>
 #include <QThread>
 

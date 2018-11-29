@@ -1,8 +1,8 @@
 #ifndef CONVOLVER_HPP
 #define CONVOLVER_HPP
 
-#include <src/audio/audio.hpp>
-#include <src/audio/soundfile.hpp>
+#include <source/audio/audio.hpp>
+#include <source/audio/soundfile.hpp>
 #include <external/fftconvolver/FFTConvolver.h>
 
 using namespace fftconvolver;

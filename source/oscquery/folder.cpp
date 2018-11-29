@@ -2,7 +2,7 @@
 #include "file.hpp"
 #include <QtDebug>
 #include <QStandardPaths>
-#include <src/oscquery/client.hpp>
+#include <source/oscquery/client.hpp>
 #include <QJsonArray>
 
 WPNFolderNode::WPNFolderNode() : m_recursive(true), WPNNode()

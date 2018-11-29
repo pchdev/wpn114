@@ -1,4 +1,4 @@
-#include "query-server.hpp"
+#include "server.hpp"
 #include <QJsonObject>
 #include <QJsonDocument>
 #include "../http/http.hpp"

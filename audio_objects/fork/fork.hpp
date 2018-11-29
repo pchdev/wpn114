@@ -1,7 +1,7 @@
 #ifndef FORK_HPP
 #define FORK_HPP
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 class Fork;
 

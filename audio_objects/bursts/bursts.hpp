@@ -1,7 +1,7 @@
 #ifndef BURSTS_HPP
 #define BURSTS_HPP
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 class Bursts : public StreamNode
 {

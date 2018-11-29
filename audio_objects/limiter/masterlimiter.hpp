@@ -1,7 +1,7 @@
 #ifndef MASTERLIMITER_HPP
 #define MASTERLIMITER_HPP
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 class MasterLimiter : public StreamNode
 {

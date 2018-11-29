@@ -1,4 +1,4 @@
-#include "nodetree.hpp"
+#include "tree.hpp"
 #include "node.hpp"
 #include <QtDebug>
 

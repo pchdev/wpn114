@@ -1,7 +1,7 @@
 #ifndef ROOMS_H
 #define ROOMS_H
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 #include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>

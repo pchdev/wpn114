@@ -1,8 +1,8 @@
 #pragma once
 
 #include "device.hpp"
-#include <src/websocket/websocket.hpp>
-#include <src/osc/osc.hpp>
+#include <source/websocket/websocket.hpp>
+#include <source/osc/osc.hpp>
 #include <QTcpSocket>
 #include <QQmlParserStatus>
 #include <qzeroconf.h>

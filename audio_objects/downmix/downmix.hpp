@@ -1,7 +1,7 @@
 #ifndef DOWNMIX_HPP
 #define DOWNMIX_HPP
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 class Downmix : public StreamNode
 {

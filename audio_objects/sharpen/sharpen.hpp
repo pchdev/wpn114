@@ -1,6 +1,6 @@
 #pragma once
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 class Sharpen : public StreamNode
 {

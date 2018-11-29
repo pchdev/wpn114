@@ -1,7 +1,7 @@
 #ifndef MULTISAMPLER_HPP
 #define MULTISAMPLER_HPP
 
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 #include <audio_objects/sampler/sampler.hpp>
 #include <QDir>
 

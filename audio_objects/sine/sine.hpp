@@ -2,7 +2,7 @@
 #define QSINE_H
 
 #include <QObject>
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 
 #define WT_SIZE 16384
 

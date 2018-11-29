@@ -1,16 +1,16 @@
 #include "qml_plugin.hpp"
 
 #ifdef WPN114_NETWORK
-#include <src/oscquery/client.hpp>
-#include <src/oscquery/query-server.hpp>
-#include <src/oscquery/node.hpp>
-#include <src/oscquery/file.hpp>
-#include <src/oscquery/folder.hpp>
-#include <src/oscquery/netexplorer.hpp>
+#include <source/oscquery/client.hpp>
+#include <source/oscquery/server.hpp>
+#include <source/oscquery/node.hpp>
+#include <source/oscquery/file.hpp>
+#include <source/oscquery/folder.hpp>
+#include <source/oscquery/netexplorer.hpp>
 #endif
 
 #ifdef WPN114_AUDIO
-#include <src/audio/audio.hpp>
+#include <source/audio/audio.hpp>
 #include <audio_objects/sine/sine.hpp>
 #include <audio_objects/stpanner/stereopanner.hpp>
 #include <audio_objects/sampler/sampler.hpp>
@@ -30,8 +30,8 @@
 #endif
 
 #ifdef WPN114_MIDI
-#include <src/midi/midi.hpp>
-#include <src/midi/devices/push/device_enums.hpp>
+#include <source/midi/midi.hpp>
+#include <source/midi/devices/push/device_enums.hpp>
 #endif
 
 #ifdef WPN114_VST
