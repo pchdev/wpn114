@@ -432,22 +432,28 @@ void WorldStream::componentComplete()
 
     auto ndevices = audio.getDeviceCount();
 
-    for ( quint32 d = 0; d < ndevices; ++d )
+    if ( !m_out_device.isEmpty())
     {
-        info = audio.getDeviceInfo(d);
-        auto name = QString::fromStdString(info.name);
-        qDebug() << name;
-
-        if ( name.contains(m_out_device) )
+        for ( quint32 d = 0; d < ndevices; ++d )
         {
-            parameters.deviceId = d;
-            break;
+            info = audio.getDeviceInfo(d);
+            auto name = QString::fromStdString(info.name);
+            qDebug() << name;
+
+            if ( name.contains(m_out_device) )
+            {
+                parameters.deviceId = d;
+                break;
+            }
         }
     }
+
+    else parameters.deviceId = audio.getDefaultOutputDevice();
 
     parameters.nChannels = m_num_outputs;
     options.streamName = "WPN114";
     options.flags = RTAUDIO_SCHEDULE_REALTIME;
+    options.priority = 10;
 
     m_stream = new AudioStream( *this, parameters, info, options);
     m_stream->moveToThread  ( &m_stream_thread );
@@ -561,9 +567,9 @@ void AudioStream::configure()
 
     try
     {
-        m_stream->openStream( &m_parameters, nullptr,
-                    m_format, m_world.sampleRate(), &m_blocksize,
-                    &readData, (void*) &m_world, &m_options, nullptr);
+        m_stream->openStream( &m_parameters, nullptr, m_format,
+            m_world.sampleRate(), &m_blocksize,
+            &readData, (void*) &m_world, &m_options, nullptr );
     }
 
     catch(const RtAudioError& e)
