@@ -423,9 +423,28 @@ void WorldStream::setOutDevice(QString device)
     m_out_device = device;
 }
 
+void WorldStream::setApi(QString api)
+{
+    m_api = api;
+}
+
+void WorldStream::setOffset(quint32 offset)
+{
+    m_offset = offset;
+}
+
 void WorldStream::componentComplete()
 {
-    RtAudio audio;
+    RtAudio::Api api;
+
+    if ( m_api == "JACK" )
+        api = RtAudio::UNIX_JACK;
+    else if ( m_api == "ALSA" )
+        api = RtAudio::LINUX_ALSA;
+    else if ( m_api == "PULSE" )
+        api = RtAudio::LINUX_PULSE;
+
+    RtAudio audio(api);
     RtAudio::StreamParameters parameters;
     RtAudio::DeviceInfo info;
     RtAudio::StreamOptions options;
@@ -451,6 +470,7 @@ void WorldStream::componentComplete()
     else parameters.deviceId = audio.getDefaultOutputDevice();
 
     parameters.nChannels = m_num_outputs;
+    parameters.firstChannel = m_offset;
     options.streamName = "WPN114";
     options.flags = RTAUDIO_SCHEDULE_REALTIME;
     options.priority = 10;

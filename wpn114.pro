@@ -28,7 +28,10 @@ macx {
 
 linux {
     CONFIG += audio midi network
-    DESTDIR = /usr/lib/x86_64-linux-gnu/qt5/qml/WPN114
+    DESTDIR = /usr/lib/qt/qml/WPN114
+    DEFINES += __UNIX_JACK__
+    DEFINES += __LINUX_ALSA__
+    LIBS += -lasound -lpthread -ljack
 }
 
 include ( external/qtzeroconf/qtzeroconf.pri )
