@@ -3,17 +3,25 @@
 
 #include <QObject>
 #include <source/audio/audio.hpp>
-#include "aeffect.h"
-#include "aeffectx.h"
-#include <QMacNativeWidget>
-#include <QMacCocoaViewContainer>
+#include "vst-compat.hpp"
 #include <QQueue>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QLibrary>
 
-static VstIntPtr VSTCALLBACK HostCallback
-(AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void* ptr, float opt);
-typedef AEffect* (*PluginEntryProc) (audioMasterCallback audioMaster);
+#ifdef __APPLE_
+#include <QMacNativeWidget>
+#include <QMacCocoaViewContainer>
+#endif
+
+#ifdef __linux__
+#include <QWidget>
+#endif
+
+intptr_t vst_host_callback(AEffect* effect, int32_t opcode, int32_t index, intptr_t value,
+                           void* ptr, float opt);
+
+using PluginEntryProc = AEffect* (*)(audioMasterCallback audioMaster);
 
 enum class version
 {
@@ -73,7 +81,8 @@ class plugin_hdl
 
 class vst3x_plugin : public plugin_hdl
 {
-    AUDIO_PLUGIN_INTERFACE ( )
+    AUDIO_PLUGIN_INTERFACE (override)
+
     vst3x_plugin( const std::string path );
     vst3x_plugin( const vst3x_plugin& ) = delete;
     vst3x_plugin& operator= ( const vst3x_plugin& ) = delete;
@@ -83,7 +92,8 @@ class vst3x_plugin : public plugin_hdl
 
 class vst2x_plugin : public plugin_hdl
 {
-    AUDIO_PLUGIN_INTERFACE ( )
+    AUDIO_PLUGIN_INTERFACE (override)
+
     vst2x_plugin( const std::string path );
     vst2x_plugin( const vst2x_plugin& ) = delete;
     vst2x_plugin& operator= ( const vst2x_plugin& ) = delete;
@@ -98,6 +108,7 @@ class vst2x_plugin : public plugin_hdl
     qint64 m_delta_frames = 0;
     VstEvents* m_event_queue;
     AEffect* m_aeffect;
+    QLibrary m_loader;
 };
 
 // QT INSTANCE --------------------------------------------------------------------
@@ -177,6 +188,10 @@ private:
     QStringList         m_parameters;
     QString             m_chunk;
     WorldStream*        m_world_stream;
+
+#ifdef __linux__
+    QWidget m_view;
+#endif
 
 #ifdef __APPLE__
     QMacNativeWidget*           m_view;

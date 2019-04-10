@@ -27,8 +27,7 @@ macx {
 }
 
 linux {
-    CONFIG += audio midi network
-    DESTDIR = /usr/lib/qt/qml/WPN114
+    CONFIG += audio midi network vst
     DEFINES += __UNIX_JACK__
     DEFINES += __LINUX_ALSA__
     LIBS += -lasound -lpthread -ljack
@@ -40,9 +39,9 @@ vst {
     DEFINES += WPN114_VST
     QT += widgets
     HEADERS += audio_objects/audioplugin/aeffect.h \
-    audio_objects/audioplugin/aeffectx.h \
+    audio_objects/audioplugin/vst-compat.hpp \
     audio_objects/audioplugin/audioplugin.hpp
-    SOURCES += audio_objects/audioplugin/audioplugin.mm
+    SOURCES += audio_objects/audioplugin/audioplugin.cpp
 }
 
 audio {

@@ -436,7 +436,8 @@ void Automation::onTick(qint64 sz)
 {
     TimeNode::onTick(sz);
 
-    if ( !m_running ) return;
+    if (!m_running)
+        return;
 
     m_phase = m_clock/m_duration;
 

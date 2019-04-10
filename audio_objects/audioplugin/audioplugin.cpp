@@ -8,18 +8,26 @@
 #endif
 
 #include <array>
+
+#ifdef __APPLE__
 #include <QMacCocoaViewContainer>
+#endif
+
+#ifdef __linux__
+#endif
 
 #define PARAMNAME_MAXLE     256
 #define PROGRAMNAME_MAXLE   256
 
 // QT INSTANCE --------------------------------------------------------------------
 
-AudioPlugin::AudioPlugin() : m_path(""), m_view(nullptr), m_plugin_hdl(nullptr) {}
+AudioPlugin::AudioPlugin() : m_path(""), m_plugin_hdl(nullptr) {}
 AudioPlugin::~AudioPlugin()
 {    
+#ifdef __APPLE__
     delete m_view;
     delete m_view_container;
+#endif
     delete m_plugin_hdl;
 }
 
@@ -47,8 +55,8 @@ void AudioPlugin::componentComplete()
         m_programs << str;
     }
 
-    SETN_IN    ( m_plugin_hdl->get_ninputs()  );
-    SETN_OUT   ( m_plugin_hdl->get_noutputs() );
+    SETN_IN   (m_plugin_hdl->get_ninputs())
+    SETN_OUT  (m_plugin_hdl->get_noutputs())
 
     if ( !m_num_inputs ) m_type = StreamType::Generator;
     else m_type = StreamType::Effect;
@@ -56,13 +64,20 @@ void AudioPlugin::componentComplete()
 #ifdef __APPLE__ //----------------------------------------------------------
     m_view              = new QMacNativeWidget();
     m_view_container    = new QMacCocoaViewContainer( m_view->nativeView() );
-#endif //--------------------------------------------------------------------
-
     auto size           = m_plugin_hdl->get_editor_size();    
     m_view              ->resize(size[0], size[1]);
     m_view              ->update();
     m_view_container    ->setFixedSize(size[0], size[1]);
     m_view_container    ->update();
+
+    #endif //--------------------------------------------------------------------
+
+#ifdef __linux__
+    auto size = m_plugin_hdl->get_editor_size();
+    //resize(size[0], size[1]);
+    m_view.setFixedSize(size[0], size[1]);
+    m_view.update();
+#endif
 
     emit pluginLoaded();
 }
@@ -71,23 +86,29 @@ void AudioPlugin::showEditorWindow()
 {    
 #ifdef __APPLE__ //----------------------------------------------------------
     m_plugin_hdl->open_editor((void*) m_view->nativeView());
+    m_view_container->show();
 #endif //--------------------------------------------------------------------
 
-    m_view_container->show();
+#ifdef __linux__
+    m_plugin_hdl->open_editor((void*)m_view.winId());
+    m_view.show();
+#endif
 }
 
 void AudioPlugin::initialize(qint64 nsamples)
 {
-    m_plugin_hdl->configure( m_stream_properties.sample_rate, m_stream_properties.block_size );
-    m_plugin_hdl->set_world( m_world_stream );
+    m_plugin_hdl->configure(m_stream_properties.sample_rate, m_stream_properties.block_size);
+    m_plugin_hdl->set_world(m_world_stream);
 }
 
 float** AudioPlugin::process(float**input, qint64 nsamples)
 {                
-    if  ( m_num_inputs )
+    if (m_num_inputs)
         m_plugin_hdl->process_audio(input, m_out, nsamples);
 
-    else    m_plugin_hdl->process_audio(m_out, nsamples);
+    else
+        m_plugin_hdl->process_audio(m_out, nsamples);
+
     return  m_out;
 }
 
@@ -98,7 +119,7 @@ void AudioPlugin::expose(WPNNode* root)
     auto show   = funcs->createSubnode("show");
 
     show->setType(Type::Impulse);
-    QObject::connect( show, SIGNAL(valueReceived(QVariant)), this, SLOT(showEditorWindow()) );
+    QObject::connect( show, SIGNAL(valueReceived(QVariant)), (StreamNode*)this, SLOT(showEditorWindow()) );
 }
 
 QString AudioPlugin::path() const
@@ -263,36 +284,13 @@ void AudioPlugin::allNotesOff()
     return (std::string) name;
 
 vst2x_plugin::vst2x_plugin(std::string path) : m_event_queue(new VstEvents)
-{
+{   
+    m_loader.setFileName(QString::fromStdString(path));
+    m_loader.load();
 
-#ifdef __APPLE__ //-----------------------------------------------------------------------------
-
-    CFStringRef fns     = CFStringCreateWithCString
-                        ( NULL, path.c_str(), kCFStringEncodingUTF8 );
-    if ( !fns  )        return;
-
-    CFURLRef url        = CFURLCreateWithFileSystemPath
-                        ( NULL, fns, kCFURLPOSIXPathStyle, false );
-    if ( !url  )        return;
-
-    m_module            = (void*) CFBundleCreate
-                        ( NULL, url );
-    CFRelease           ( url );
-
-    if      ( m_module && CFBundleLoadExecutable( (CFBundleRef) m_module) == false )
-    return  ;
-
-    PluginEntryProc main_proc   = 0;
-    main_proc                   = (PluginEntryProc) CFBundleGetFunctionPointerForName
-                                ( (CFBundleRef) m_module, CFSTR("VSTPluginMain") );
-    if  (!main_proc)
-        main_proc               = (PluginEntryProc) CFBundleGetFunctionPointerForName
-                                ( (CFBundleRef) m_module, CFSTR("main_macho") );
-
-    m_aeffect  = main_proc(HostCallback);
-
-#endif //------------------------------------------------------------------------------------    
-    m_aeffect -> dispatcher(m_aeffect, effOpen, 0, 0, nullptr, 0.f);
+    PluginEntryProc main_proc = (PluginEntryProc) m_loader.resolve("VSTPluginMain");
+    m_aeffect = main_proc(vst_host_callback);
+    m_aeffect->dispatcher(m_aeffect, effOpen, 0, 0, nullptr, 0.f);
 }
 
 vst2x_plugin::~vst2x_plugin()
@@ -301,10 +299,7 @@ vst2x_plugin::~vst2x_plugin()
     m_aeffect->dispatcher( m_aeffect, effMainsChanged, 0, 0, nullptr, 0.f );
     m_aeffect->dispatcher( m_aeffect, effClose, 0, 0, nullptr, 0.f );
 
-#ifdef __APPLE__ // ---------------------------------------------------------------
-    CFBundleUnloadExecutable( (CFBundleRef) m_module );
-    CFRelease( (CFBundleRef) m_module );
-#endif //--------------------------------------------------------------------------
+    m_loader.unload();
     delete m_event_queue;
 }
 
@@ -371,7 +366,7 @@ void vst2x_plugin::process_audio(float** inputs, float **outputs, const uint16_t
 {
     if ( m_event_queue->numEvents )
     {
-         m_aeffect->dispatcher( m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f );
+         m_aeffect->dispatcher(m_aeffect, effProcessEvents, 0, 0, m_event_queue, 0.f);
          m_event_queue->numEvents = 0;
 //         set_delta( 0 );
     }
@@ -404,8 +399,8 @@ void vst2x_plugin::set_delta(quint16 delta)
 void vst2x_plugin::process_midi(const uint8_t data[4])
 {
     auto midiev = new VstMidiEvent;
-    std::memset ( midiev, 0, sizeof( VstMidiEvent ) );
-    std::copy_n ( data, 4, midiev->midiData );
+    memset(midiev, 0, sizeof(VstMidiEvent));
+    std::copy_n(data, 4, midiev->midiData);
 
     midiev->deltaFrames  = 0;
     midiev->flags        = kVstMidiEventIsRealtime;
@@ -430,14 +425,13 @@ version vst2x_plugin::get_version() const
 std::array<uint16_t, 2> vst2x_plugin::get_editor_size() const
 {
     std::array<uint16_t, 2> res = { 0, 0 };
-    ERect* rect = 0;
+    ERect* rect = nullptr;
 
     m_aeffect->dispatcher(m_aeffect, effEditGetRect, 0, 0, &rect, 0.f);
 
-    if ( rect )
-    {
-        res[0]   = rect->right - rect->left;
-        res[1]   = rect->bottom - rect->top;
+    if (rect) {
+        res[0] = rect->right - rect->left;
+        res[1] = rect->bottom - rect->top;
     }
 
     return res;
@@ -456,10 +450,10 @@ void vst2x_plugin::set_chunk(QByteArray chunk)
     m_aeffect->dispatcher(m_aeffect, effSetChunk, 0, chunk.size(), chunk.data(), 0);
 }
 
-VstIntPtr VSTCALLBACK HostCallback
-(AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void *ptr, float opt)
+intptr_t vst_host_callback
+(AEffect* effect, int32_t opcode, int32_t index, intptr_t value, void *ptr, float opt)
 {
-    VstIntPtr result = 0;
+    intptr_t result = 0;
 
     switch(opcode)
     {
@@ -476,7 +470,7 @@ VstIntPtr VSTCALLBACK HostCallback
     case audioMasterGetTime:
     {
         VstTimeInfo* info = new VstTimeInfo;
-        std::memset(info, 0, sizeof(VstTimeInfo));
+        memset(info, 0, sizeof(VstTimeInfo));
 
         if ( value & kVstTempoValid )
         {
@@ -484,7 +478,7 @@ VstIntPtr VSTCALLBACK HostCallback
           info->flags |= kVstTempoValid;
         }
 
-        result = reinterpret_cast<VstIntPtr>(info);
+        result = reinterpret_cast<intptr_t>(info);
         break;
     }
     case audioMasterProcessEvents:

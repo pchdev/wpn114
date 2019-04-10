@@ -22,7 +22,9 @@ void ChannelMapper::setMap(QVariantList const map)
     for ( const auto& index : map )
           tmp << index.toInt();
 
-    if ( tmp.size() == m_map.size() ) return;
+    if (tmp.size() == m_map.size())
+        return;
+
     m_map = tmp;
 }
 
@@ -33,8 +35,7 @@ float** ChannelMapper::process(float** in, qint64 nsamples)
     auto out = m_out;
     StreamNode::resetBuffer(out, nout, nsamples);
 
-    for ( const auto& channel : m_map )
-    {
+    for ( const auto& channel : m_map ) {
         memcpy(out[channel], in[index], sizeof(float)*nsamples);
          ++index;
     }
